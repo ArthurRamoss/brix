@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "skills": {
+    "apply-grant": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "7ebbc707a9c89d09fe2c91dc0f082c6dfceff4ae9915374b43bd0ddc813d8e1e"
+    },
+    "brand-design": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "7f6af2f06574d457e1f4f210adb3a7042b1db92d5667c811a6cafe4a0ba37f8d"
+    },
+    "build-data-pipeline": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "d17e19532a80f723929cafdbf6dd1c63997cc0f4633a78452beb63723491ad3c"
+    },
+    "build-defi-protocol": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "cd9528ad6db65ca9fb088fbee87902f4d9b0488d586fd2de78b5a933f4543f6a"
+    },
+    "build-mobile": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "6ce2bec995ff9a2fac759aa5f84b37dc3a1b06fe7a18d5f47276f6f4c9d0d2a4"
+    },
+    "build-with-claude": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "3cbaf602d25a1c6d7621a0376ffb4ad17984a05336fb4abe53e5f1166b4bba15"
+    },
+    "colosseum-copilot": {
+      "source": "ColosseumOrg/colosseum-copilot",
+      "sourceType": "github",
+      "computedHash": "7859139478a5276c63a6114f0c3f9899ca4a30b5e4239825d16b92e8744e9e07"
+    },
+    "competitive-landscape": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "e62edb28b7e26c0e0f5a31d106824a7854c8af74d35a8d593c36e97b5247e3f9"
+    },
+    "create-pitch-deck": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "6506ad1ba2ed4bf4b91fbca35321b6c6ca55b1e8de962db501ea487234f9b467"
+    },
+    "cso": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "162ffea82ff0b8c15d45ca18d8ecfc934bfeebd9e1988ec2dd9f316d35032503"
+    },
+    "debug-program": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "dd4c91e9312c97395d01950959251c26741ba86c011682d6307e9ca143b2c5ea"
+    },
+    "defillama-research": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "dc04a7ea4c13677405ff18609e29c011ec9efa2d40f6c06bf12351b0c3142baa"
+    },
+    "deploy-to-mainnet": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "19891bd4d0fd8bd8ba34d1c1c3f40c9b2b4ef92211824179909cc23eb7f6f2e7"
+    },
+    "find-next-crypto-idea": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "224c289295e68e03936c4de3145a0cf770f88a18b96c246739c605d7f6d8b91c"
+    },
+    "frontend-design-guidelines": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "9903fe08304578d8ec360f0c71ebfdef13cf56ef0e63d9db1cc10c21001f4030"
+    },
+    "launch-token": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "e39df9a833ab7fc9e9d6b59512c50640497f132faa410683859b3df16e0cfc2a"
+    },
+    "learn": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "62ebebc6853b8ab149ed4de93fe70908988897aabe37644d7b2d91f74c502e61"
+    },
+    "marketing-video": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "da332a9fb77945c74fe1b2f364534870e8c8b061c34851efb0af5af924b57ac6"
+    },
+    "navigate-skills": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "ccff9022ba5b4f10932b75ce465be8a3ce1069bb7b34cd35c269bb6735117c90"
+    },
+    "product-review": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "24a28ca01bc4a5fdf640b1cf1645225c80d33158ce02f11e067167b43f6529c4"
+    },
+    "review-and-iterate": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "b4c839d4d733d67798a43883d070e21e1557b33f60f92931a69499a7870a8664"
+    },
+    "roast-my-product": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "ee028c207205b17062c93a82aa0478b3f5c4c4d13f871d2788ab0ab3e75b4a39"
+    },
+    "scaffold-project": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "e984fd247a4da6c4768ea0c7eb3194e9d46a36a2122aca4aeecdbce696c0b541"
+    },
+    "solana-beginner": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "a58f9dcb83319defe47ece36ced01ce9885602dd622adc9f6f8b0e4808797bea"
+    },
+    "submit-to-hackathon": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "b175ab4eb9649e4623d43de0f93894bae2e898ec43aeea253958c1949785abdd"
+    },
+    "validate-idea": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "4f4099cd74801625fdc2b8bcdcb4644e6697cc28cda8c8d5a0f09010ccc2e33a"
+    },
+    "virtual-solana-incubator": {
+      "source": "sendaifun/solana-new",
+      "ref": "main",
+      "sourceType": "github",
+      "computedHash": "cb906b55cc2ec0b979494a8734dd7cc9946a0f98d583686f3a78d471bd53799f"
+    }
+  }
+}

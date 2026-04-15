@@ -1,0 +1,537 @@
+﻿[
+    {
+        "slug":  "leap-2",
+        "name":  "LEAP",
+        "description":  "Leap is a rental solution that is compounding landlords\u0027 income through efficient rental management. It is a trusted marketplace for rental houses that utilizes Metaplex NFTs to update the availability of houses and tokenize rental apartments to enable landlords to access liquidity on-chain. Leap also accepts rent payments for landlords in fiat and crypto, helping landlords compound income via lending to liquidity pools.",
+        "oneLiner":  "Tokenized rental marketplace using NFTs to provide landlords with liquidity and automated DeFi yield.",
+        "hackathon":  {
+                          "name":  "Renaissance",
+                          "slug":  "renaissance",
+                          "startDate":  "2024-03-04"
+                      },
+        "tracks":  [
+                       {
+                           "name":  "DeFi \u0026 Payments",
+                           "key":  "renaissance/defi--payments"
+                       },
+                       {
+                           "name":  "Consumer Apps",
+                           "key":  "renaissance/consumer-apps"
+                       }
+                   ],
+        "links":  {
+                      "github":  "https://github.com/Nathandcwendy/leap-hack",
+                      "demo":  null,
+                      "presentation":  "https://www.loom.com/share/678229968a5543a2bb37a9e95277dc08?sid=f1aeecca-3ca0-45f9-9d57-de373c318cc7",
+                      "technicalDemo":  null,
+                      "twitter":  "https://twitter.com/https://twitter.com/Leap_realty042",
+                      "colosseum":  "https://arena.colosseum.org/projects/explore/leap-2"
+                  },
+        "team":  {
+                     "count":  1,
+                     "members":  [
+                                     {
+                                         "displayName":  "Axel",
+                                         "username":  "alexkings47",
+                                         "githubHandle":  "alexkings47",
+                                         "twitterHandle":  "axelkings47"
+                                     }
+                                 ]
+                 },
+        "isWinner":  false,
+        "accelerator":  null,
+        "createdAt":  "2024-04-09T06:53:54.114Z",
+        "tags":  {
+                     "problemTags":  [
+                                         "illiquid real estate assets",
+                                         "inefficient rental management",
+                                         "limited payment options for rent",
+                                         "idle rental income"
+                                     ],
+                     "solutionTags":  [
+                                          "rwa tokenization",
+                                          "nft-based property management",
+                                          "defi yield integration",
+                                          "hybrid payment gateway"
+                                      ],
+                     "primitives":  [
+                                        "nft",
+                                        "rwa",
+                                        "lending",
+                                        "tokenization",
+                                        "yield-aggregator"
+                                    ],
+                     "techStack":  [
+                                       "solana",
+                                       "metaplex"
+                                   ],
+                     "targetUsers":  [
+                                         "landlords",
+                                         "property managers",
+                                         "real estate investors",
+                                         "tenants"
+                                     ]
+                 },
+        "cluster":  {
+                        "key":  "v1-c1",
+                        "label":  "Solana Real Estate Tokenization"
+                    },
+        "metrics":  {
+                        "updatesCount":  0
+                    },
+        "prize":  null
+    },
+    {
+        "slug":  "trustrent",
+        "name":  "TrustRent",
+        "description":  "\nA Yield-Enhancing Protocol that ensures tenants earn their rightful yields, \u0026 enables instant settlement for rental payments \n",
+        "oneLiner":  "A yield-enhancing rental protocol enabling tenants to earn interest on deposits with instant payment settlement.",
+        "hackathon":  {
+                          "name":  "Renaissance",
+                          "slug":  "renaissance",
+                          "startDate":  "2024-03-04"
+                      },
+        "tracks":  [
+                       {
+                           "name":  "DeFi \u0026 Payments",
+                           "key":  "renaissance/defi--payments"
+                       },
+                       {
+                           "name":  "Consumer Apps",
+                           "key":  "renaissance/consumer-apps"
+                       }
+                   ],
+        "links":  {
+                      "github":  "https://github.com/orgs/TrustRent/repositories",
+                      "demo":  null,
+                      "presentation":  "https://youtu.be/0YSgnwfuKo4",
+                      "technicalDemo":  null,
+                      "twitter":  "https://twitter.com/https://twitter.com/TrustRentSol",
+                      "colosseum":  "https://arena.colosseum.org/projects/explore/trustrent"
+                  },
+        "team":  {
+                     "count":  2,
+                     "members":  [
+                                     {
+                                         "displayName":  "0xMulch",
+                                         "username":  "0xmulch",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  "0xmulch"
+                                     },
+                                     {
+                                         "displayName":  "Brobb",
+                                         "username":  "Brobb",
+                                         "githubHandle":  "Brobb954",
+                                         "twitterHandle":  "Brobb954"
+                                     }
+                                 ]
+                 },
+        "isWinner":  false,
+        "accelerator":  null,
+        "createdAt":  "2024-04-09T05:58:49.287Z",
+        "tags":  {
+                     "problemTags":  [
+                                         "idle rental deposits",
+                                         "slow payment settlement",
+                                         "lack of tenant financial incentives",
+                                         "inefficient rental markets"
+                                     ],
+                     "solutionTags":  [
+                                          "yield-generating escrow",
+                                          "automated payment rails",
+                                          "smart contract based leasing",
+                                          "defi-integrated real estate"
+                                      ],
+                     "primitives":  [
+                                        "escrow",
+                                        "yield-bearing tokens",
+                                        "stablecoins",
+                                        "smart contracts"
+                                    ],
+                     "techStack":  [
+                                       "solana",
+                                       "rust",
+                                       "anchor"
+                                   ],
+                     "targetUsers":  [
+                                         "tenants",
+                                         "landlords",
+                                         "property managers",
+                                         "real estate investors"
+                                     ]
+                 },
+        "cluster":  {
+                        "key":  "v1-c8",
+                        "label":  "Solana Yield and DeFi Optimization"
+                    },
+        "metrics":  {
+                        "updatesCount":  0
+                    },
+        "prize":  null
+    },
+    {
+        "slug":  "leap-1",
+        "name":  "LEAP",
+        "description":  "LEAP unlocks landlords\u0027 liquidity through equity and property management.",
+        "oneLiner":  "Unlocks real estate liquidity for landlords through equity tokenization and automated property management.",
+        "hackathon":  {
+                          "name":  "Radar",
+                          "slug":  "radar",
+                          "startDate":  "2024-09-02"
+                      },
+        "tracks":  [
+                       {
+                           "name":  "Consumer",
+                           "key":  "radar/consumer"
+                       },
+                       {
+                           "name":  "DAOs \u0026 Network States",
+                           "key":  "radar/daos--network-states"
+                       }
+                   ],
+        "links":  {
+                      "github":  "https://github.com/Nathandcwendy/leap-hack",
+                      "demo":  null,
+                      "presentation":  "https://photos.app.goo.gl/tctUdDqka7PY9Ph47",
+                      "technicalDemo":  null,
+                      "twitter":  "https://twitter.com/https://x.com/Leap_realty042?t=POtzkaMUYnlBX7Sp1CBu_Q\u0026s=09",
+                      "colosseum":  "https://arena.colosseum.org/projects/explore/leap-1"
+                  },
+        "team":  {
+                     "count":  1,
+                     "members":  [
+                                     {
+                                         "displayName":  "Axel",
+                                         "username":  "alexkings47",
+                                         "githubHandle":  "alexkings47",
+                                         "twitterHandle":  "axelkings47"
+                                     }
+                                 ]
+                 },
+        "isWinner":  false,
+        "accelerator":  null,
+        "createdAt":  "2024-10-09T06:59:42.839Z",
+        "tags":  {
+                     "problemTags":  [
+                                         "illiquid real estate assets",
+                                         "high barriers to property investment",
+                                         "inefficient property management",
+                                         "capital lock-up for landlords"
+                                     ],
+                     "solutionTags":  [
+                                          "real estate tokenization",
+                                          "fractional ownership",
+                                          "liquidity pools for equity",
+                                          "decentralized property management"
+                                      ],
+                     "primitives":  [
+                                        "tokenization",
+                                        "rwa",
+                                        "fractionalization",
+                                        "dao",
+                                        "smart contracts"
+                                    ],
+                     "techStack":  [
+                                       "solana"
+                                   ],
+                     "targetUsers":  [
+                                         "landlords",
+                                         "real estate investors",
+                                         "property managers",
+                                         "retail investors"
+                                     ]
+                 },
+        "cluster":  {
+                        "key":  "v1-c1",
+                        "label":  "Solana Real Estate Tokenization"
+                    },
+        "metrics":  {
+                        "updatesCount":  0
+                    },
+        "prize":  null
+    },
+    {
+        "slug":  "rentic",
+        "name":  "Rentic",
+        "description":  "Rentic automates the entire rental process with blockchain for small landlords including: rent collection, maintenance, communication, and compliance. While focusing on centralizing everything into one secure, user-friendly platform that improves efficiency, transparency, and tenant satisfaction\n",
+        "oneLiner":  "Blockchain-based platform for small landlords to automate rent collection, maintenance, and compliance.",
+        "hackathon":  {
+                          "name":  "Cypherpunk",
+                          "slug":  "cypherpunk",
+                          "startDate":  "2025-09-25"
+                      },
+        "tracks":  [
+                       {
+                           "name":  "Consumer Apps",
+                           "key":  "cypherpunk/consumer-apps"
+                       }
+                   ],
+        "links":  {
+                      "github":  "https://github.com/peterworkad/Rentic-",
+                      "demo":  null,
+                      "presentation":  "https://youtu.be/M_jOMkWBRUw",
+                      "technicalDemo":  "https://youtu.be/0xUs35h7cuI",
+                      "twitter":  null,
+                      "colosseum":  "https://arena.colosseum.org/projects/explore/rentic"
+                  },
+        "team":  {
+                     "count":  2,
+                     "members":  [
+                                     {
+                                         "displayName":  "Peter G",
+                                         "username":  "Peterg",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  null
+                                     },
+                                     {
+                                         "displayName":  "Aleksandr Krupnov",
+                                         "username":  "Shur1ken4",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  null
+                                     }
+                                 ]
+                 },
+        "isWinner":  false,
+        "accelerator":  null,
+        "createdAt":  "2025-10-31T01:07:07.815Z",
+        "tags":  {
+                     "problemTags":  [
+                                         "manual rent collection",
+                                         "fragmented property management",
+                                         "lack of transparency in maintenance",
+                                         "complex rental compliance"
+                                     ],
+                     "solutionTags":  [
+                                          "automated rental workflows",
+                                          "on-chain payment tracking",
+                                          "centralized communication hub",
+                                          "smart contract lease management"
+                                      ],
+                     "primitives":  [
+                                        "smart contracts",
+                                        "payments",
+                                        "stablecoins"
+                                    ],
+                     "techStack":  [
+                                       "solana",
+                                       "react"
+                                   ],
+                     "targetUsers":  [
+                                         "small landlords",
+                                         "property managers",
+                                         "tenants"
+                                     ]
+                 },
+        "cluster":  {
+                        "key":  "v1-c15",
+                        "label":  "Decentralized Freelance Marketplaces"
+                    },
+        "metrics":  {
+                        "updatesCount":  0
+                    },
+        "prize":  null
+    },
+    {
+        "slug":  "vitalfi",
+        "name":  "VitalFi",
+        "description":  "VitalFi is a Solana-based DeFi protocol that tokenizes Brazilian medical receivables, allowing users to deposit USDT into transparent on-chain vaults that finance healthcare providers and generate sustainable yield.",
+        "oneLiner":  "Solana-based DeFi protocol tokenizing Brazilian medical receivables to provide sustainable USDT yield.",
+        "hackathon":  {
+                          "name":  "Cypherpunk",
+                          "slug":  "cypherpunk",
+                          "startDate":  "2025-09-25"
+                      },
+        "tracks":  [
+                       {
+                           "name":  "DeFi",
+                           "key":  "cypherpunk/defi"
+                       },
+                       {
+                           "name":  "RWAs",
+                           "key":  "cypherpunk/rwas"
+                       },
+                       {
+                           "name":  "Stablecoins",
+                           "key":  "cypherpunk/stablecoins"
+                       }
+                   ],
+        "links":  {
+                      "github":  "https://github.com/credit-markets/cypherpunk",
+                      "demo":  null,
+                      "presentation":  "https://youtu.be/UgupRFrYzd8",
+                      "technicalDemo":  "https://www.youtube.com/watch?v=ms9BTaBAHOQ",
+                      "twitter":  "https://twitter.com/vitalfi_sol",
+                      "colosseum":  "https://arena.colosseum.org/projects/explore/vitalfi"
+                  },
+        "team":  {
+                     "count":  4,
+                     "members":  [
+                                     {
+                                         "displayName":  "Gabriel Thom",
+                                         "username":  "thomgabriel",
+                                         "githubHandle":  "thomgabriel",
+                                         "twitterHandle":  "thomgaabriel"
+                                     },
+                                     {
+                                         "displayName":  "Aubry",
+                                         "username":  "Aubrix",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  null
+                                     },
+                                     {
+                                         "displayName":  "Martin",
+                                         "username":  "masommerf",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  null
+                                     },
+                                     {
+                                         "displayName":  "Lucas Britto",
+                                         "username":  "lucastobritto",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  null
+                                     }
+                                 ]
+                 },
+        "isWinner":  true,
+        "accelerator":  null,
+        "createdAt":  "2025-10-07T13:01:38.616Z",
+        "tags":  {
+                     "problemTags":  [
+                                         "liquidity gaps in healthcare",
+                                         "high cost of capital for medical providers",
+                                         "lack of transparent yield for stablecoins"
+                                     ],
+                     "solutionTags":  [
+                                          "rwa tokenization",
+                                          "on-chain credit vaults",
+                                          "receivables financing"
+                                      ],
+                     "primitives":  [
+                                        "rwa",
+                                        "vaults",
+                                        "stablecoin",
+                                        "yield-farming"
+                                    ],
+                     "techStack":  [
+                                       "solana",
+                                       "anchor",
+                                       "rust",
+                                       "react",
+                                       "usdt"
+                                   ],
+                     "targetUsers":  [
+                                         "defi investors",
+                                         "healthcare providers",
+                                         "stablecoin holders"
+                                     ]
+                 },
+        "cluster":  {
+                        "key":  "v1-c8",
+                        "label":  "Solana Yield and DeFi Optimization"
+                    },
+        "metrics":  {
+                        "updatesCount":  0
+                    },
+        "prize":  {
+                      "type":  "HONORABLE_MENTION",
+                      "name":  "Honorable Mention - RWAs",
+                      "placement":  null,
+                      "amount":  null,
+                      "trackName":  "RWAs"
+                  }
+    },
+    {
+        "slug":  "evergreen-protocol",
+        "name":  "Evergreen Protocol",
+        "description":  "Evergreen Protocol is a modular infrastructure on Solana for tokenizing, trading, and fractionalizing verified forest land as real-world assets. Landowners mint EVG-L tokens backed by geospatial and legal data. A USDC-based vault acquires these tokens and issues EVG-S shares. All assets are tied to environmental commitments and registered via Brazil’s CAR system — creating transparent, legal, on-chain liquidity for conservation.",
+        "oneLiner":  "Modular Solana infrastructure for tokenizing and fractionalizing verified forest land as real-world assets.",
+        "hackathon":  {
+                          "name":  "Breakout",
+                          "slug":  "breakout",
+                          "startDate":  "2025-04-14"
+                      },
+        "tracks":  [
+                       {
+                           "name":  "DeFi",
+                           "key":  "breakout/defi"
+                       },
+                       {
+                           "name":  "Infrastructure",
+                           "key":  "breakout/infrastructure"
+                       },
+                       {
+                           "name":  "Stablecoins",
+                           "key":  "breakout/stablecoins"
+                       }
+                   ],
+        "links":  {
+                      "github":  "https://github.com/vivipolli/evergreen-protocol",
+                      "demo":  null,
+                      "presentation":  "https://www.loom.com/share/dbce48ae1af14eed9ff04ad75cd75bbd?sid=b4b06a4f-6252-4364-b691-e907e5af3dc1",
+                      "technicalDemo":  "https://www.loom.com/share/8a96631a49e74b079546f5ab48a1c884?sid=a8856e90-6006-4ba8-bd07-35e0eb21d904",
+                      "twitter":  "https://twitter.com/nossaterrafirme",
+                      "colosseum":  "https://arena.colosseum.org/projects/explore/evergreen-protocol"
+                  },
+        "team":  {
+                     "count":  2,
+                     "members":  [
+                                     {
+                                         "displayName":  "vivian polli",
+                                         "username":  "vivipolli",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  null
+                                     },
+                                     {
+                                         "displayName":  "iara vicente",
+                                         "username":  "iaravicente",
+                                         "githubHandle":  null,
+                                         "twitterHandle":  "iara_vicente"
+                                     }
+                                 ]
+                 },
+        "isWinner":  false,
+        "accelerator":  null,
+        "createdAt":  "2025-05-16T15:48:25.448Z",
+        "tags":  {
+                     "problemTags":  [
+                                         "illiquid real estate assets",
+                                         "lack of transparency in conservation",
+                                         "difficulties in forest land monetization",
+                                         "complex legal verification for land"
+                                     ],
+                     "solutionTags":  [
+                                          "rwa tokenization",
+                                          "fractionalization",
+                                          "geospatial data integration",
+                                          "usdc-backed vaults"
+                                      ],
+                     "primitives":  [
+                                        "rwa",
+                                        "tokenization",
+                                        "vaults",
+                                        "fractionalization",
+                                        "oracle"
+                                    ],
+                     "techStack":  [
+                                       "solana",
+                                       "react",
+                                       "vercel",
+                                       "framer"
+                                   ],
+                     "targetUsers":  [
+                                         "landowners",
+                                         "impact investors",
+                                         "defi protocols",
+                                         "conservationists"
+                                     ]
+                 },
+        "cluster":  {
+                        "key":  "v1-c1",
+                        "label":  "Solana Real Estate Tokenization"
+                    },
+        "metrics":  {
+                        "updatesCount":  0
+                    },
+        "prize":  null
+    }
+]

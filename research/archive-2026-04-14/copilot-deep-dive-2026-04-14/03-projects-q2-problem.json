@@ -1,0 +1,729 @@
+﻿{
+    "results":  [
+                    {
+                        "slug":  "leap-2",
+                        "name":  "LEAP",
+                        "oneLiner":  "Tokenized rental marketplace using NFTs to provide landlords with liquidity and automated DeFi yield.",
+                        "similarity":  0.07849738675958189,
+                        "hackathon":  {
+                                          "name":  "Renaissance",
+                                          "slug":  "renaissance",
+                                          "startDate":  "2024-03-04"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi \u0026 Payments",
+                                           "key":  "renaissance/defi--payments"
+                                       },
+                                       {
+                                           "name":  "Consumer Apps",
+                                           "key":  "renaissance/consumer-apps"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Nathandcwendy/leap-hack",
+                                      "demo":  null,
+                                      "presentation":  "https://www.loom.com/share/678229968a5543a2bb37a9e95277dc08?sid=f1aeecca-3ca0-45f9-9d57-de373c318cc7",
+                                      "technicalDemo":  null,
+                                      "twitter":  "https://twitter.com/https://twitter.com/Leap_realty042",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/leap-2"
+                                  },
+                        "evidence":  [
+                                         "accepts rent payments for landlords in fiat and crypto, helping landlords compound income via lending to liquidity pools",
+                                         "Tokenized rental marketplace using NFTs to provide landlords with liquidity and automated DeFi yield."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  1
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "illiquid real estate assets",
+                                                         "inefficient rental management",
+                                                         "limited payment options for rent",
+                                                         "idle rental income"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "rwa tokenization",
+                                                          "nft-based property management",
+                                                          "defi yield integration",
+                                                          "hybrid payment gateway"
+                                                      ],
+                                     "primitives":  [
+                                                        "nft",
+                                                        "rwa",
+                                                        "lending",
+                                                        "tokenization",
+                                                        "yield-aggregator"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "metaplex"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "landlords",
+                                                         "property managers",
+                                                         "real estate investors",
+                                                         "tenants"
+                                                     ]
+                                 },
+                        "crowdedness":  204,
+                        "cluster":  {
+                                        "key":  "v1-c1",
+                                        "label":  "Solana Real Estate Tokenization"
+                                    }
+                    },
+                    {
+                        "slug":  "trustrent",
+                        "name":  "TrustRent",
+                        "oneLiner":  "A yield-enhancing rental protocol enabling tenants to earn interest on deposits with instant payment settlement.",
+                        "similarity":  0.05725806451612903,
+                        "hackathon":  {
+                                          "name":  "Renaissance",
+                                          "slug":  "renaissance",
+                                          "startDate":  "2024-03-04"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi \u0026 Payments",
+                                           "key":  "renaissance/defi--payments"
+                                       },
+                                       {
+                                           "name":  "Consumer Apps",
+                                           "key":  "renaissance/consumer-apps"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/orgs/TrustRent/repositories",
+                                      "demo":  null,
+                                      "presentation":  "https://youtu.be/0YSgnwfuKo4",
+                                      "technicalDemo":  null,
+                                      "twitter":  "https://twitter.com/https://twitter.com/TrustRentSol",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/trustrent"
+                                  },
+                        "evidence":  [
+                                         "Yield-Enhancing Protocol that ensures tenants earn their rightful yields, \u0026 enables instant settlement for rental payments",
+                                         "A yield-enhancing rental protocol enabling tenants to earn interest on deposits with instant payment settlement."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "idle rental deposits",
+                                                         "slow payment settlement",
+                                                         "lack of tenant financial incentives",
+                                                         "inefficient rental markets"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "yield-generating escrow",
+                                                          "automated payment rails",
+                                                          "smart contract based leasing",
+                                                          "defi-integrated real estate"
+                                                      ],
+                                     "primitives":  [
+                                                        "escrow",
+                                                        "yield-bearing tokens",
+                                                        "stablecoins",
+                                                        "smart contracts"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "rust",
+                                                       "anchor"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "tenants",
+                                                         "landlords",
+                                                         "property managers",
+                                                         "real estate investors"
+                                                     ]
+                                 },
+                        "crowdedness":  257,
+                        "cluster":  {
+                                        "key":  "v1-c8",
+                                        "label":  "Solana Yield and DeFi Optimization"
+                                    }
+                    },
+                    {
+                        "slug":  "leap-1",
+                        "name":  "LEAP",
+                        "oneLiner":  "Unlocks real estate liquidity for landlords through equity tokenization and automated property management.",
+                        "similarity":  0.05661881977671451,
+                        "hackathon":  {
+                                          "name":  "Radar",
+                                          "slug":  "radar",
+                                          "startDate":  "2024-09-02"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Consumer",
+                                           "key":  "radar/consumer"
+                                       },
+                                       {
+                                           "name":  "DAOs \u0026 Network States",
+                                           "key":  "radar/daos--network-states"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Nathandcwendy/leap-hack",
+                                      "demo":  null,
+                                      "presentation":  "https://photos.app.goo.gl/tctUdDqka7PY9Ph47",
+                                      "technicalDemo":  null,
+                                      "twitter":  "https://twitter.com/https://x.com/Leap_realty042?t=POtzkaMUYnlBX7Sp1CBu_Q\u0026s=09",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/leap-1"
+                                  },
+                        "evidence":  [
+                                         "LEAP unlocks landlords\u0027 liquidity through equity and property",
+                                         "Unlocks real estate liquidity for landlords through equity tokenization and automated property management."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  1
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "illiquid real estate assets",
+                                                         "high barriers to property investment",
+                                                         "inefficient property management",
+                                                         "capital lock-up for landlords"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "real estate tokenization",
+                                                          "fractional ownership",
+                                                          "liquidity pools for equity",
+                                                          "decentralized property management"
+                                                      ],
+                                     "primitives":  [
+                                                        "tokenization",
+                                                        "rwa",
+                                                        "fractionalization",
+                                                        "dao",
+                                                        "smart contracts"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "landlords",
+                                                         "real estate investors",
+                                                         "property managers",
+                                                         "retail investors"
+                                                     ]
+                                 },
+                        "crowdedness":  204,
+                        "cluster":  {
+                                        "key":  "v1-c1",
+                                        "label":  "Solana Real Estate Tokenization"
+                                    }
+                    },
+                    {
+                        "slug":  "rentic",
+                        "name":  "Rentic",
+                        "oneLiner":  "Blockchain-based platform for small landlords to automate rent collection, maintenance, and compliance.",
+                        "similarity":  0.04992458521870287,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Consumer Apps",
+                                           "key":  "cypherpunk/consumer-apps"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/peterworkad/Rentic-",
+                                      "demo":  null,
+                                      "presentation":  "https://youtu.be/M_jOMkWBRUw",
+                                      "technicalDemo":  "https://youtu.be/0xUs35h7cuI",
+                                      "twitter":  null,
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/rentic"
+                                  },
+                        "evidence":  [
+                                         "Rentic automates the entire rental process with blockchain",
+                                         "Blockchain-based platform for small landlords to automate rent collection, maintenance, and compliance."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "manual rent collection",
+                                                         "fragmented property management",
+                                                         "lack of transparency in maintenance",
+                                                         "complex rental compliance"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "automated rental workflows",
+                                                          "on-chain payment tracking",
+                                                          "centralized communication hub",
+                                                          "smart contract lease management"
+                                                      ],
+                                     "primitives":  [
+                                                        "smart contracts",
+                                                        "payments",
+                                                        "stablecoins"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "react"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "small landlords",
+                                                         "property managers",
+                                                         "tenants"
+                                                     ]
+                                 },
+                        "crowdedness":  149,
+                        "cluster":  {
+                                        "key":  "v1-c15",
+                                        "label":  "Decentralized Freelance Marketplaces"
+                                    }
+                    },
+                    {
+                        "slug":  "the-need-for-blockchain-gaming-in-shogi",
+                        "name":  "The Need for Blockchain Gaming in Shogi",
+                        "oneLiner":  "Exploring the integration of Shogi with Solana to enable transparent and decentralized board gaming.",
+                        "similarity":  0.03125,
+                        "hackathon":  {
+                                          "name":  "Radar",
+                                          "slug":  "radar",
+                                          "startDate":  "2024-09-02"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Gaming",
+                                           "key":  "radar/gaming"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/shgmjshn/The-Need-for-Blockchain-Gaming-in-Shogi",
+                                      "demo":  null,
+                                      "presentation":  "https://www.loom.com/share/7aa7a926c7e54bf09362602f76ad79ae",
+                                      "technicalDemo":  null,
+                                      "twitter":  null,
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/the-need-for-blockchain-gaming-in-shogi"
+                                  },
+                        "evidence":  [
+                                         "\"Why Solana is necessary for Shogi\" is the",
+                                         "Exploring the integration of Shogi with Solana to enable transparent and decentralized board gaming."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  1
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "centralized game control",
+                                                         "lack of transparency",
+                                                         "limited player ownership"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "on-chain logic",
+                                                          "blockchain-based verification",
+                                                          "decentralized gaming infrastructure"
+                                                      ],
+                                     "primitives":  [
+                                                        "on-chain gaming",
+                                                        "nft",
+                                                        "state compression"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "shogi players",
+                                                         "strategy gamers",
+                                                         "web3 developers"
+                                                     ]
+                                 },
+                        "crowdedness":  176,
+                        "cluster":  {
+                                        "key":  "v1-c18",
+                                        "label":  "Solana Competitive Wagering and Betting"
+                                    }
+                    },
+                    {
+                        "slug":  "kaze",
+                        "name":  "Kaze",
+                        "oneLiner":  "A specialized trading terminal optimized for high-speed memecoin trading and market analysis.",
+                        "similarity":  0.02857142857142857,
+                        "hackathon":  {
+                                          "name":  "Breakout",
+                                          "slug":  "breakout",
+                                          "startDate":  "2025-04-14"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "breakout/defi"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Kaze-sh/kaze-app",
+                                      "demo":  null,
+                                      "presentation":  "https://youtu.be/ruF2rih2mzU",
+                                      "technicalDemo":  "https://youtu.be/er1hJyeo7FU",
+                                      "twitter":  "https://twitter.com/FlyOnSOL",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/kaze"
+                                  },
+                        "evidence":  [
+                                         "The only terminal you need to trade memecoins",
+                                         "A specialized trading terminal optimized for high-speed memecoin trading and market analysis."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "slow trade execution",
+                                                         "fragmented memecoin data",
+                                                         "complex dex interfaces"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "trading terminal",
+                                                          "aggregated liquidity",
+                                                          "simplified ux"
+                                                      ],
+                                     "primitives":  [
+                                                        "dex",
+                                                        "amm",
+                                                        "swap"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "memecoin traders",
+                                                         "defi users",
+                                                         "active traders"
+                                                     ]
+                                 },
+                        "crowdedness":  323,
+                        "cluster":  {
+                                        "key":  "v1-c9",
+                                        "label":  "Solana DEX and Trading Infrastructure"
+                                    }
+                    },
+                    {
+                        "slug":  "titan3",
+                        "name":  "Titan3",
+                        "oneLiner":  "Security infrastructure to protect decentralized applications against frontend vulnerabilities and exploits.",
+                        "similarity":  0.02702702702702703,
+                        "hackathon":  {
+                                          "name":  "Renaissance",
+                                          "slug":  "renaissance",
+                                          "startDate":  "2024-03-04"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Infrastructure",
+                                           "key":  "renaissance/infrastructure"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/danielvzh/TITAN3-App",
+                                      "demo":  null,
+                                      "presentation":  "https://drive.google.com/file/d/1kkg8BSxOlSWxSiXcGU8VKLRy0-atXhv3/view?usp=sharing",
+                                      "technicalDemo":  null,
+                                      "twitter":  null,
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/titan3"
+                                  },
+                        "evidence":  [
+                                         "Protect your dApp against frontend vulnerabilities.",
+                                         "Security infrastructure to protect decentralized applications against frontend vulnerabilities and exploits."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  1
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "frontend exploits",
+                                                         "malicious script injection",
+                                                         "ui hijacking",
+                                                         "phishing attacks"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "frontend security monitoring",
+                                                          "integrity verification",
+                                                          "threat mitigation"
+                                                      ],
+                                     "primitives":  [
+                                                        "security",
+                                                        "middleware"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "javascript",
+                                                       "typescript",
+                                                       "react"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "dapp developers",
+                                                         "security engineers",
+                                                         "protocol founders"
+                                                     ]
+                                 },
+                        "crowdedness":  257,
+                        "cluster":  {
+                                        "key":  "v1-c5",
+                                        "label":  "Solana Data and Monitoring Infrastructure"
+                                    }
+                    },
+                    {
+                        "slug":  "solana-a2a-payment",
+                        "name":  "Solana a2a payment",
+                        "oneLiner":  "Account-to-account payment system leveraging Solana Pay for seamless transactions.",
+                        "similarity":  0.03225806451612903,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Infrastructure",
+                                           "key":  "cypherpunk/infrastructure"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/google-agentic-commerce/a2a-x402",
+                                      "demo":  null,
+                                      "presentation":  "https://www.youtube.com/watch?v=amAq-WHAFs8",
+                                      "technicalDemo":  "https://www.youtube.com/watch?v=amAq-WHAFs8",
+                                      "twitter":  null,
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/solana-a2a-payment"
+                                  },
+                        "evidence":  [
+                                         "a2a payment with Solana Pay support",
+                                         "Account-to-account payment system leveraging Solana Pay for seamless transactions."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  1
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "high payment processing fees",
+                                                         "slow settlement times",
+                                                         "complex checkout flows"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "a2a payments",
+                                                          "qr code payments",
+                                                          "direct wallet transfers"
+                                                      ],
+                                     "primitives":  [
+                                                        "solana pay",
+                                                        "spl-token",
+                                                        "payments"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "solana pay",
+                                                       "typescript"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "merchants",
+                                                         "e-commerce platforms",
+                                                         "retailers"
+                                                     ]
+                                 },
+                        "crowdedness":  223,
+                        "cluster":  {
+                                        "key":  "v1-c26",
+                                        "label":  "Simplified Solana Payment Solutions"
+                                    }
+                    },
+                    {
+                        "slug":  "stableyard",
+                        "name":  "Stableyard",
+                        "oneLiner":  "A programmable infrastructure layer for stablecoin-based payments.",
+                        "similarity":  0.029411764705882353,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Consumer Apps",
+                                           "key":  "cypherpunk/consumer-apps"
+                                       },
+                                       {
+                                           "name":  "Infrastructure",
+                                           "key":  "cypherpunk/infrastructure"
+                                       },
+                                       {
+                                           "name":  "Stablecoins",
+                                           "key":  "cypherpunk/stablecoins"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Gasyard/DopeCardsWebapp",
+                                      "demo":  null,
+                                      "presentation":  "https://youtu.be/sJNx_1qUVss",
+                                      "technicalDemo":  "https://youtu.be/z2NA-rgfZ68",
+                                      "twitter":  "https://twitter.com/0xavinash",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/stableyard"
+                                  },
+                        "evidence":  [
+                                         "Programmable layer for payments",
+                                         "A programmable infrastructure layer for stablecoin-based payments."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  3
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "rigid payment systems",
+                                                         "complex stablecoin integration",
+                                                         "lack of payment automation"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "programmable payment layer",
+                                                          "stablecoin abstraction",
+                                                          "smart contract payments"
+                                                      ],
+                                     "primitives":  [
+                                                        "stablecoins",
+                                                        "smart contracts",
+                                                        "payments"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "developers",
+                                                         "merchants",
+                                                         "fintech startups"
+                                                     ]
+                                 },
+                        "crowdedness":  202,
+                        "cluster":  {
+                                        "key":  "v1-c16",
+                                        "label":  "Stablecoin Payment Rails and Infrastructure"
+                                    }
+                    },
+                    {
+                        "slug":  "oblio",
+                        "name":  "Oblio",
+                        "oneLiner":  "A confidential liquid staking platform providing privacy for staked assets and rewards.",
+                        "similarity":  0.027777777777777776,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "cypherpunk/defi"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Bonfi3/Oblio",
+                                      "demo":  null,
+                                      "presentation":  "https://www.loom.com/share/ebbe5ebf89754aa2bc7f31be38ac4ba0",
+                                      "technicalDemo":  "https://www.loom.com/share/96cdafa16cac4985be01cfca6eda4b9c",
+                                      "twitter":  "https://twitter.com/obliofinance",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/oblio"
+                                  },
+                        "evidence":  [
+                                         "Confidential Liquid Staking platform",
+                                         "A confidential liquid staking platform providing privacy for staked assets and rewards."
+                                     ],
+                        "prize":  null,
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  4
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "lack of privacy in staking",
+                                                         "publicly visible liquid staking positions",
+                                                         "traceable yield generation"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "confidential liquid staking",
+                                                          "privacy-preserving smart contracts",
+                                                          "zero-knowledge proofs for staking"
+                                                      ],
+                                     "primitives":  [
+                                                        "liquid staking",
+                                                        "zk-proofs",
+                                                        "privacy",
+                                                        "lst"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "rust"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "privacy-conscious investors",
+                                                         "institutional stakers",
+                                                         "defi users"
+                                                     ]
+                                 },
+                        "crowdedness":  260,
+                        "cluster":  {
+                                        "key":  "v1-c13",
+                                        "label":  "Solana Privacy and Identity Management"
+                                    }
+                    }
+                ],
+    "filtersApplied":  {
+                           "filters":  {
+                                           "winnersOnly":  false,
+                                           "acceleratorOnly":  false
+                                       }
+                       },
+    "totalFound":  11,
+    "hasMore":  true
+}

@@ -1,0 +1,376 @@
+﻿{
+    "totals":  {
+                   "projects":  5428,
+                   "winners":  293
+               },
+    "buckets":  {
+                    "tracks":  [
+                                   {
+                                       "key":  "cypherpunk/consumer-apps",
+                                       "label":  "Consumer Apps",
+                                       "count":  1090,
+                                       "share":  0.2008106116433309,
+                                       "sampleProjectSlugs":  [
+                                                                  "regret-market"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "breakout/consumer-apps",
+                                       "label":  "Consumer Apps",
+                                       "count":  923,
+                                       "share":  0.17004421518054533,
+                                       "sampleProjectSlugs":  [
+                                                                  "audient-wallet"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "radar/consumer",
+                                       "label":  "Consumer",
+                                       "count":  867,
+                                       "share":  0.15972733971997052,
+                                       "sampleProjectSlugs":  [
+                                                                  "dansr"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "cypherpunk/defi",
+                                       "label":  "DeFi",
+                                       "count":  752,
+                                       "share":  0.13854089904200442,
+                                       "sampleProjectSlugs":  [
+                                                                  "regret-market"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "breakout/defi",
+                                       "label":  "DeFi",
+                                       "count":  593,
+                                       "share":  0.10924834193072955,
+                                       "sampleProjectSlugs":  [
+                                                                  "audient-wallet"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "cypherpunk/infrastructure",
+                                       "label":  "Infrastructure",
+                                       "count":  570,
+                                       "share":  0.10501105379513632,
+                                       "sampleProjectSlugs":  [
+                                                                  "sendryx"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "renaissance/consumer-apps",
+                                       "label":  "Consumer Apps",
+                                       "count":  554,
+                                       "share":  0.10206337509211497,
+                                       "sampleProjectSlugs":  [
+                                                                  "github-solana-dispenser-solidpull"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "breakout/ai",
+                                       "label":  "AI",
+                                       "count":  501,
+                                       "share":  0.09229918938835667,
+                                       "sampleProjectSlugs":  [
+                                                                  "audient-wallet"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "cypherpunk/undefined",
+                                       "label":  "Undefined",
+                                       "count":  491,
+                                       "share":  0.09045689019896831,
+                                       "sampleProjectSlugs":  [
+                                                                  "pls-give-1"
+                                                              ]
+                                   },
+                                   {
+                                       "key":  "radar/defi",
+                                       "label":  "DeFi",
+                                       "count":  465,
+                                       "share":  0.08566691230655858,
+                                       "sampleProjectSlugs":  [
+                                                                  "web3-easy-access"
+                                                              ]
+                                   }
+                               ],
+                    "problemTags":  [
+                                        {
+                                            "key":  "fragmented liquidity",
+                                            "label":  "fragmented liquidity",
+                                            "count":  120,
+                                            "share":  0.02210759027266028,
+                                            "sampleProjectSlugs":  [
+                                                                       "mecha"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "information overload",
+                                            "label":  "information overload",
+                                            "count":  87,
+                                            "share":  0.016028002947678702,
+                                            "sampleProjectSlugs":  [
+                                                                       "marketwizard"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "high platform fees",
+                                            "label":  "high platform fees",
+                                            "count":  68,
+                                            "share":  0.012527634487840826,
+                                            "sampleProjectSlugs":  [
+                                                                       "fan-live-~web3-streaming~"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "high barrier to entry",
+                                            "label":  "high barrier to entry",
+                                            "count":  66,
+                                            "share":  0.012159174649963155,
+                                            "sampleProjectSlugs":  [
+                                                                       "wealthsphere-1"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "complex web3 onboarding",
+                                            "label":  "complex web3 onboarding",
+                                            "count":  58,
+                                            "share":  0.010685335298452468,
+                                            "sampleProjectSlugs":  [
+                                                                       "pett.ai-on-solana"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "lack of transparency",
+                                            "label":  "lack of transparency",
+                                            "count":  55,
+                                            "share":  0.010132645541635961,
+                                            "sampleProjectSlugs":  [
+                                                                       "request-on-chain-ticketing"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "capital inefficiency",
+                                            "label":  "capital inefficiency",
+                                            "count":  41,
+                                            "share":  0.007553426676492263,
+                                            "sampleProjectSlugs":  [
+                                                                       "brrr-day"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "low community engagement",
+                                            "label":  "low community engagement",
+                                            "count":  41,
+                                            "share":  0.007553426676492263,
+                                            "sampleProjectSlugs":  [
+                                                                       "priddi.market"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "rug pulls",
+                                            "label":  "rug pulls",
+                                            "count":  37,
+                                            "share":  0.0068165070007369195,
+                                            "sampleProjectSlugs":  [
+                                                                       "big-fish-alert"
+                                                                   ]
+                                        },
+                                        {
+                                            "key":  "high transaction fees",
+                                            "label":  "high transaction fees",
+                                            "count":  36,
+                                            "share":  0.006632277081798084,
+                                            "sampleProjectSlugs":  [
+                                                                       "chainpay-1"
+                                                                   ]
+                                        }
+                                    ],
+                    "techStack":  [
+                                      {
+                                          "key":  "solana",
+                                          "label":  "solana",
+                                          "count":  5404,
+                                          "share":  0.9955784819454679,
+                                          "sampleProjectSlugs":  [
+                                                                     "regret-market"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "react",
+                                          "label":  "react",
+                                          "count":  2238,
+                                          "share":  0.4123065585851142,
+                                          "sampleProjectSlugs":  [
+                                                                     "dansr"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "rust",
+                                          "label":  "rust",
+                                          "count":  1697,
+                                          "share":  0.3126381724392041,
+                                          "sampleProjectSlugs":  [
+                                                                     "regret-market"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "anchor",
+                                          "label":  "anchor",
+                                          "count":  1171,
+                                          "share":  0.21573323507737657,
+                                          "sampleProjectSlugs":  [
+                                                                     "regret-market"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "typescript",
+                                          "label":  "typescript",
+                                          "count":  744,
+                                          "share":  0.13706705969049374,
+                                          "sampleProjectSlugs":  [
+                                                                     "dansr"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "ai",
+                                          "label":  "ai",
+                                          "count":  575,
+                                          "share":  0.1059322033898305,
+                                          "sampleProjectSlugs":  [
+                                                                     "munki.ai"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "llm",
+                                          "label":  "llm",
+                                          "count":  218,
+                                          "share":  0.04016212232866617,
+                                          "sampleProjectSlugs":  [
+                                                                     "pett.ai-on-solana"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "vercel",
+                                          "label":  "vercel",
+                                          "count":  208,
+                                          "share":  0.03831982313927782,
+                                          "sampleProjectSlugs":  [
+                                                                     "rampfi"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "web3.js",
+                                          "label":  "web3.js",
+                                          "count":  187,
+                                          "share":  0.03445099484156227,
+                                          "sampleProjectSlugs":  [
+                                                                     "mattle.fun"
+                                                                 ]
+                                      },
+                                      {
+                                          "key":  "javascript",
+                                          "label":  "javascript",
+                                          "count":  127,
+                                          "share":  0.02339719970523213,
+                                          "sampleProjectSlugs":  [
+                                                                     "genesis:-your-passwords-your-privacy-your-peace-of-mind."
+                                                                 ]
+                                      }
+                                  ],
+                    "primitives":  [
+                                       {
+                                           "key":  "nft",
+                                           "label":  "nft",
+                                           "count":  1355,
+                                           "share":  0.24963154016212233,
+                                           "sampleProjectSlugs":  [
+                                                                      "perkpal"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "payments",
+                                           "label":  "payments",
+                                           "count":  635,
+                                           "share":  0.11698599852616065,
+                                           "sampleProjectSlugs":  [
+                                                                      "dansr"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "token-gating",
+                                           "label":  "token-gating",
+                                           "count":  583,
+                                           "share":  0.10740604274134119,
+                                           "sampleProjectSlugs":  [
+                                                                      "uni-sol-bridge"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "oracle",
+                                           "label":  "oracle",
+                                           "count":  568,
+                                           "share":  0.10464259395725865,
+                                           "sampleProjectSlugs":  [
+                                                                      "regret-market"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "smart contracts",
+                                           "label":  "smart contracts",
+                                           "count":  537,
+                                           "share":  0.09893146647015476,
+                                           "sampleProjectSlugs":  [
+                                                                      "sodh"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "dao",
+                                           "label":  "dao",
+                                           "count":  431,
+                                           "share":  0.07940309506263818,
+                                           "sampleProjectSlugs":  [
+                                                                      "uni-sol-bridge"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "token",
+                                           "label":  "token",
+                                           "count":  423,
+                                           "share":  0.07792925571112749,
+                                           "sampleProjectSlugs":  [
+                                                                      "carrot"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "staking",
+                                           "label":  "staking",
+                                           "count":  420,
+                                           "share":  0.07737656595431099,
+                                           "sampleProjectSlugs":  [
+                                                                      "deep-dungeon-duel"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "tokenization",
+                                           "label":  "tokenization",
+                                           "count":  410,
+                                           "share":  0.07553426676492263,
+                                           "sampleProjectSlugs":  [
+                                                                      "munki.ai"
+                                                                  ]
+                                       },
+                                       {
+                                           "key":  "escrow",
+                                           "label":  "escrow",
+                                           "count":  408,
+                                           "share":  0.07516580692704496,
+                                           "sampleProjectSlugs":  [
+                                                                      "terrafund"
+                                                                  ]
+                                       }
+                                   ]
+                }
+}

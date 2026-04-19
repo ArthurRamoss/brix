@@ -1,237 +1,198 @@
 # Brix — Project Brief
 
-> **Status**: Brainstorm → Ready for Claude Code buildout
-> **Builder**: Arthur Ramos (@ramoslds)
-> **Date**: April 14, 2026
-> **Chain**: Solana (primary — Frontier hackathon), Base (secondary — Base Batches)
+> **Status**: Idea validated → Ready for scaffold
+> **Builder**: Arthur Ramos ([@ArthurRamoss](https://github.com/ArthurRamoss))
+> **Repo**: https://github.com/ArthurRamoss/brix
+> **Last updated**: April 18, 2026
+> **Target**: Colosseum Frontier (Solana) — Deadline: May 11, 2026
 
 ---
 
 ## One-liner
 
-On-chain real estate credit protocol that turns property income streams into transparent, insurance-backed yield products. Starting in Brazil, built for global expansion.
+Brix unlocks parked capital stuck in future rent by tokenizing insurance-backed rental receivables on Solana. Brazil-first, agency-originated, transparent pricing.
 
 ---
 
-## The Problem
+## The Problem (winning frame: capital inefficiency)
 
-Property owners everywhere have predictable future income (rent, short-term rental bookings, construction installments) but no transparent, fair way to access liquidity against it.
+Property owners hold predictable future rental income but cannot access it at fair terms.
 
-### Brazil (launch market)
-- Off-chain fintechs like CashGo charge 36-60% APR with fees that change at signing
-- R$2B+ annual rental advance market, zero transparency, zero on-chain alternative
-- 13.3 million rented properties, seguro fiança (rental insurance) as structural protection
-- Banks cut credit to construction by 54% in 2025 — developers scrambling for alternatives
+### Macro (capital inefficiency)
+- **Banks cut real estate credit in Brazil by 54%** in H1 2025 (CBIC): R$19.9bi → R$9.1bi in SBPE production credit
+- **17.4% of Brazilian households are renters** (IBGE PNAD 2023) — 13M+ rented units
+- Existing off-chain fintechs (CashGO R$120M FIDC, 250K+ owners served) operate with opaque pricing and **bait-and-switch practices**: simulation rate differs from final contract rate
 
-### Why start here
-- **Selectimob** (family business): 700+ active contracts, ~140 landlords, zero CAC, day-one pilot
-- Seguro fiança solves the default problem that killed Goldfinch ($103M → $1.6M TVL)
-- CVM Resolution 88 provides clear regulatory pathway for tokenized receivables
-- BRZ stablecoin eliminates FX risk for local users
+### On-chain gap
+- Solana RWA TVL >$2B (Apr 2026), but nearly all of it is US Treasuries (BlackRock, Ondo)
+- **Solana RWA Lending on DefiLlama is nearly empty** — structural gap
+- No Colosseum project in the 5,400+ corpus has dominated rental receivables with insurance wrapper + local origination in Brazil
 
-### Global opportunity
-- US: $12T+ residential rental market, fragmented landlord financing, DSCR loans are slow and expensive
-- LATAM: Similar dynamics to Brazil across Mexico, Colombia, Argentina
-- Europe: Rental markets in Germany, Spain, Portugal with analogous credit gaps
-- Short-term rentals (Airbnb/Booking): $100B+ global market, hosts everywhere need working capital
-
-The protocol is designed chain-agnostic and jurisdiction-flexible from day one. Brazil is the beachhead, not the ceiling.
+### Why the insurance angle matters
+Goldfinch peaked at $103M TVL and collapsed to $1.6M — killed by loan defaults without an insurance layer. Credix raised $11.25M and sits at $1 TVL. **Brix solves the default problem structurally via seguro fiança** (Brazilian rental insurance), which ~85% of Selectimob's contracts already carry.
 
 ---
 
 ## The Solution
 
-Brix is a Solana-native credit protocol that tokenizes real estate receivables into structured yield tranches. Connects property owners who need liquidity today with investors seeking real-world yield.
+Brix is an RWA lending protocol on Solana that tokenizes rental receivables into a single transparent yield vault.
 
-Smart contracts lock the rate — it cannot change after signing. Everything is transparent and on-chain.
+### Core promise
+Rate is written in the smart contract at signing. **It cannot change.** This alone defeats the off-chain bait-and-switch that made rental advances a broken category.
 
----
-
-## How It Works (Simple)
-
+### Flow
 ```
-BORROWER SIDE                         INVESTOR SIDE
-(property owner)                      (DeFi user / institution)
-
-"I need money today                   "I want 20-25% APR
- against my future                     backed by real
- rental income"                        assets, not speculation"
-       |                                      |
-       v                                      v
-┌─────────────────────────────────────────────────┐
-│                    BRIX                         │
-│                                                 │
-│  1. Agency (e.g. Selectimob) validates          │
-│     rental contract & tenant                    │
-│                                                 │
-│  2. Smart contract escrows future receivables   │
-│     at IMMUTABLE rate                           │
-│                                                 │
-│  3. Investor capital flows into risk-tiered     │
-│     vaults:                                     │
-│     ┌─────────┐  ┌─────────┐                   │
-│     │ SENIOR  │  │ JUNIOR  │                    │
-│     │ Lower   │  │ Higher  │                    │
-│     │ risk    │  │ risk    │                    │
-│     │ ~16% APR│  │ ~25% APR│                    │
-│     └─────────┘  └─────────┘                    │
-│                                                 │
-│  4. Property owner receives stablecoin →        │
-│     local off-ramp (PIX in BR, ACH in US, etc)  │
-│     Owner never touches crypto                  │
-│                                                 │
-│  5. Monthly payments flow back to vaults        │
-│     automatically via smart contract            │
-└─────────────────────────────────────────────────┘
+Landlord (via Selectimob)           Investor (DeFi user / institution)
+"I need money today against          "I want ~20% APR backed by real
+ my future rental income"             rental income, not speculation"
+          |                                       |
+          v                                       v
+  ┌──────────────────────────────────────────────────────┐
+  │                        BRIX                          │
+  │                                                      │
+  │  1. Agency (Selectimob) validates contract + seguro  │
+  │     fiança off-chain, signs commitment on-chain      │
+  │                                                      │
+  │  2. Smart contract escrows future receivables at     │
+  │     IMMUTABLE rate                                   │
+  │                                                      │
+  │  3. Single investor vault (senior/junior tranches    │
+  │     deferred to v2) deposits BRZ stablecoin          │
+  │                                                      │
+  │  4. Landlord receives BRZ → off-ramp to PIX via      │
+  │     Transfero API (or integrated partner like        │
+  │     LocalPay/Sendryx). Owner never touches crypto.   │
+  │                                                      │
+  │  5. Tenant pays Selectimob → Selectimob routes to    │
+  │     smart contract → repayment to vault              │
+  └──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Triple Collateral (What Makes This Different)
+## Differentiation (triple collateral, modular by market)
 
-1. **Insurance layer**: In Brazil, seguro fiança covers tenant default — not the protocol, not the investor. This is what killed Goldfinch ($103M TVL → $1.6M from loan defaults). Each new market plugs in its local equivalent (renters insurance in US, deposit protection in EU).
-2. **Registered contracts**: In Brazil, cartório-registered agreements. In US, legally binding lease agreements. Institutional-grade legal backing per jurisdiction.
-3. **Real estate as implicit collateral**: Physical property underlying every contract, regardless of market.
+1. **Insurance layer**: seguro fiança absorbs tenant default before it reaches the protocol. This is what Goldfinch missed. Modular per market (renters insurance US, deposit protection EU).
+2. **Registered contracts**: cartório-registered in Brazil, legally binding lease in other jurisdictions.
+3. **Real estate as implicit collateral**: physical property underlying every contract.
 
-The collateral framework is modular — same protocol, different insurance/legal wrappers per market.
-
----
-
-## Vertical Expansion Strategy
-
-The vertical is **real estate income streams**. Same smart contract infra, same tranche model, same collateral type. Start narrow, expand within the vertical.
-
-### Phase 1: Long-term rentals — LAUNCH (Brazil)
-- Selectimob: 700+ contracts, ~140 landlords, zero CAC
-- Simplest receivable: fixed monthly rent, seguro fiança, cartório-registered
-- This is the hackathon MVP
-
-### Phase 2: Short-term rentals (Airbnb/Booking) — GLOBAL
-- Hosts need working capital, renovation funding, expansion capital
-- Receivable: projected booking revenue (AirDNA-style data as underwriting)
-- **Flywheel with STR Scout** (CTX Protocol MCP server already built)
-- Works in any country with Airbnb/Booking presence
-- Higher yield, slightly higher risk → fits Junior tranche
-
-### Phase 3: Construction receivables — BRAZIL → LATAM
-- Developers selling units on installment plans
-- R$3.2T+ credit market in BR, banks retreating
-- Receivable: installment payments from sold units
-- Largest ticket sizes, most complex underwriting, but massive TAM
-
-### Phase 4: US / EU market entry
-- US: partner with property management companies (equivalent of Selectimob)
-- Adapt collateral module for local insurance products (renters insurance, security deposits)
-- Stablecoin: USDC for US market, EURe for EU
-- Same protocol, different regulatory wrapper
-
-### NOT in scope (focus = death avoidance)
-- Invoice factoring (NF-e) — different vertical
-- Payroll advances — different vertical
-- Personal credit — different vertical
-- Generic "PayFi universal" — Brix is real estate, period
+**Core tags (winning frame, from Colosseum Copilot)**: `rwa tokenization`, `lending`, `stablecoin payments`, `oracle`. Intentionally NOT `smart contract escrow` — zero Colosseum winners positioned that way.
 
 ---
 
-## Competitive Landscape
+## Unfair advantages
 
-### Colosseum Copilot Data (5,400+ hackathon projects)
-- **Direct competitors in rental receivables on Solana: 0**
-- Cluster "RE Tokenization": 204 projects, 5.9% win rate
-- Cluster "Yield & DeFi": 257 projects, 11.3% win rate
-- Winners over-index on: lending (+387%), tokenization (+23%), fractional ownership (+62%)
-- Winners under-index on: NFTs (-77%)
-- **Brix aligns with winner profile**
-
-### Most Similar Projects (all low similarity < 0.07)
-| Project | What it does | Similarity | Result |
-|---------|-------------|-----------|--------|
-| VitalFi | Brazilian medical receivables → USDT yield | 0.056 | HM RWAs |
-| 20apy/NASH | Credit card receivables → 20% APY via WhatsApp | 0.056 | No prize |
-| Pencil Finance | Student loan tranches (senior/junior) | 0.042 | 4th RWAs $10K |
-| BridgingFi | UK property-backed bridging loans | 0.053 | No prize |
-
-### Dead/dying comparables
-- **Credix**: Raised $11.25M Series A. Currently $1 TVL — effectively dead.
-- **Goldfinch**: $103M TVL peak → $1.6M. Killed by loan defaults. Brix solves this with insurance-backed collateral.
+1. **Selectimob** (family business): 700+ active contracts, ~140 landlords, **~85% with seguro fiança** (~595 insured), zero CAC, day-one pilot. Already intermediates rent payment flow → smart contract can slot into existing rails.
+2. **Founder story is genuine**: landlords in the family nearly signed with CashGO; the rate changed between simulation and contract. That is the pitch hook.
+3. **Founder-market fit**: production fullstack at Banco Safra / Rock Encantech + 3 MCP servers shipped for CTX Protocol (BidScout Tier S, STR Scout Tier A, AdWinner).
+4. **Timing**: bank credit retreat + Solana RWA momentum + empty RWA lending category on DefiLlama.
+5. **STR Scout flywheel** (already built): market intelligence for Phase 2 vertical (short-term rentals).
 
 ---
 
-## Regulatory Strategy
+## Competitive landscape (refined with Copilot Apr 18 data)
 
-### Brazil (launch): CVM Resolution 88 Partnership
-- Partner with a CVM 88-authorized crowdfunding platform
-- Brix = tech infrastructure layer; partner = regulated entity
-- CVM reviewing Resolution 88 in 2026 to expand tokenized offerings
-- Antecipação de recebíveis = cessão de crédito (Art. 286 Civil Code), not a loan
-- Non-custodial design to avoid PSAV classification (R$10-37M minimum capital)
+### Most relevant adjacencies on Solana
+| Project | Angle | Team | Prize | Why it matters |
+|---|---|---|---|---|
+| xVaultFi | Solana-native RWA lending for xStocks | 3 | none | **Closest architecture reference** (Anchor/Rust vault pattern) |
+| BridgingFi | UK property-backed bridging loans | 4 | none | Useful framing: "legal-to-smart-contract mapping" |
+| Kormos (C4 accelerator) | Fractional reserve yield, senior/junior tranches | 4 | 2nd DeFi Cypherpunk $20K | Tranche pattern reference (deferred to v2) |
+| Credible Finance (C4) | CeDeFi lending vs tokenized RWAs, institutional licenses | 5 | HM DeFi & Payments | Horizontal competitor; Brix is vertical-specific |
+| Care Finance (C4, Credible portfolio) | CeDeFi lending for India healthcare | 4 | none | **Structural twin**: vertical-specific CeDeFi in emerging market |
+| Yumi Finance (C4) | BNPL + credit scoring | 4 | 1st DeFi Cypherpunk $25K | Underwriting reference |
+| VitalFi | Medical receivables BR → USDT yield | 4 | HM RWAs Cypherpunk | Proves BR receivables on-chain works |
 
-### US (expansion): Reg D / Reg CF pathway
-- Accredited investor exemption (Reg D 506(c)) for initial deployment
-- Regulation Crowdfunding (Reg CF) for broader access
-- Partner with licensed broker-dealer or funding portal
+### What's killed / coasting
+- **Goldfinch**: $103M → $1.6M TVL. Died from uninsured defaults.
+- **Credix**: $11.25M Series A, $1 TVL, $10M+ historical borrowed. Effectively inactive.
 
-### General principle
-- Brix never seeks its own financial license
-- Always operates as protocol infrastructure plugging into locally regulated entities
-- Hackathon/MVP stage: no registration needed anywhere
-
----
-
-## Tech Stack
-
-- **Smart contracts**: Anchor (Rust) on Solana
-- **Stablecoin**: BRZ (Brazil), USDC (US/global), modular per market
-- **Off-ramp**: BRLA API for PIX (Brazil), modular for ACH/SEPA
-- **Frontend**: Next.js / React
-- **Auth/wallet**: Privy.io (abstract wallet complexity — users never touch crypto)
-- **Underwriting data**: AirDNA integration for Phase 2 (STR), on-chain credit scoring long-term
+**Honest positioning**: "Nobody has dominated rental receivables with insurance wrapper and local origination in Brazil on Solana." Not "zero competitors."
 
 ---
 
-## Unfair Advantages
+## Tech stack
 
-1. **Selectimob**: Family business, 700+ contracts, ~140 landlords. Zero CAC, day-one distribution.
-2. **Insurance-backed collateral**: Seguro fiança as structural default protection — modular per market.
-3. **Builder proof**: 3 MCP servers shipped for CTX Protocol (BidScout Intel Tier S, STR Scout Tier A, AdWinner). Production fullstack dev at Rock Encantech/Banco Safra.
-4. **STR Scout flywheel**: Already built the market intelligence tool for Phase 2's vertical.
-5. **Empty niche**: 0/5,400+ Colosseum projects in rental receivables tokenization.
-6. **Global-ready architecture**: Modular collateral/insurance/stablecoin/off-ramp per jurisdiction from day one.
+| Layer | Choice | Why |
+|---|---|---|
+| Smart contracts | Anchor (Rust) on Solana devnet | Standard; well-documented |
+| Stablecoin | **BRZ (Transfero)** — native on Solana since 2021 | BRLA is NOT on Solana. USDC as global alt. |
+| Off-ramp PIX | Transfero API (BRZ→PIX) for production; **mocked in MVP demo** | LocalPay/Sendryx/DOLLAR exist as integration partners — not building from scratch |
+| Auth / wallet | **Privy.io** (Frontier sponsor, SOC 2, email login) | Users never touch seed phrases |
+| RPC | **Helius** (Frontier sponsor, 50% off Max, 10M credits) | Sub-ms response |
+| Multisig (v2) | Squads (Frontier sponsor) | For vaults >$10K TVL |
+| Frontend | Next.js / React | Fast shipping |
+| Underwriting data (v2) | AirDNA via STR Scout | Phase 2 (short-term rentals) |
 
----
-
-## Hackathon Targets
-
-### Colosseum Frontier (Solana) — Deadline: May 11, 2026
-- Anchor smart contracts on devnet (escrow, tranches, agency registry)
-- Investor deposit flow + tranche selection UI
-- Landlord simulation + agency validation dashboard
-- PIX off-ramp integration (BRLA)
-- End-to-end demo with Selectimob data (10+ advance cycles)
-- Primary KPI: successful end-to-end rental advance cycles on devnet
-
-### Base Batches 2026 Student Track — Deadline: April 27, 2026
-- Port core logic to Base/Solidity
-- Record ~1 min unlisted intro video
-
-### Agentic Engineering Grant (Superteam) — Deadline: May 4, 2026
-- $200 USDG for Claude Max subscription
-- Requires Frontier submission + GitHub repo + AI subscription receipt
+**Not using**: Metaplex (no NFTs), World (identity overkill), Arcium (privacy not the angle).
 
 ---
 
-## Lessons from Superteam BR Ideathon Top 5
+## MVP scope — brutally cut for solo + 27 days
 
-Analyzed the winning decks (Riptide 1st, Anemone 2nd, OPEN 3rd, IntentLayer 4th, Compliance Oracle 5th):
+### What ships for Frontier
+- Anchor program: escrow + **single vault** + immutable rate + deposit/withdraw
+- Next.js frontend with Privy auth — landlord flow + investor flow
+- Agency validation: off-chain, signed on-chain
+- End-to-end demo: 1–3 full advance cycles with anonymized Selectimob data
+- Pitch video (3 min) + technical demo video (2–3 min)
 
-- **Name**: Short, evocative, no suffix beats descriptive names. "Brix" fits.
-- **Opening slide**: Lead with a killer one-liner, not a logo dump. 
-- **Problem framing**: Open with a big number ($197M lost, $3.4B stolen). For Brix: "$103M TVL → $1.6M. Goldfinch died because defaults had no insurance. Brix fixes that."
-- **Show you're building**: Anemone had a Week 1 update with actual code. Ship > slide.
-- **Solo founder is OK**: 3 of top 5 were solo. But proof of work must be strong.
-- **Visual style**: Dark themes, clean typography, minimal text per slide, data-heavy.
+### Explicitly deferred to v2
+- Senior/junior tranches (Kormos/Pencil Finance already prove the pattern; too complex for MVP)
+- Agency validation dashboard (agency signature is enough for now)
+- Real PIX off-ramp (mocked in demo; mentioned as integration partner story in pitch)
+- 10+ advance cycles (overkill — 1–3 end-to-end is a clean demo)
+- Multi-rail payout automation
+- STR vertical (Phase 2)
+- Construction receivables (Phase 3)
 
 ---
 
-*Brix — Real estate yield, on-chain. Starting in Brazil, built for the world.*
-*Generated April 14, 2026 — Ready for Claude Code continuation*
+## Pitch video structure (3 min)
+
+1. **Hook (15s)** — "Minha mãe tem uma imobiliária. 700 contratos. Ela quase assinou com uma fintech pra antecipar aluguel. Na simulação era 18%. Na hora de assinar, 32%. Com Brix, a taxa é gravada em smart contract. Impossível de mudar."
+2. **Macro problem (30s)** — Bancos cortaram crédito imobiliário em 54% no 1S25. R$ bilhões em aluguéis futuros parados. Proprietários pagam 36-60% ao ano em off-chain alternatives.
+3. **Why it's broken on-chain too (20s)** — Goldfinch: $103M → $1.6M TVL, killed by defaults without insurance. Credix: $1 TVL.
+4. **Solution (30s)** — Brix: RWA lending with (a) immutable rate in smart contract, (b) seguro fiança as structural default protection (85% of our contracts already carry it), (c) off-ramp PIX via Transfero.
+5. **Demo (60s)** — Full cycle on devnet: agency validates → investor deposits → landlord receives BRZ → tenant pays → vault settles.
+6. **Why Solana (10s)** — 400ms blocks, $0.00025 tx, native stablecoins, RWA momentum.
+7. **Traction + next (15s)** — Selectimob pilot ready day one (700 contratos, zero CAC). Phase 2: short-term rentals globally via STR Scout flywheel.
+
+---
+
+## Regulatory strategy
+
+- **Hackathon / MVP**: no license required (devnet prototype).
+- **Brazil production**: partner with CVM 88–authorized crowdfunding platform. Brix = tech layer; partner = regulated entity. CVM opened public consultation in 2025 to expand Res. 88 for tokenized securities — pathway exists but is not plug-and-play.
+- **Non-custodial design** to avoid PSAV classification (R$10–37M minimum capital requirement).
+- **Antecipação de recebíveis = cessão de crédito** (Art. 286 Civil Code), not a loan.
+- Brix never seeks its own financial license; always plugs into locally regulated entities.
+
+---
+
+## Timeline (27 days: Apr 14 → May 11)
+
+| Week | Focus | Deliverable |
+|------|-------|-------------|
+| 1 (Apr 14–20) | Scaffold + smart contract core | Anchor program on devnet: escrow, vault, deposit/withdraw |
+| 2 (Apr 21–27) | Frontend + Privy + flows | Next.js + Privy, landlord flow, investor flow |
+| 3 (Apr 28–May 4) | Integration + demo data | E2E flow working, Selectimob data anonymized, polish |
+| 4 (May 5–11) | **SACRED: video + submission** | Pitch video 3min, demo video, Colosseum submission |
+
+Week 4 is untouchable for code changes. Video and submission eat the full week.
+
+---
+
+## Status
+
+- [x] Agentic Engineering Grant (Superteam) — **secured**
+- [x] Idea validation (Colosseum Copilot, DefiLlama, competitive landscape)
+- [x] Founder interview with Selectimob (seguro fiança %, payment flow, demand confirmed)
+- [ ] Scaffold project (next step)
+- [ ] Anchor program MVP
+- [ ] Frontend MVP
+- [ ] Pitch video + submission
+
+---
+
+*Brix — Rental receivables, on-chain. Brazil-first, built to scale.*

@@ -1,0 +1,850 @@
+﻿{
+    "results":  [
+                    {
+                        "slug":  "collaterize",
+                        "name":  "Collaterize",
+                        "oneLiner":  "A platform for launching and trading liquid real-world assets (RWAs) on the Solana blockchain.",
+                        "similarity":  0.07250132555673383,
+                        "hackathon":  {
+                                          "name":  "Breakout",
+                                          "slug":  "breakout",
+                                          "startDate":  "2025-04-14"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "breakout/defi"
+                                       },
+                                       {
+                                           "name":  "DePIN",
+                                           "key":  "breakout/depin"
+                                       },
+                                       {
+                                           "name":  "Infrastructure",
+                                           "key":  "breakout/infrastructure"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Collaterize-DAO/rwa_fun_ui",
+                                      "demo":  null,
+                                      "presentation":  "https://www.youtube.com/watch?v=Zti7Q2YwO9M",
+                                      "technicalDemo":  "https://youtu.be/G_7drNkokoo",
+                                      "twitter":  "https://twitter.com/collaterizehq",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/collaterize"
+                                  },
+                        "evidence":  [
+                                         "Launch and trade liquid RWAs on Solana",
+                                         "A platform for launching and trading liquid real-world assets (RWAs) on the Solana blockchain."
+                                     ],
+                        "prize":  {
+                                      "type":  "HONORABLE_MENTION",
+                                      "name":  "Honorable Mention - DeFi",
+                                      "placement":  null,
+                                      "amount":  5000,
+                                      "trackName":  "DeFi"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  3
+                                    },
+                        "team":  {
+                                     "count":  3
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "illiquidity of physical assets",
+                                                         "high investment barriers",
+                                                         "fragmented asset markets"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "rwa tokenization",
+                                                          "liquid secondary markets",
+                                                          "on-chain collateralization"
+                                                      ],
+                                     "primitives":  [
+                                                        "tokenization",
+                                                        "amm",
+                                                        "oracle",
+                                                        "lending"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "anchor",
+                                                       "rust"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "asset owners",
+                                                         "defi investors",
+                                                         "institutional traders"
+                                                     ]
+                                 },
+                        "crowdedness":  204,
+                        "cluster":  {
+                                        "key":  "v1-c1",
+                                        "label":  "Solana Real Estate Tokenization"
+                                    }
+                    },
+                    {
+                        "slug":  "oro",
+                        "name":  "ORO",
+                        "oneLiner":  "Yield-generating tokenized gold protocol on Solana providing liquidity and returns for physical assets.",
+                        "similarity":  0.06066176470588235,
+                        "hackathon":  {
+                                          "name":  "Radar",
+                                          "slug":  "radar",
+                                          "startDate":  "2024-09-02"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "radar/defi"
+                                       },
+                                       {
+                                           "name":  "Consumer",
+                                           "key":  "radar/consumer"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/JuanMarchetto/oro",
+                                      "demo":  null,
+                                      "presentation":  "https://www.loom.com/share/614551d234df466299f7237df25c6071",
+                                      "technicalDemo":  null,
+                                      "twitter":  "https://twitter.com/https://x.com/_orogold",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/oro"
+                                  },
+                        "evidence":  [
+                                         "Yield-generating tokenized gold on Solana",
+                                         "Yield-generating tokenized gold protocol on Solana providing liquidity and returns for physical assets."
+                                     ],
+                        "prize":  {
+                                      "type":  "HONORABLE_MENTION",
+                                      "name":  "Honorable Mention - DeFi",
+                                      "placement":  null,
+                                      "amount":  null,
+                                      "trackName":  "DeFi"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "gold illiquidity",
+                                                         "lack of yield on physical assets",
+                                                         "high storage costs for gold",
+                                                         "limited accessibility to gold markets"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "real world asset tokenization",
+                                                          "yield-bearing tokens",
+                                                          "fractional gold ownership",
+                                                          "defi integration for rwas"
+                                                      ],
+                                     "primitives":  [
+                                                        "rwa",
+                                                        "tokenization",
+                                                        "yield-bearing token",
+                                                        "stablecoin"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "rust",
+                                                       "anchor"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "retail investors",
+                                                         "defi users",
+                                                         "gold bugs",
+                                                         "institutional investors"
+                                                     ]
+                                 },
+                        "crowdedness":  204,
+                        "cluster":  {
+                                        "key":  "v1-c1",
+                                        "label":  "Solana Real Estate Tokenization"
+                                    }
+                    },
+                    {
+                        "slug":  "cream",
+                        "name":  "CREAM",
+                        "oneLiner":  "Decentralized energy grid on Solana tokenizing rooftop solar assets for stable income.",
+                        "similarity":  0.05277777777777778,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "RWAs",
+                                           "key":  "cypherpunk/rwas"
+                                       },
+                                       {
+                                           "name":  "Undefined",
+                                           "key":  "cypherpunk/undefined"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/cream-protocol/cream-sol-program",
+                                      "demo":  null,
+                                      "presentation":  "https://www.youtube.com/watch?v=Ebl7QcO5bjA",
+                                      "technicalDemo":  "https://www.loom.com/share/2b787193c7c84c088dd9a234f9261340",
+                                      "twitter":  "https://twitter.com/creamrwa",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/cream"
+                                  },
+                        "evidence":  [
+                                         "CREAM is a Decentralized Energy Grid on Solana",
+                                         "Decentralized energy grid on Solana tokenizing rooftop solar assets for stable income."
+                                     ],
+                        "prize":  {
+                                      "type":  "HONORABLE_MENTION",
+                                      "name":  "Honorable Mention - RWAs",
+                                      "placement":  null,
+                                      "amount":  null,
+                                      "trackName":  "RWAs"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  1
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "high entry barriers for renewable energy",
+                                                         "centralized energy grid inefficiencies",
+                                                         "illiquid physical energy assets"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "rwa tokenization",
+                                                          "decentralized physical infrastructure networks",
+                                                          "fractional ownership of solar panels"
+                                                      ],
+                                     "primitives":  [
+                                                        "rwa",
+                                                        "tokenization",
+                                                        "yield-bearing assets",
+                                                        "depin"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "anchor",
+                                                       "rust"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "homeowners",
+                                                         "green energy investors",
+                                                         "esg-focused dao members"
+                                                     ]
+                                 },
+                        "crowdedness":  138,
+                        "cluster":  {
+                                        "key":  "v1-c29",
+                                        "label":  "Solar Energy DePIN and Verification"
+                                    }
+                    },
+                    {
+                        "slug":  "rsrv",
+                        "name":  "RSRV",
+                        "oneLiner":  "A protocol enabling unsecured revolving debt and credit lines for crypto users.",
+                        "similarity":  0.05283347863993025,
+                        "hackathon":  {
+                                          "name":  "Renaissance",
+                                          "slug":  "renaissance",
+                                          "startDate":  "2024-03-04"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi \u0026 Payments",
+                                           "key":  "renaissance/defi--payments"
+                                       },
+                                       {
+                                           "name":  "Consumer Apps",
+                                           "key":  "renaissance/consumer-apps"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/myfridayio/rsrv",
+                                      "demo":  null,
+                                      "presentation":  "https://www.loom.com/share/587228517b874633aaa8e7fc54f5b313?sid=219c3f55-d1a1-47d8-ab99-656d221696e2",
+                                      "technicalDemo":  null,
+                                      "twitter":  "https://twitter.com/https://twitter.com/rsrvcredit",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/rsrv"
+                                  },
+                        "evidence":  [
+                                         "We\u0027re building the first step towards unsecured",
+                                         "A protocol enabling unsecured revolving debt and credit lines for crypto users."
+                                     ],
+                        "prize":  {
+                                      "type":  "HONORABLE_MENTION",
+                                      "name":  "Honorable Mention - DeFi \u0026 Payments",
+                                      "placement":  null,
+                                      "amount":  null,
+                                      "trackName":  "DeFi \u0026 Payments"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  3
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "over-collateralization",
+                                                         "capital inefficiency",
+                                                         "lack of credit markets",
+                                                         "rigid loan structures"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "unsecured debt",
+                                                          "revolving credit",
+                                                          "dynamic credit limits",
+                                                          "under-collateralized lending"
+                                                      ],
+                                     "primitives":  [
+                                                        "lending",
+                                                        "credit",
+                                                        "debt",
+                                                        "tokenization"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "anchor",
+                                                       "rust"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "defi users",
+                                                         "institutional borrowers",
+                                                         "active traders"
+                                                     ]
+                                 },
+                        "crowdedness":  257,
+                        "cluster":  {
+                                        "key":  "v1-c8",
+                                        "label":  "Solana Yield and DeFi Optimization"
+                                    }
+                    },
+                    {
+                        "slug":  "solana-gives",
+                        "name":  "Solana Gives",
+                        "oneLiner":  "A Web3 Donor Advised Fund on Solana providing instant tax receipts and USDC-based charitable giving.",
+                        "similarity":  0.04830362277170788,
+                        "hackathon":  {
+                                          "name":  "Radar",
+                                          "slug":  "radar",
+                                          "startDate":  "2024-09-02"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "radar/defi"
+                                       },
+                                       {
+                                           "name":  "Payments",
+                                           "key":  "radar/payments"
+                                       },
+                                       {
+                                           "name":  "Consumer",
+                                           "key":  "radar/consumer"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Jmclean88/solana-gives-frontend",
+                                      "demo":  null,
+                                      "presentation":  "https://www.loom.com/share/74f3919baeb844ec878b84094ea79816?sid=1b26911f-266e-4ebb-9e72-1c2b1b86de9e",
+                                      "technicalDemo":  null,
+                                      "twitter":  null,
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/solana-gives"
+                                  },
+                        "evidence":  [
+                                         "A Donor Advised Fund for Web 3. Solana",
+                                         "A Web3 Donor Advised Fund on Solana providing instant tax receipts and USDC-based charitable giving."
+                                     ],
+                        "prize":  {
+                                      "type":  "HONORABLE_MENTION",
+                                      "name":  "Honorable Mention - DeFi",
+                                      "placement":  null,
+                                      "amount":  null,
+                                      "trackName":  "DeFi"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  1
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "complex crypto tax compliance",
+                                                         "inefficient charitable giving",
+                                                         "lack of donation transparency"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "automated tax receipting",
+                                                          "on-chain fund management",
+                                                          "stablecoin payments"
+                                                      ],
+                                     "primitives":  [
+                                                        "payments",
+                                                        "stablecoin",
+                                                        "smart-contracts"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "anchor",
+                                                       "rust"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "crypto donors",
+                                                         "non-profit organizations",
+                                                         "tax-conscious investors"
+                                                     ]
+                                 },
+                        "crowdedness":  111,
+                        "cluster":  {
+                                        "key":  "v1-c4",
+                                        "label":  "Solana-Based Charitable Fundraising"
+                                    }
+                    },
+                    {
+                        "slug":  "attn.markets",
+                        "name":  "attn.markets",
+                        "oneLiner":  "Tokenizes Solana app revenues to provide builders and creators with DeFi services like cash advances and loans.",
+                        "similarity":  0.046612466124661245,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "cypherpunk/defi"
+                                       },
+                                       {
+                                           "name":  "Stablecoins",
+                                           "key":  "cypherpunk/stablecoins"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/twentyOne2x/attnmarkets",
+                                      "demo":  null,
+                                      "presentation":  "https://www.loom.com/share/9d44a70a09f84d008092249daf36dc3c",
+                                      "technicalDemo":  "https://www.loom.com/share/390d95ecc77b4f76929ec9249f69a6dd",
+                                      "twitter":  "https://twitter.com/twentyOne2x",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/attn.markets"
+                                  },
+                        "evidence":  [
+                                         "ecosystem With tokenised revenues: - Builders/DAOs/Creators get cash advance, loans/corporate bonds, savings account (+4-6% APR from stables/LSTs), credit card lines… - LPs get yield uncorrelated to market returns sourced from attn products",
+                                         "Tokenizes Solana app revenues to provide builders and creators with DeFi services like cash advances and loans."
+                                     ],
+                        "prize":  {
+                                      "type":  "TRACK_PRIZE",
+                                      "name":  "1st Place - Undefined",
+                                      "placement":  1,
+                                      "amount":  25000,
+                                      "trackName":  "Undefined"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  1
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "underutilized protocol revenue",
+                                                         "lack of credit for web3 builders",
+                                                         "uncorrelated yield scarcity",
+                                                         "inefficient treasury management"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "revenue tokenization",
+                                                          "cash advances",
+                                                          "corporate bonds for daos",
+                                                          "multisig-managed credit lines"
+                                                      ],
+                                     "primitives":  [
+                                                        "tokenization",
+                                                        "lending",
+                                                        "multisig",
+                                                        "yield-aggregator",
+                                                        "rwa"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "squads",
+                                                       "anchor",
+                                                       "rust"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "daos",
+                                                         "web3 builders",
+                                                         "content creators",
+                                                         "liquidity providers"
+                                                     ]
+                                 },
+                        "crowdedness":  204,
+                        "cluster":  {
+                                        "key":  "v1-c1",
+                                        "label":  "Solana Real Estate Tokenization"
+                                    }
+                    },
+                    {
+                        "slug":  "clipstake",
+                        "name":  "ClipStake",
+                        "oneLiner":  "Launchpad for creators to fund video production by tokenizing and selling future ad revenue shares to their audience.",
+                        "similarity":  0.039607843137254906,
+                        "hackathon":  {
+                                          "name":  "Breakout",
+                                          "slug":  "breakout",
+                                          "startDate":  "2025-04-14"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Consumer Apps",
+                                           "key":  "breakout/consumer-apps"
+                                       },
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "breakout/defi"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/ClipStake/clipstake-hackathon",
+                                      "demo":  null,
+                                      "presentation":  "https://youtu.be/xZuw1SDrkIw",
+                                      "technicalDemo":  "https://youtu.be/gkxro48V9VQ",
+                                      "twitter":  "https://twitter.com/ClipStake_X",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/clipstake"
+                                  },
+                        "evidence":  [
+                                         "ClipStake is a launchpad that enables content creators",
+                                         "Launchpad for creators to fund video production by tokenizing and selling future ad revenue shares to their audience."
+                                     ],
+                        "prize":  {
+                                      "type":  "TRACK_PRIZE",
+                                      "name":  "University Prize - Consumer Apps",
+                                      "placement":  6,
+                                      "amount":  2500,
+                                      "trackName":  "Consumer Apps"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "high production costs",
+                                                         "lack of creator capital",
+                                                         "limited fan monetization",
+                                                         "centralized revenue control"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "revenue tokenization",
+                                                          "decentralized crowdfunding",
+                                                          "automated revenue distribution",
+                                                          "creator launchpad"
+                                                      ],
+                                     "primitives":  [
+                                                        "tokenization",
+                                                        "revenue-sharing",
+                                                        "launchpad",
+                                                        "smart-contracts"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "content creators",
+                                                         "video producers",
+                                                         "retail investors",
+                                                         "youtube creators"
+                                                     ]
+                                 },
+                        "crowdedness":  192,
+                        "cluster":  {
+                                        "key":  "v1-c12",
+                                        "label":  "Blockchain Music and Royalty Platforms"
+                                    }
+                    },
+                    {
+                        "slug":  "yumi-finance",
+                        "name":  "Yumi Finance",
+                        "oneLiner":  "Fully onchain buy now, pay later protocol for consumer, B2B, and credit card infrastructure.",
+                        "similarity":  0.03785460992907801,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "cypherpunk/defi"
+                                       },
+                                       {
+                                           "name":  "Infrastructure",
+                                           "key":  "cypherpunk/infrastructure"
+                                       },
+                                       {
+                                           "name":  "Stablecoins",
+                                           "key":  "cypherpunk/stablecoins"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Yumi-Finance/colloseum-monorepo",
+                                      "demo":  null,
+                                      "presentation":  "https://youtu.be/O-0q9cRJRvo",
+                                      "technicalDemo":  "https://youtu.be/II7UAWZGK90",
+                                      "twitter":  "https://twitter.com/YumiFinance",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/yumi-finance"
+                                  },
+                        "evidence":  [
+                                         "better manage their cash flow and liquidity - Infrastructure for crypto cards - Allows crypto cards to issue credit cards backed by fully onchain loans and credit profiles - Data layer - An interoperable data layer and standard",
+                                         "Fully onchain buy now, pay later protocol for consumer, B2B, and credit card infrastructure."
+                                     ],
+                        "prize":  {
+                                      "type":  "TRACK_PRIZE",
+                                      "name":  "1st Place - DeFi",
+                                      "placement":  1,
+                                      "amount":  25000,
+                                      "trackName":  "DeFi"
+                                  },
+                        "accelerator":  {
+                                            "companySlug":  "yumi-finance",
+                                            "companyName":  "Yumi Finance",
+                                            "batchKey":  "accelerator/c4",
+                                            "batchName":  "C4"
+                                        },
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  4
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "limited crypto payment flexibility",
+                                                         "lack of onchain credit history",
+                                                         "high counterparty risk in lending",
+                                                         "inefficient b2b liquidity"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "buy now pay later",
+                                                          "automated loan origination",
+                                                          "interoperable credit profiles",
+                                                          "credit card infrastructure"
+                                                      ],
+                                     "primitives":  [
+                                                        "lending",
+                                                        "underwriting",
+                                                        "credit-scoring",
+                                                        "sdk",
+                                                        "stablecoins"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "rust",
+                                                       "anchor",
+                                                       "react"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "merchants",
+                                                         "crypto card issuers",
+                                                         "b2b enterprises",
+                                                         "defi users"
+                                                     ]
+                                 },
+                        "crowdedness":  202,
+                        "cluster":  {
+                                        "key":  "v1-c16",
+                                        "label":  "Stablecoin Payment Rails and Infrastructure"
+                                    }
+                    },
+                    {
+                        "slug":  "solana-atm",
+                        "name":  "Solana ATM",
+                        "oneLiner":  "A physical P2P cash-to-stablecoin liquidity pool machine on Solana.",
+                        "similarity":  0.03225806451612903,
+                        "hackathon":  {
+                                          "name":  "Cypherpunk",
+                                          "slug":  "cypherpunk",
+                                          "startDate":  "2025-09-25"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "DeFi",
+                                           "key":  "cypherpunk/defi"
+                                       },
+                                       {
+                                           "name":  "Stablecoins",
+                                           "key":  "cypherpunk/stablecoins"
+                                       },
+                                       {
+                                           "name":  "Undefined",
+                                           "key":  "cypherpunk/undefined"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/Degenerate-Laboratories/bankless-terminal",
+                                      "demo":  null,
+                                      "presentation":  "https://www.youtube.com/watch?v=AxGgGwsUjwA\u0026t",
+                                      "technicalDemo":  "https://www.youtube.com/shorts/qUe9lNHnPgg",
+                                      "twitter":  "https://twitter.com/solanaATMstable",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/solana-atm"
+                                  },
+                        "evidence":  [
+                                         "The Solana ATM is a physical machine that",
+                                         "A physical P2P cash-to-stablecoin liquidity pool machine on Solana."
+                                     ],
+                        "prize":  {
+                                      "type":  "TRACK_PRIZE",
+                                      "name":  "4th Place - Undefined",
+                                      "placement":  4,
+                                      "amount":  10000,
+                                      "trackName":  "Undefined"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  4
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "limited physical crypto access",
+                                                         "high fees for cash-to-crypto",
+                                                         "centralized atm reliance",
+                                                         "lack of p2p cash ramps"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "physical hardware interface",
+                                                          "p2p liquidity pool",
+                                                          "automated cash exchange",
+                                                          "stablecoin integration"
+                                                      ],
+                                     "primitives":  [
+                                                        "liquidity pool",
+                                                        "stablecoin",
+                                                        "p2p",
+                                                        "automated market maker"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "rust",
+                                                       "hardware",
+                                                       "iot"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "unbanked users",
+                                                         "cash-heavy traders",
+                                                         "local liquidity providers",
+                                                         "stablecoin users"
+                                                     ]
+                                 },
+                        "crowdedness":  223,
+                        "cluster":  {
+                                        "key":  "v1-c26",
+                                        "label":  "Simplified Solana Payment Solutions"
+                                    }
+                    },
+                    {
+                        "slug":  "solanaizer",
+                        "name":  "SolanAIzer",
+                        "oneLiner":  "AI-powered automated smart contract auditing tool for Solana projects integrated via GitHub.",
+                        "similarity":  0.030303030303030304,
+                        "hackathon":  {
+                                          "name":  "Renaissance",
+                                          "slug":  "renaissance",
+                                          "startDate":  "2024-03-04"
+                                      },
+                        "tracks":  [
+                                       {
+                                           "name":  "Infrastructure",
+                                           "key":  "renaissance/infrastructure"
+                                       }
+                                   ],
+                        "links":  {
+                                      "github":  "https://github.com/solanaizer/solanaizer-action",
+                                      "demo":  null,
+                                      "presentation":  "https://www.youtube.com/watch?v=7NdutEn5Ir4",
+                                      "technicalDemo":  null,
+                                      "twitter":  "https://twitter.com/https://twitter.com/solenaizer",
+                                      "colosseum":  "https://arena.colosseum.org/projects/explore/solanaizer"
+                                  },
+                        "evidence":  [
+                                         "SolanAIzer, a next-generation AI-powered tool, is",
+                                         "AI-powered automated smart contract auditing tool for Solana projects integrated via GitHub."
+                                     ],
+                        "prize":  {
+                                      "type":  "HONORABLE_MENTION",
+                                      "name":  "Honorable Mention - Infrastructure",
+                                      "placement":  null,
+                                      "amount":  null,
+                                      "trackName":  "Infrastructure"
+                                  },
+                        "accelerator":  null,
+                        "metrics":  {
+                                        "updatesCount":  0
+                                    },
+                        "team":  {
+                                     "count":  2
+                                 },
+                        "tags":  {
+                                     "problemTags":  [
+                                                         "smart contract vulnerabilities",
+                                                         "expensive security audits",
+                                                         "manual code review bottlenecks",
+                                                         "deployment of buggy code"
+                                                     ],
+                                     "solutionTags":  [
+                                                          "ai-driven auditing",
+                                                          "automated bug detection",
+                                                          "continuous integration security",
+                                                          "static analysis"
+                                                      ],
+                                     "primitives":  [
+                                                        "smart contracts",
+                                                        "security",
+                                                        "ai"
+                                                    ],
+                                     "techStack":  [
+                                                       "solana",
+                                                       "github actions",
+                                                       "rust",
+                                                       "anchor",
+                                                       "llm"
+                                                   ],
+                                     "targetUsers":  [
+                                                         "solana developers",
+                                                         "web3 security researchers",
+                                                         "devops engineers"
+                                                     ]
+                                 },
+                        "crowdedness":  257,
+                        "cluster":  {
+                                        "key":  "v1-c5",
+                                        "label":  "Solana Data and Monitoring Infrastructure"
+                                    }
+                    }
+                ],
+    "filtersApplied":  {
+                           "filters":  {
+                                           "winnersOnly":  true
+                                       }
+                       },
+    "totalFound":  11,
+    "hasMore":  true
+}

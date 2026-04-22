@@ -5,6 +5,8 @@
 
 **Hoje**: 2026-04-22 · **Submission Frontier**: 2026-05-11 · **Solo founder**.
 
+> **Ideias/features pós-MVP** → `ROADMAP.md`. Nada fora-de-escopo se perde.
+
 ---
 
 ## Precondição 0 — Toolchain ✅ CONCLUÍDO (22 abr)
@@ -57,19 +59,19 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 - [x] `pnpm --filter app build` passa → Next build limpo em 14s
 - [x] Privy + Solana SDKs instalados (`@privy-io/react-auth`, `@solana/web3.js`, `@coral-xyz/anchor`, `@solana/spl-token`)
 - [x] Program ID placeholder: `6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94` (será re-confirmado no primeiro `anchor deploy`)
-- [ ] `programs/brix/src/state.rs` com contas: `Vault` (PDA), `Receivable` (PDA por contract_id)
-- [ ] `programs/brix/src/error.rs` com `BrixError` enum
-- [ ] `programs/brix/src/constants.rs` com seeds + bps constants
-- [ ] Instruction `initialize_vault` + teste LiteSVM
-- [ ] Instruction `register_receivable` (agência) + teste
-- [ ] Instruction `deposit` (investidor → vault, BRZ SPL) + teste
-- [ ] Instruction `fund_landlord` (vault → landlord, BRZ SPL) + teste
-- [ ] Instruction `repay` (tenant/agência → vault) + teste
-- [ ] Instruction `withdraw` (investidor saca principal + juros) + teste
-- [ ] `anchor test` (cargo test via LiteSVM) passa com ≥ 6 testes
-- [ ] `solana airdrop 2` (via web faucet) → devnet SOL pra deploy
-- [ ] Deploy devnet: `anchor deploy --provider.cluster devnet`
-- [ ] Program ID final salvo em `Anchor.toml` e `.env.local`
+- [x] `programs/brix/src/state.rs` com contas: `Vault`, `Receivable`, `InvestorPosition`, `ReceivableStatus` enum
+- [x] `programs/brix/src/error.rs` com `BrixError` enum (13 variants)
+- [x] `programs/brix/src/constants.rs` com seeds + `BPS_DENOMINATOR` + `CONTRACT_ID_LEN`
+- [x] Instruction `initialize_vault`
+- [x] Instruction `register_receivable` (agência)
+- [x] Instruction `deposit` (investidor → vault, BRZ SPL, shares LP-like)
+- [x] Instruction `fund_landlord` (vault → landlord, PDA-signed CPI)
+- [x] Instruction `repay` (com suporte a parcelas — rounding drift absorvida pela última parcela)
+- [x] Instruction `withdraw` (investidor queima shares → principal + juros pro-rata)
+- [x] `cargo test` via LiteSVM passa (1 unit + 2 integration: `full_cycle_single_repay` + `partial_repay_three_installments`)
+- [x] 2.5 SOL devnet disponíveis pra deploy
+- [x] Deploy devnet: `anchor deploy --provider.cluster devnet` concluído
+- [x] Program ID final: `6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94` (mesmo do scaffold — salvo em `Anchor.toml` `[programs.devnet]`)
 - [ ] Arthur sabe explicar (próprias palavras) PDA, SPL, instruction, CPI
 - [ ] Commit tag: `cp1-done`
 
@@ -176,6 +178,21 @@ Adicionar entradas cronológicas do tipo:
 ```
 
 Últimas entradas aqui embaixo (mais novas no topo):
+
+### 2026-04-22 (qua) — PC home (sessão noite) — **CP1 CORE PROGRAM ✅ em devnet**
+- `build-defi-protocol` skill executada completamente.
+- Escrito: `state.rs` (Vault / Receivable / InvestorPosition / ReceivableStatus), `error.rs` (13 variants), `constants.rs` (seeds + bps), 6 instructions em módulos separados, `lib.rs` com 6 entrypoints.
+- Modelo de contabilidade: `total_assets = vault_ata.amount + total_deployed`; shares LP-like `shares = amount * total_shares / total_assets` (round down); `fund_landlord` conserva total_assets; `repay` cresce total_assets pelo juros_part; withdraw queima shares pro-rata.
+- **Partial repay** implementado: agência pode repassar em parcelas mensais (use-case real Selectimob). Algoritmo rounding-safe — última parcela absorve drift pra fechar `total_deployed = 0` exatamente.
+- Testes LiteSVM (2) passando: `full_cycle_single_repay` valida E2E + invariants; `partial_repay_three_installments` valida que 3×3k fecha total_deployed=0.
+- Bugs consertados durante CP1:
+  - Anchor 1.0 mudou `CpiContext::new` pra receber `Pubkey` (via `.key()`), não `AccountInfo` — 4 call sites ajustados.
+  - Borrow conflict no `fund_landlord`/`withdraw` (vault.to_account_info() depois de `&mut ctx.accounts.vault`) — capturado `AccountInfo` antes da mut borrow.
+  - `spl_associated_token_account::ID` virou `::program::ID` no Anchor 1.0 / anchor-spl 1.0.1.
+  - LiteSVM rejeita txs duplicadas (`AlreadyProcessed`) — usar `svm.expire_blockhash()` entre repetições de ix idênticas.
+  - `ReceivableStatus` precisa de `#[derive(Debug)]` pra `msg!("{:?}")`.
+- Deploy devnet: `6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94` (authority `EFQuU2ii5HhG1r7nRCoMQNNA9YnSDnG2UGPvUZSG3dRs`, 2.1 SOL locked in program data).
+- **PRÓXIMO**: Arthur salvar program ID em `.env.local` + commit `cp1-done` tag → CP2 (Privy Provider + landing + `/landlord` + `/invest` flows).
 
 ### 2026-04-22 (qua) — PC home (sessão tarde)
 - Helius free tier ativado, API key validada via `getHealth → ok`.

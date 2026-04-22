@@ -2,7 +2,7 @@
 
 > **Quem lê isto**: Claude Code (ou qualquer agente AI) no começo de toda sessão neste repo.
 > **Quem mantém**: Arthur + agente, atualizando conforme o projeto evolui.
-> **Última revisão**: 2026-04-22
+> **Última revisão**: 2026-04-22 (sessão noite — CP1 core em devnet)
 
 ---
 
@@ -163,7 +163,13 @@ Termos que aparecem ao longo do projeto. Arthur começou sem conhecer a maioria.
 - **#[program]**: macro que marca o módulo de instructions.
 - **#[account]**: macro que marca uma struct como conta persistente.
 - **#[derive(Accounts)]**: macro que valida contas passadas à instruction.
-- **CPI (Cross-Program Invocation)**: quando seu program chama outro program (ex: Brix chama SPL Token pra transferir). Usa `CpiContext`.
+- **CPI (Cross-Program Invocation)**: quando seu program chama outro program (ex: Brix chama SPL Token pra transferir). Usa `CpiContext`. Em Anchor 1.0+ o primeiro argumento de `CpiContext::new` é `Pubkey` (use `.key()` no `Program<Token>`), não `AccountInfo`.
+- **signer_seeds**: quando uma PDA precisa "assinar" uma CPI, passa-se `&[&[&[u8]]]` estruturado como `[[seed_bytes..., bump]]`. Ex: `&[&[VAULT_SEED, admin.as_ref(), &[bump]]]`. Usado via `CpiContext::new_with_signer`.
+- **has_one**: constraint Anchor que valida `stored_struct.field == passed_account.key()`. Exemplo: `has_one = vault_ata @ BrixError::MintMismatch` garante que a `vault_ata` passada bate com a salva no Vault.
+- **#[instruction(...)]**: captura args da ix pra uso em seeds/constraints em tempo de validação (ex: `#[instruction(contract_id: [u8; 32])]` pra derivar PDA do receivable).
+- **InitSpace**: `#[derive(InitSpace)]` calcula automaticamente o tamanho da conta em bytes; usa-se `space = 8 + Foo::INIT_SPACE` (8 = discriminator).
+- **init_if_needed**: feature flag (`anchor-lang = { features = ["init-if-needed"] }`) que permite `init` condicional — a conta é criada se não existe, ou apenas validada se já existe. Útil pra InvestorPosition criado no primeiro deposit.
+- **Checks-Effects-Interactions**: padrão universal em contratos — primeiro `require!` (checks), depois mutação de contas (effects), por último CPI externo (interactions). Evita re-entrância e estados inconsistentes.
 - **#[error_code]**: define erros custom do program.
 
 ### DeFi
@@ -171,6 +177,10 @@ Termos que aparecem ao longo do projeto. Arthur começou sem conhecer a maioria.
 - **Escrow**: contrato que segura valor até uma condição (em Brix: recebível vinculado ao repayment).
 - **TVL (Total Value Locked)**: soma de ativos dentro do protocolo. Métrica principal de "uso".
 - **APR / APY**: retorno anual. APR sem compounding, APY com.
+- **bps (basis points)**: 1 bps = 0.01%. 10_000 bps = 100%. Evita float no on-chain; sempre inteiro.
+- **Shares LP-like**: cada depósito recebe `shares = amount * total_shares / total_assets`. A "cotação" da share sobe quando entram juros. Permite investidores entrarem/saírem em momentos diferentes sem dividir lucro manualmente.
+- **total_assets / total_deployed**: `total_assets = ATA.amount + total_deployed`. `total_deployed` é BRZ emprestado ao landlord (fora do ATA, mas ainda nosso). Invariant: `fund_landlord` não muda total_assets (só move entre os dois termos).
+- **Partial repay / rounding drift**: quando parcelas quebram principal/repayment em razão não-inteira, divisão inteira acumula erro. Solução: última parcela libera o saldo restante explicitamente (`principal - prior_released`), fechando `total_deployed` exatamente em 0.
 
 (Expandir este glossário sempre que um termo novo aparecer.)
 
@@ -224,6 +234,7 @@ Se Arthur pedir algo da lista acima, **questione escopo** antes de começar (pod
 - `.agents/tone-guide.md` — guia de tom (se houver pitch/material público sendo escrito)
 - `.agents/data/` — datasets de apoio (solana-knowledge, defi, colosseum)
 - `CHECKPOINTS.md` — tracking de progresso (atualizar toda sessão)
+- `ROADMAP.md` — **todas** as ideias/features pós-MVP (v2/v3/eventually). Nada deferido pode se perder — sempre escrever aqui com "por quê deferido" + "quando subir prioridade".
 
 ---
 

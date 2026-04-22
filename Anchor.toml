@@ -6,7 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-brix = "4dKtdEs8qqSVFpm8QkiRwnFEXcyJeArDQfTmv8J6eFwo"
+brix = "6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94"
+
+[programs.devnet]
+brix = "6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94"
 
 [provider]
 cluster = "devnet"

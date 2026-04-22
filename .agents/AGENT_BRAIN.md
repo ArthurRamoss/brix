@@ -229,6 +229,7 @@ Se Arthur pedir algo da lista acima, **questione escopo** antes de começar (pod
 
 ## 12. Quando atualizar este arquivo
 
+- assim que terminar uma sessao, para atualizar o manager do que a ia precisa sabe/ta pensando
 - Decisão técnica que altera stack → atualizar seção 4
 - Novo termo técnico apareceu → adicionar ao glossário (seção 8)
 - Nova convenção combinada → seção 9

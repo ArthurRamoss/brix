@@ -94,19 +94,20 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 
 ### Tasks
 
-- [ ] Privy App ID + Helius key em `.env.local`
-- [ ] Privy Provider montado no layout
-- [ ] Landing page simples (hero + CTA login)
-- [ ] Rota `/landlord` — listagem de recebíveis (mock Selectimob JSON)
-- [ ] Botão "Antecipar" → chama `register_receivable` + `fund_landlord`
-- [ ] UI mostra "✓ R$ X recebidos via PIX" após `fund_landlord` (mock)
-- [ ] Rota `/invest` — vault stats (TVL, APR) + deposit form
-- [ ] Botão "Depositar" → chama `deposit`
-- [ ] Botão "Withdraw" → chama `withdraw`
-- [ ] Tx links pro Solana Explorer devnet
-- [ ] Toasts de sucesso/erro
-- [ ] Deploy Vercel preview (opcional mas recomendado)
-- [ ] Commit tag: `cp2-done`
+- [x] Privy App ID + Helius key em `.env.local` (Helius já configurado; Privy App ID `cmoa0jx8500v30cl78buc8dop` em `.env.local`)
+- [x] Privy Provider montado no layout (`app/src/providers/privy-provider.tsx`, Privy v3 API)
+- [x] Landing page simples (hero + CTA login) (`app/src/app/page.tsx`)
+- [x] Rota `/landlord` — listagem de recebíveis (mock Selectimob JSON em `app/src/lib/mock-data.ts`)
+- [x] Botão "Antecipar" → chama `register_receivable` + `fund_landlord` (wired; sign placeholder até seed-demo)
+- [x] UI mostra "✓ R$ X recebidos via PIX" após `fund_landlord` (mock com fallback visual)
+- [x] Rota `/invest` — vault stats (TVL, APR) + deposit form
+- [x] Botão "Depositar" → chama `deposit` (wired ao program via useBrix hook)
+- [x] Botão "Withdraw" → chama `withdraw` (wired ao program via useBrix hook)
+- [x] Tx links pro Solana Explorer devnet (em todos os toasts de sucesso)
+- [x] Toasts de sucesso/erro (sonner)
+- [ ] Deploy Vercel preview (opcional mas recomendado) — **próximo: Arthur faz `vercel deploy`**
+- [ ] Sign real com Privy embedded Solana wallet → **blocker CP2→CP3**: precisa do seed-demo.ts + BRZ devnet mint
+- [ ] Commit tag: `cp2-done` (marcar após vercel preview + `.env.local` confirmado)
 
 ### Fallback
 - Se Privy der atrito → Unified Wallet Adapter (Phantom). Menos UX mas funcional.
@@ -178,6 +179,25 @@ Adicionar entradas cronológicas do tipo:
 ```
 
 Últimas entradas aqui embaixo (mais novas no topo):
+
+### 2026-04-22 (qua) — PC home (sessão noite 2) — **CP2 FRONTEND ✅ build passando**
+- `build-with-claude` skill executada completamente para CP2.
+- Criados: `privy-provider.tsx` (Privy v3 + Buffer polyfill + Sonner), `layout.tsx` atualizado, landing page (`page.tsx`), `/landlord` page, `/invest` page, `use-brix.ts` hook, `brix-program.ts`, `connection.ts`, `mock-data.ts`.
+- Bugs resolvidos durante CP2:
+  - Privy v3: `useWallets()` é EVM-only; Solana wallet acessada via `user.linkedAccounts` (filter `type==="wallet" && chainType==="solana"`).
+  - `@privy-io/react-auth/solana` subpath requer `@solana-program/memo` (não instalável facilmente no pnpm workspace Windows) — evitado completamente.
+  - `embeddedWallets.createOnLogin` em Privy v3 precisa ser nested: `{ solana: { createOnLogin: "all-users" } }` — não top-level.
+  - `solanaClusters` não existe em `PrivyClientConfig` v3 — removido.
+  - `pnpm add` com permission failures no Windows — `@privy-io` resolvido com PowerShell junction.
+  - BigInt literals → `tsconfig.json` `target` ES2017 → ES2020.
+  - JSX em `.ts` file → substituído por strings nos `toast.description`.
+  - `program.account.vault` TypeScript error → cast `(program.account as any).vault`.
+  - Privy App ID prerender error (build sem `.env.local`) → guard `if (!PRIVY_APP_ID)` no Providers.
+  - Next.js 16 Turbopack warning → adicionado `turbopack: {}` em `next.config.ts`.
+- `pnpm --filter app build` ✅ (41s): 4 rotas estáticas geradas (/, /\_not-found, /invest, /landlord).
+- Commit: `7299924 feat(cp2)`.
+- **BLOCKER CP2→CP3**: sign real com Privy Solana wallet precisa do `scripts/seed-demo.ts` + BRZ devnet test mint. Hoje tudo usa placeholder `signTransaction: async (tx) => tx`.
+- **PRÓXIMO**: Arthur confirma `.env.local` → `pnpm --filter app dev` → testa local → `vercel deploy` → tag `cp2-done` → CP3.
 
 ### 2026-04-22 (qua) — PC home (sessão noite) — **CP1 CORE PROGRAM ✅ em devnet**
 - `build-defi-protocol` skill executada completamente.

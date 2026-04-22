@@ -1,0 +1,1121 @@
+{
+  "address": "6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94",
+  "metadata": {
+    "name": "brix",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "deposit",
+      "docs": [
+        "Investor deposits BRZ into the vault and receives pro-rata shares."
+      ],
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "investor",
+          "docs": [
+            "Investor (Privy-managed or external Solana wallet) signing the deposit."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Target vault. Must match the mint and ATA of the token accounts below."
+          ],
+          "writable": true
+        },
+        {
+          "name": "brz_mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "vault_ata",
+          "docs": [
+            "Vault's own ATA (destination of the transfer)."
+          ],
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "investor_brz_ata",
+          "docs": [
+            "Investor's BRZ ATA (source of the transfer)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "position",
+          "docs": [
+            "Per-investor share ledger. Created on first deposit, updated on",
+            "subsequent deposits."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "investor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "fund_landlord",
+      "docs": [
+        "Vault fronts the principal to the landlord's ATA. Agency-signed."
+      ],
+      "discriminator": [
+        105,
+        165,
+        160,
+        156,
+        32,
+        251,
+        136,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "agency",
+          "docs": [
+            "Agency that registered the receivable. Only the same agency can fund."
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "receivable"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault that will front the BRZ. Re-derived here so we can sign as it."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.admin",
+                "account": "Vault"
+              }
+            ]
+          },
+          "relations": [
+            "receivable"
+          ]
+        },
+        {
+          "name": "vault_ata",
+          "docs": [
+            "Source: vault's BRZ ATA."
+          ],
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "receivable",
+          "docs": [
+            "Receivable being funded. Must belong to this vault, be registered",
+            "by this agency, and reference the landlord below."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  101,
+                  105,
+                  118,
+                  97,
+                  98,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "contract_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "landlord",
+          "relations": [
+            "receivable"
+          ]
+        },
+        {
+          "name": "landlord_brz_ata",
+          "docs": [
+            "Destination: landlord's BRZ ATA."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "contract_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_vault",
+      "docs": [
+        "Create the singleton vault PDA for an admin + the vault's BRZ ATA."
+      ],
+      "discriminator": [
+        48,
+        191,
+        163,
+        44,
+        71,
+        129,
+        63,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin pays for the vault account + ATA creation and becomes the",
+            "governance authority (pause etc. in v2)."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The singleton Vault PDA for this admin."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "admin"
+              }
+            ]
+          }
+        },
+        {
+          "name": "brz_mint",
+          "docs": [
+            "BRZ mint (or any SPL-Token classic stablecoin for localnet/devnet tests)."
+          ]
+        },
+        {
+          "name": "vault_ata",
+          "docs": [
+            "ATA owned by the vault PDA. This is where deposited BRZ sits before",
+            "being funded out to landlords."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "brz_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_receivable",
+      "docs": [
+        "Agency registers a rental receivable on behalf of a landlord.",
+        "`repayment` is fixed at registration (immutable rate guarantee)."
+      ],
+      "discriminator": [
+        186,
+        45,
+        140,
+        71,
+        205,
+        82,
+        153,
+        23
+      ],
+      "accounts": [
+        {
+          "name": "agency",
+          "docs": [
+            "Agency (e.g. Selectimob) pays for account creation and is recorded",
+            "as the registering authority."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "The target vault. Readonly — we only reference it."
+          ]
+        },
+        {
+          "name": "landlord",
+          "docs": [
+            "`fund_landlord` can later validate the destination ATA belongs to it."
+          ]
+        },
+        {
+          "name": "receivable",
+          "docs": [
+            "The new Receivable PDA. Initialization fails if the contract_id was",
+            "already used (desired — contract IDs must be unique per protocol)."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  101,
+                  105,
+                  118,
+                  97,
+                  98,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "contract_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "contract_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "principal",
+          "type": "u64"
+        },
+        {
+          "name": "repayment",
+          "type": "u64"
+        },
+        {
+          "name": "rate_bps",
+          "type": "u16"
+        },
+        {
+          "name": "duration_days",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "repay",
+      "docs": [
+        "Repay (partial or full) towards a funded receivable.",
+        "Accepts installments; status flips to Repaid when total reaches repayment."
+      ],
+      "discriminator": [
+        234,
+        103,
+        67,
+        82,
+        208,
+        234,
+        219,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "repayer",
+          "docs": [
+            "Anyone can call repay — the tenant, the agency on their behalf, or",
+            "an admin script. Ownership of source ATA is what matters."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault receiving the repayment."
+          ],
+          "writable": true,
+          "relations": [
+            "receivable"
+          ]
+        },
+        {
+          "name": "vault_ata",
+          "docs": [
+            "Destination: vault's BRZ ATA."
+          ],
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "receivable",
+          "docs": [
+            "Receivable being repaid. Must be Funded (not Registered, not Repaid)."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  101,
+                  105,
+                  118,
+                  97,
+                  98,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "contract_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "repayer_brz_ata",
+          "docs": [
+            "Source: repayer's BRZ ATA."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "contract_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "docs": [
+        "Investor burns shares for pro-rata BRZ (principal + accrued interest)."
+      ],
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "investor",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.admin",
+                "account": "Vault"
+              }
+            ]
+          },
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "vault_ata",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "position",
+          "docs": [
+            "Investor's position ledger. `has_one` enforces ownership."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "investor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor_brz_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "InvestorPosition",
+      "discriminator": [
+        145,
+        143,
+        236,
+        150,
+        229,
+        40,
+        195,
+        88
+      ]
+    },
+    {
+      "name": "Receivable",
+      "discriminator": [
+        251,
+        233,
+        56,
+        203,
+        43,
+        43,
+        80,
+        4
+      ]
+    },
+    {
+      "name": "Vault",
+      "discriminator": [
+        211,
+        8,
+        232,
+        43,
+        2,
+        152,
+        117,
+        119
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Paused",
+      "msg": "Protocol is paused"
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "Unauthorized signer for this instruction"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidRepayment",
+      "msg": "Repayment must be strictly greater than principal"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidRate",
+      "msg": "Rate must be greater than zero"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidDuration",
+      "msg": "Duration must be greater than zero"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidReceivableStatus",
+      "msg": "Receivable is not in the expected status for this action"
+    },
+    {
+      "code": 6007,
+      "name": "RepayAmountMismatch",
+      "msg": "Repay amount must equal the receivable's repayment value (MVP: full repay only)"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientShares",
+      "msg": "Investor does not have enough shares to burn"
+    },
+    {
+      "code": 6009,
+      "name": "InsufficientLiquidity",
+      "msg": "Vault does not hold enough liquid BRZ for this withdrawal"
+    },
+    {
+      "code": 6010,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6011,
+      "name": "MintMismatch",
+      "msg": "Mint of the provided token account does not match the vault's BRZ mint"
+    },
+    {
+      "code": 6012,
+      "name": "VaultMismatch",
+      "msg": "Receivable does not belong to the provided vault"
+    }
+  ],
+  "types": [
+    {
+      "name": "InvestorPosition",
+      "docs": [
+        "Per-investor share ledger. One PDA per (vault, investor) pair.",
+        "",
+        "PDA seeds: [b\"position\", vault.key(), investor.key()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "investor",
+            "docs": [
+              "The investor wallet (Privy-managed or external) that owns this position."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "docs": [
+              "Parent vault."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "shares",
+            "docs": [
+              "LP-like shares the investor currently holds."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_deposited",
+            "docs": [
+              "Cumulative BRZ ever deposited. Informational (for UI \"your deposits\")."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_withdrawn",
+            "docs": [
+              "Cumulative BRZ ever withdrawn. Informational."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Canonical bump."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Receivable",
+      "docs": [
+        "A single rental receivable registered by an agency on behalf of a landlord.",
+        "The `repayment` value is fixed at registration and is the binding amount",
+        "the tenant must ultimately pay back.",
+        "",
+        "PDA seeds: [b\"receivable\", contract_id]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "docs": [
+              "Parent vault that will fund this receivable."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "agency",
+            "docs": [
+              "Agency (e.g. Selectimob) that registered the receivable."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "landlord",
+            "docs": [
+              "Landlord that will receive the BRZ advance on `fund_landlord`."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "contract_id",
+            "docs": [
+              "Unique identifier (typically hash of the off-chain contract)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "principal",
+            "docs": [
+              "BRZ amount the landlord receives upfront."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "repayment",
+            "docs": [
+              "Total BRZ that must come back to the vault. IMMUTABLE after",
+              "registration. Interest = repayment - principal."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_repaid",
+            "docs": [
+              "Cumulative BRZ returned so far via `repay` for this receivable.",
+              "Supports partial/installment repayments. Final installment must",
+              "bring this value to exactly `repayment`."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "rate_bps",
+            "docs": [
+              "Informational annualized rate in basis points (10_000 = 100 %).",
+              "The binding number is `repayment`; this is kept for UX/audit only."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "duration_days",
+            "docs": [
+              "Contract tenor in days (e.g. 30 for monthly)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "registered_at",
+            "docs": [
+              "Unix timestamp when the receivable was registered."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "funded_at",
+            "docs": [
+              "Unix timestamp when the landlord was funded. 0 until `fund_landlord`."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "docs": [
+              "Lifecycle state of the receivable."
+            ],
+            "type": {
+              "defined": {
+                "name": "ReceivableStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Canonical bump for this PDA."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReceivableStatus",
+      "docs": [
+        "Lifecycle of a Receivable. Transitions are strictly:",
+        "Registered -> Funded -> Repaid",
+        "`Defaulted` is reserved for v2 (admin-triggered)."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Registered"
+          },
+          {
+            "name": "Funded"
+          },
+          {
+            "name": "Repaid"
+          },
+          {
+            "name": "Defaulted"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vault",
+      "docs": [
+        "Singleton vault per admin. Custodies BRZ on behalf of investors and lends it",
+        "out against registered rental receivables.",
+        "",
+        "PDA seeds: [b\"vault\", admin.key()]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Authority that initialized the vault and can pause/unpause it."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "brz_mint",
+            "docs": [
+              "SPL mint of the stablecoin the vault accepts (BRZ on mainnet,",
+              "test mint on devnet/localnet)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_ata",
+            "docs": [
+              "Associated token account owned by this PDA. Holds all idle BRZ",
+              "(total_assets = vault_ata.amount + total_deployed)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_shares",
+            "docs": [
+              "Total LP-like shares outstanding across all InvestorPositions.",
+              "Denominates pro-rata ownership of total_assets."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_deployed",
+            "docs": [
+              "BRZ currently lent out (sum of principal for all Receivables in",
+              "`Funded` status). Returns to the ATA on repay."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_deposits",
+            "docs": [
+              "Cumulative principal ever deposited by investors. Informational;",
+              "not used in math."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_repaid",
+            "docs": [
+              "Cumulative BRZ returned via repay (principal + interest).",
+              "Informational."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "When true, `deposit` and `fund_landlord` are blocked.",
+              "`withdraw` and `repay` remain open so users can always exit."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Canonical bump for the vault PDA. Stored so we don't re-derive each ix."
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "VAULT_SEED",
+      "docs": [
+        "PDA seed for the singleton Vault account per admin.",
+        "Address = PDA([b\"vault\", admin.key()], program_id)."
+      ],
+      "type": "bytes",
+      "value": "[118, 97, 117, 108, 116]"
+    }
+  ]
+}

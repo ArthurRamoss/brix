@@ -1,0 +1,18 @@
+[toolchain]
+package_manager = "pnpm"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+brix = "4dKtdEs8qqSVFpm8QkiRwnFEXcyJeArDQfTmv8J6eFwo"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]

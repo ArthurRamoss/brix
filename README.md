@@ -21,36 +21,45 @@ Arthur desenvolve de PCs diferentes. Este bloco é replicável em qualquer máqu
 
 ### 2. Toolchain (dentro do WSL/Linux)
 
+> **Nota**: desde abril 2026 a CLI Solana virou **Agave** (3.x) e o Anchor pulou pra **1.x**. Comandos abaixo refletem o ecossistema atual.
+
 ```bash
+# Build deps
+sudo apt update && sudo apt install -y build-essential pkg-config libssl-dev libudev-dev protobuf-compiler git
+
 # Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
 source "$HOME/.cargo/env"
 
-# Solana CLI (1.18.x stable)
-sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+# Solana CLI (Agave via Anza)
+curl -sSfL https://release.anza.xyz/stable/install | sh
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
-# Anchor via avm
-cargo install --git https://github.com/coral-xyz/anchor avm --locked
-avm install 0.30.1
-avm use 0.30.1
+# Anchor via avm (instala versão latest, atualmente 1.0.1)
+cargo install --git https://github.com/coral-xyz/anchor avm --force
+avm install latest
+avm use latest
 
 # Node + pnpm (via nvm)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.nvm/nvm.sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
 nvm install 20
-npm i -g pnpm
+nvm alias default 20
+corepack enable && corepack prepare pnpm@latest --activate
 
 # Verificar
 anchor --version && solana --version && node -v && pnpm -v
 ```
+
+**Versões de referência (validadas 2026-04-22)**: Rust 1.95.0 · Agave 3.1.14 · Anchor 1.0.1 · Node 20.20.2 · pnpm 10.33.1.
 
 ### 3. Wallet devnet
 
 ```bash
 solana-keygen new                    # SALVE o seed phrase num gerenciador seguro
 solana config set --url devnet
-solana airdrop 5
+solana airdrop 2                     # faucet costuma dar rate limit; use https://faucet.solana.com se falhar
 solana balance
 ```
 
@@ -127,7 +136,7 @@ brix/
 
 Ver [`.agents/AGENT_BRAIN.md` §4](./.agents/AGENT_BRAIN.md) para a lista canônica.
 
-Resumo: **Anchor 0.30.x** (Rust) · **Next.js 14** App Router · **Privy** (auth) · **Helius** (RPC) · **BRZ** (stablecoin nativo Solana) · **pnpm**.
+Resumo: **Anchor 1.x** (Rust) em **Agave 3.x** · **Next.js 14** App Router · **Privy** (auth) · **Helius** (RPC) · **BRZ** (stablecoin nativo Solana) · **pnpm**.
 
 ---
 

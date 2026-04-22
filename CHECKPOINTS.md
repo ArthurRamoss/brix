@@ -3,59 +3,43 @@
 > **Regra**: este arquivo é o estado do projeto. Abra toda sessão. Atualize toda sessão.
 > Tag cada conclusão com `git tag cpN-done` para bookmarks rápidos.
 
-**Hoje**: 2026-04-18 · **Submission Frontier**: 2026-05-11 · **Solo founder**.
+**Hoje**: 2026-04-22 · **Submission Frontier**: 2026-05-11 · **Solo founder**.
 
 ---
 
-## Precondição 0 — Toolchain
+## Precondição 0 — Toolchain ✅ CONCLUÍDO (22 abr)
 
-> **🚧 BLOCKER ATUAL (18 abr)**: WSL está instalado mas **sem distro Linux**. Tentativa de `wsl --install -d Ubuntu` falhou porque **Virtual Machine Platform não está habilitado** (e possivelmente virtualização BIOS off).
->
-> **O que Arthur precisa fazer offline**:
-> 1. Abrir PowerShell como Admin e rodar:
->    ```powershell
->    dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
->    dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
->    ```
-> 2. Reiniciar o PC.
-> 3. Entrar no BIOS/UEFI (F2/Del/F10 no boot — depende da marca). Procurar `Intel VT-x`, `AMD-V`, ou `Virtualization Technology`. Habilitar. Salvar e sair.
-> 4. Rodar `wsl --install -d Ubuntu` (sem admin). Quando abrir pela primeira vez, criar user (pode ser `arthur`) e senha.
-> 5. Voltar aqui pra Claude retomar o setup.
->
-> Após resolvido, rodar:
-> ```bash
-> wsl -d Ubuntu
-> # dentro do Ubuntu, seguir o README.md seção "Toolchain"
-> ```
+Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 
-- [ ] VM Platform habilitado + BIOS virtualization on (resolver offline)
-- [ ] WSL2 Ubuntu instalado (`wsl -l -v` mostra Ubuntu v2)
-- [ ] Rust instalado (`rustup`, stable)
-- [ ] Solana CLI instalado (1.18.x)
-- [ ] Anchor instalado via `avm` (0.30.x)
-- [ ] Node.js 20+ via `nvm`
-- [ ] pnpm instalado
-- [ ] `solana-keygen new` rodado, seed phrase salvo em gerenciador seguro
-- [ ] `solana config set --url devnet` feito
-- [ ] `solana airdrop 5` retornou SOL
-- [ ] Conta Helius criada, API key em `.env.local`
-- [ ] Conta Privy criada, App ID em `.env.local`
-- [ ] `anchor init test-tmp && cd test-tmp && anchor build` passa
+| Tool | Versão | Notas |
+|---|---|---|
+| Rust | 1.95.0 | via rustup, profile minimal |
+| Solana CLI | **3.1.14 (Agave)** | via `release.anza.xyz/stable/install` — Solana virou Agave/Anza; numeração resetou (ex-Solana 1.18.x agora é Agave 3.x) |
+| Anchor | **1.0.1** | via `avm install latest` — Anchor jumped 0.31→1.0 |
+| Node | 20.20.2 | via nvm (default alias) |
+| pnpm | 10.33.1 | via corepack |
+| protobuf-compiler | apt | necessário pra alguns deps do Anchor |
+
+**Keypair devnet**: `EFQuU2ii5HhG1r7nRCoMQNNA9YnSDnG2UGPvUZSG3dRs` — seed phrase salva pelo Arthur (gerenciador seguro).
+**Validação**: `anchor init` + `anchor build` produziu `.so` + IDL com sucesso.
+
+### Pendências não-bloqueantes
+- [ ] Airdrop devnet (faucet rate-limited hoje; pegar 2 SOL em https://faucet.solana.com/ quando necessário)
+- [x] Conta Helius criada, API key em `.env.local` (free tier, validada com `getHealth` → ok)
+- [x] Conta Privy criada — App ID `cmoa0jx8500v30cl78buc8dop`
 - [ ] Commit tag: `precond0-done`
 
-**Próximo se isso travar**: docs do anchor.com, helius.dev, privy.io. Canal #solana-dev no Discord Solana.
-
 ---
 
-## Precondição 1 — Arquivos de contexto
+## Precondição 1 — Arquivos de contexto ✅ CONCLUÍDO (22 abr)
 
 - [x] `brix.md` reescrito (Apr 18)
 - [x] `research/deep-dive-brix-2026-04-18.md` criado
-- [x] `.agents/AGENT_BRAIN.md` criado
-- [x] `CHECKPOINTS.md` (este) criado
-- [ ] `README.md` root criado
-- [ ] `.env.local.example` criado
-- [ ] `.gitignore` ampliado (`target/`, `.anchor/`, keypairs, `node_modules/`)
+- [x] `.agents/AGENT_BRAIN.md` criado + atualizado com versões reais (22 abr)
+- [x] `CHECKPOINTS.md` (este) criado + atualizado (22 abr)
+- [x] `README.md` root criado + atualizado com toolchain correto (22 abr)
+- [x] `.env.local.example` criado (Helius, Privy, Colosseum Copilot, Brix program ID, BRZ mint)
+- [x] `.gitignore` completo (env, keypairs, target/, .anchor/, node_modules/, build artifacts)
 - [ ] Commit tag: `precond1-done`
 
 ---
@@ -68,19 +52,24 @@
 
 ### Tasks
 
-- [ ] `scaffold-project` executado → workspace `create-solana-dapp` clonado
-- [ ] Repo inicial ajustado (pasta renomeada, branch main, primeiro commit)
-- [ ] `programs/brix/src/lib.rs` com estrutura inicial (`#[program]`, `#[account]`)
-- [ ] Contas definidas: `Vault` (PDA), `Receivable` (PDA por contract_id)
-- [ ] Instruction `initialize_vault` implementada + teste
-- [ ] Instruction `register_receivable` (agência) implementada + teste
-- [ ] Instruction `deposit` (investidor → vault) implementada + teste
-- [ ] Instruction `fund_landlord` (vault → landlord) implementada + teste
-- [ ] Instruction `repay` (tenant/agência → vault) implementada + teste
-- [ ] Instruction `withdraw` (investidor saca principal + juros) implementada + teste
-- [ ] `anchor test` passa com >= 6 testes
+- [x] `scaffold-project` skill executado (Anchor 1.0.1 + Next.js 16 + Tailwind 4, monorepo pnpm)
+- [x] `anchor build` passa → `.so`, IDL (`target/idl/brix.json`), TS types (`target/types/brix.ts`)
+- [x] `pnpm --filter app build` passa → Next build limpo em 14s
+- [x] Privy + Solana SDKs instalados (`@privy-io/react-auth`, `@solana/web3.js`, `@coral-xyz/anchor`, `@solana/spl-token`)
+- [x] Program ID placeholder: `6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94` (será re-confirmado no primeiro `anchor deploy`)
+- [ ] `programs/brix/src/state.rs` com contas: `Vault` (PDA), `Receivable` (PDA por contract_id)
+- [ ] `programs/brix/src/error.rs` com `BrixError` enum
+- [ ] `programs/brix/src/constants.rs` com seeds + bps constants
+- [ ] Instruction `initialize_vault` + teste LiteSVM
+- [ ] Instruction `register_receivable` (agência) + teste
+- [ ] Instruction `deposit` (investidor → vault, BRZ SPL) + teste
+- [ ] Instruction `fund_landlord` (vault → landlord, BRZ SPL) + teste
+- [ ] Instruction `repay` (tenant/agência → vault) + teste
+- [ ] Instruction `withdraw` (investidor saca principal + juros) + teste
+- [ ] `anchor test` (cargo test via LiteSVM) passa com ≥ 6 testes
+- [ ] `solana airdrop 2` (via web faucet) → devnet SOL pra deploy
 - [ ] Deploy devnet: `anchor deploy --provider.cluster devnet`
-- [ ] Program ID salvo em `Anchor.toml` e `.env.local`
+- [ ] Program ID final salvo em `Anchor.toml` e `.env.local`
 - [ ] Arthur sabe explicar (próprias palavras) PDA, SPL, instruction, CPI
 - [ ] Commit tag: `cp1-done`
 
@@ -187,6 +176,27 @@ Adicionar entradas cronológicas do tipo:
 ```
 
 Últimas entradas aqui embaixo (mais novas no topo):
+
+### 2026-04-22 (qua) — PC home (sessão tarde)
+- Helius free tier ativado, API key validada via `getHealth → ok`.
+- **Scaffold executado** via skill `scaffold-project`:
+  - `anchor init brix-scaffold` em `/tmp` → renomeado pra `brix` → merge no repo root.
+  - `create-next-app` em `app/` (Next 16.2.4, React 19, Tailwind 4, TS, App Router, `src/` layout, pnpm).
+  - Instalados `@privy-io/react-auth`, `@solana/web3.js`, `@coral-xyz/anchor`, `@solana/spl-token`.
+  - Workspace pnpm unificado no root (`pnpm-workspace.yaml` → `['app']`).
+  - `package.json` root com scripts `program:build`, `program:test`, `app:dev`, `app:build`.
+- **Validação E2E**: `anchor build` OK (4m31s em /mnt/c) → `.so` + IDL + TS types. `pnpm --filter app build` OK (14s).
+- Program ID scaffold: `6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94` (substituído no primeiro deploy real).
+- Escrito `.superstack/build-context.md` como handoff pro `build-defi-protocol` skill.
+- ⚠️ **Nota de performance**: repo em `/mnt/c/` → anchor builds ~5x mais lentos que em ext4 nativo. Aceito no MVP; migrar pra `~/brix/` só se for bloqueante.
+- **PRÓXIMO**: Arthur pega 2 SOL devnet via web faucet → skill `build-defi-protocol` escreve state.rs + instructions de CP1.
+
+### 2026-04-22 (qua) — PC home (sessão manhã)
+- **Toolchain resolvido**: WSL2 Ubuntu 24.04 instalado; BIOS virtualization habilitada. Rust 1.95.0, Agave 3.1.14, Anchor 1.0.1, Node 20.20.2, pnpm 10.33.1.
+- Anchor jumped 0.30→1.x (ecossistema) — todas as refs de versão atualizadas em `README.md`, `AGENT_BRAIN.md`, `CHECKPOINTS.md`.
+- Keypair devnet: `EFQuU2ii5HhG1r7nRCoMQNNA9YnSDnG2UGPvUZSG3dRs`. Airdrop caiu em rate limit; usar web faucet depois.
+- Privy App ID criado: `cmoa0jx8500v30cl78buc8dop` (salvo na memória persistente).
+- Scripts de setup reutilizáveis em `.agents/setup-*.sh`.
 
 ### 2026-04-18 (sáb) — PC home
 - Deep dive Copilot Apr 18 concluído (18 JSON em `research/copilot-deep-dive-2026-04-18/`)

@@ -37,3 +37,6 @@ pnpm-debug.log*
 # Build artifacts
 build/
 coverage/
+test-ledger
+.surfpool
+.yarn

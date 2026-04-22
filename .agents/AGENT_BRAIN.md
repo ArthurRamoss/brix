@@ -2,7 +2,7 @@
 
 > **Quem lê isto**: Claude Code (ou qualquer agente AI) no começo de toda sessão neste repo.
 > **Quem mantém**: Arthur + agente, atualizando conforme o projeto evolui.
-> **Última revisão**: 2026-04-18
+> **Última revisão**: 2026-04-22
 
 ---
 
@@ -35,16 +35,19 @@ Detalhes completos em `brix.md`. Este arquivo não duplica pitch.
 
 ## 4. Stack canônico (não mudar sem discussão explícita)
 
-| Camada | Escolha | Observação |
-|---|---|---|
-| Smart contract | Anchor 0.30.x (Rust) em Solana devnet | Framework padrão Solana |
-| Frontend | Next.js 14 App Router + TypeScript | `create-solana-dapp` template |
-| Auth / wallet | Privy.io (embedded wallet, email login) | Sponsor Frontier |
-| RPC | Helius | Sponsor Frontier, free tier devnet |
-| Stablecoin | **BRZ (Transfero)** | NATIVO em Solana. NUNCA BRLA (não existe em Solana) |
-| Off-ramp PIX | **Mockado no MVP** | Não construir. Mencionar LocalPay/Sendryx/Transfero como integração futura |
-| Package manager | pnpm | Menos disco, rápido |
-| Testes Anchor | LiteSVM (unit) + localnet (integration) | `anchor test` |
+| Camada | Escolha | Versão instalada (22 abr) | Observação |
+|---|---|---|---|
+| Smart contract | Anchor (Rust) em Solana devnet | **1.0.1** | Anchor pulou 0.31→1.0; Agave 3.x exige Anchor 1.x |
+| Solana CLI | Agave (Anza) | **3.1.14** | Ex-Solana Labs virou Anza/Agave; numeração resetou |
+| Rust toolchain | stable | **1.95.0** | via rustup |
+| Frontend | Next.js 14+ App Router + TypeScript | pnpm-scaffolded | `create-solana-dapp` template quando for scaffolar |
+| Auth / wallet | Privy.io (embedded wallet, email login) | App ID: `cmoa0jx8500v30cl78buc8dop` | Sponsor Frontier |
+| RPC | Helius | pendente criação conta | Sponsor Frontier, free tier devnet suficiente pra MVP |
+| Stablecoin | **BRZ (Transfero)** | mainnet mint `FtgGSFADXBtroxq8VCausXRr2of47QBf5AS1NtZCu4GD` | NATIVO em Solana. NUNCA BRLA (não existe em Solana) |
+| Off-ramp PIX | **Mockado no MVP** | — | Não construir. Mencionar LocalPay/Sendryx/Transfero como integração futura |
+| Package manager | pnpm | **10.33.1** (via corepack) | Menos disco, rápido |
+| Node | LTS 20 | **20.20.2** (via nvm) | `nvm use default` necessário pra não pegar Windows node do PATH interop |
+| Testes Anchor | LiteSVM (unit) + devnet (integration) | litesvm 0.10.0 (vem com scaffold) | `anchor test` |
 
 **Explicitamente NÃO usar**: Metaplex/NFTs, World ID, Arcium. Sem justificativa de produto.
 

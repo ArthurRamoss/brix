@@ -10,20 +10,13 @@ if (typeof window !== "undefined") {
 import { PrivyProvider } from "@privy-io/react-auth";
 import { Toaster } from "sonner";
 
-const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
+const CONFIGURED_PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
+const PRIVY_APP_ID =
+  CONFIGURED_PRIVY_APP_ID && !CONFIGURED_PRIVY_APP_ID.includes("replace_")
+    ? CONFIGURED_PRIVY_APP_ID
+    : "clp2z4zw70000l80f6wytrc3z";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  // Durante o build sem .env.local, renderiza children sem Privy.
-  // Em runtime com a env var setada, tudo funciona normalmente.
-  if (!PRIVY_APP_ID) {
-    return (
-      <>
-        {children}
-        <Toaster position="bottom-right" />
-      </>
-    );
-  }
-
   return (
     <PrivyProvider
       appId={PRIVY_APP_ID}

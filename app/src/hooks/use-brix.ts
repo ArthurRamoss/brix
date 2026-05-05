@@ -1,20 +1,65 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
-import { PublicKey } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { BN } from "@coral-xyz/anchor";
+import { usePrivy } from "@privy-io/react-auth";
+import {
+  useSignTransaction,
+  useWallets as useSolanaWallets,
+  type ConnectedStandardSolanaWallet,
+  type UseSignTransaction,
+} from "@privy-io/react-auth/solana";
+import {
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { connection } from "../lib/connection";
 import {
-  getBrixProgram,
   BRZ_MINT,
   VAULT_ADMIN,
   deriveVaultPDA,
+  getBrixProgram,
+  type AnchorWalletAdapter,
 } from "../lib/brix-program";
 
-// --- Tipos de dados do vault (espelham os campos do state.rs) ---
+const DEVNET_CHAIN = "solana:devnet" as const;
+
+type AnchorNumeric = { toString(): string };
+
+type RawVault = {
+  admin: PublicKey | string;
+  brzMint: PublicKey | string;
+  vaultAta: PublicKey | string;
+  totalShares: AnchorNumeric;
+  totalDeployed: AnchorNumeric;
+  totalDeposits: AnchorNumeric;
+  totalRepaid: AnchorNumeric;
+  paused: boolean;
+};
+
+type RawPosition = {
+  shares: AnchorNumeric;
+  totalDeposited: AnchorNumeric;
+  totalWithdrawn: AnchorNumeric;
+};
+
+type AccountFetcher<T> = {
+  fetch(address: PublicKey): Promise<T>;
+};
+
+type BrixProgramClient = ReturnType<typeof getBrixProgram>;
+
+type BrixAccounts = {
+  vault: AccountFetcher<RawVault>;
+  investorPosition: AccountFetcher<RawPosition>;
+};
 
 export interface VaultData {
   admin: PublicKey;
@@ -25,99 +70,130 @@ export interface VaultData {
   totalDeposits: bigint;
   totalRepaid: bigint;
   paused: boolean;
-  // Calculados no cliente
-  vaultAtaBalance: bigint; // BRZ idle no ATA
-  totalAssets: bigint; // = vaultAtaBalance + totalDeployed
-  aprBps: number; // estimativa de APR em bps (calculada com recebiveis ativos)
+  vaultAtaBalance: bigint;
+  totalAssets: bigint;
+  aprBps: number;
 }
 
 export interface PositionData {
   shares: bigint;
   totalDeposited: bigint;
   totalWithdrawn: bigint;
-  // Calculado: valor em BRZ das shares
   estimatedValueBrz: bigint;
 }
 
-// --- Hook principal ---
+function brixAccounts(program: BrixProgramClient): BrixAccounts {
+  return program.account as unknown as BrixAccounts;
+}
+
+function serializeForPrivy(tx: Transaction | VersionedTransaction): Uint8Array {
+  if (tx instanceof VersionedTransaction) return tx.serialize();
+  return tx.serialize({
+    requireAllSignatures: false,
+    verifySignatures: false,
+  });
+}
+
+function deserializeSigned<T extends Transaction | VersionedTransaction>(
+  original: T,
+  bytes: Uint8Array,
+): T {
+  if (original instanceof VersionedTransaction) {
+    return VersionedTransaction.deserialize(bytes) as T;
+  }
+  return Transaction.from(bytes) as T;
+}
+
+async function signWithPrivy<T extends Transaction | VersionedTransaction>(
+  tx: T,
+  wallet: ConnectedStandardSolanaWallet,
+  signTransaction: UseSignTransaction["signTransaction"],
+): Promise<T> {
+  const { signedTransaction } = await signTransaction({
+    transaction: serializeForPrivy(tx),
+    wallet,
+    chain: DEVNET_CHAIN,
+  });
+  return deserializeSigned(tx, signedTransaction);
+}
+
+function derivePositionPDA(
+  programId: PublicKey,
+  vaultPDA: PublicKey,
+  investor: PublicKey,
+) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("position"), vaultPDA.toBuffer(), investor.toBuffer()],
+    programId,
+  );
+}
 
 export function useBrix() {
-  const { authenticated, user } = usePrivy();
+  const { authenticated } = usePrivy();
+  const { wallets, ready: solanaWalletsReady } = useSolanaWallets();
+  const { signTransaction: signPrivyTransaction } = useSignTransaction();
 
   const [vaultData, setVaultData] = useState<VaultData | null>(null);
   const [positionData, setPositionData] = useState<PositionData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Busca a wallet Solana do usuário via linkedAccounts.
-  // useWallets() do pacote principal retorna só EVM. A wallet Solana embedded
-  // fica em user.linkedAccounts com type==='wallet' && chainType==='solana'.
-  const solanaWallet = useMemo(() => {
-    return user?.linkedAccounts.find(
-      (a) => a.type === "wallet" && "chainType" in a && (a as { chainType: string }).chainType === "solana",
-    ) as { address: string } | undefined ?? null;
-  }, [user]);
+  const solanaWallet = useMemo(() => wallets[0] ?? null, [wallets]);
 
-  // Anchor wallet adapter — placeholder que permite ler dados (fetch) sem sign.
-  // Sign real requer a embedded Solana wallet do Privy (integrado no CP3).
-  const anchorWallet = useMemo(() => {
-    const address = solanaWallet?.address ?? VAULT_ADMIN.toBase58();
+  const anchorWallet = useMemo<AnchorWalletAdapter>(() => {
+    if (!solanaWallet) {
+      return {
+        publicKey: VAULT_ADMIN,
+        signTransaction: async () => {
+          throw new Error("Solana wallet is not ready to sign.");
+        },
+        signAllTransactions: async () => {
+          throw new Error("Solana wallet is not ready to sign.");
+        },
+      };
+    }
+
     return {
-      publicKey: new PublicKey(address),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      signTransaction: async (tx: any) => tx,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      signAllTransactions: async (txs: any[]) => txs,
+      publicKey: new PublicKey(solanaWallet.address),
+      signTransaction: async <T extends Transaction | VersionedTransaction>(
+        tx: T,
+      ) => signWithPrivy(tx, solanaWallet, signPrivyTransaction),
+      signAllTransactions: async <T extends Transaction | VersionedTransaction>(
+        txs: T[],
+      ) => {
+        const signed: T[] = [];
+        for (const tx of txs) {
+          signed.push(
+            await signWithPrivy(tx, solanaWallet, signPrivyTransaction),
+          );
+        }
+        return signed;
+      },
     };
-  }, [solanaWallet]);
+  }, [solanaWallet, signPrivyTransaction]);
 
-  // Instância do program (null se não conectado)
-  const program = useMemo(() => {
-    if (!anchorWallet) return null;
-    return getBrixProgram(anchorWallet);
-  }, [anchorWallet]);
-
-  // --- Fetch de dados on-chain ---
+  const program = useMemo(
+    () => getBrixProgram(anchorWallet),
+    [anchorWallet],
+  );
 
   const fetchVaultData = useCallback(async () => {
     const [vaultPDA] = deriveVaultPDA();
 
     try {
-      // program?.account.<ContaName>.fetch(pda) busca os dados da conta on-chain.
-      // Analogia: é como um GET /api/vault/:id que lê direto do banco de dados distribuído.
-      // Se o program não estiver disponível, usa um provider read-only.
-      let vault;
-      if (program) {
-        vault = await (program.account as any).vault.fetch(vaultPDA);
-      } else {
-        // Read-only: busca sem wallet (para mostrar dados públicos sem login)
-        const { getBrixProgram: getReadOnly } = await import("../lib/brix-program");
-        const readOnlyWallet = {
-          publicKey: VAULT_ADMIN,
-          signTransaction: async <T,>(tx: T) => tx,
-          signAllTransactions: async <T,>(txs: T[]) => txs,
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const readOnlyProgram = getReadOnly(readOnlyWallet as any);
-        vault = await (readOnlyProgram.account as any).vault.fetch(vaultPDA);
-      }
+      const vault = await brixAccounts(program).vault.fetch(vaultPDA);
 
-      // Busca o saldo real do ATA do vault (BRZ idle)
-      let ataBalance = BigInt(0);
+      let ataBalance = 0n;
       try {
         const ataInfo = await connection.getTokenAccountBalance(
           new PublicKey(vault.vaultAta),
         );
         ataBalance = BigInt(ataInfo.value.amount);
       } catch {
-        // ATA pode não existir ainda se o vault não foi inicializado
+        // Vault ATA may not exist before scripts/seed-demo.ts runs.
       }
 
       const totalDeployed = BigInt(vault.totalDeployed.toString());
       const totalAssets = ataBalance + totalDeployed;
-
-      // APR estimado: se há capital deployed, a yield vem dos receivables.
-      // Por ora mostramos 20% fixo como valor de demo (CP3 vai calcular real).
-      const aprBps = 2000; // 20%
 
       setVaultData({
         admin: new PublicKey(vault.admin),
@@ -130,49 +206,49 @@ export function useBrix() {
         paused: vault.paused,
         vaultAtaBalance: ataBalance,
         totalAssets,
-        aprBps,
+        aprBps: 2000,
       });
     } catch (err) {
-      // Vault ainda não inicializado no devnet — estado normal antes do seed-demo
-      console.warn("Vault não encontrado:", err);
+      console.warn("Vault not found:", err);
       setVaultData(null);
     }
   }, [program]);
 
   const fetchPositionData = useCallback(async () => {
-    if (!program || !anchorWallet) return;
+    if (!authenticated || !solanaWalletsReady || !solanaWallet) {
+      setPositionData(null);
+      return;
+    }
 
     const [vaultPDA] = deriveVaultPDA();
 
     try {
-      const [positionPDA] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("position"),
-          vaultPDA.toBuffer(),
-          anchorWallet.publicKey.toBuffer(),
-        ],
+      const [positionPDA] = derivePositionPDA(
         program.programId,
+        vaultPDA,
+        anchorWallet.publicKey,
       );
 
-      const position = await (program.account as any).investorPosition.fetch(positionPDA);
-      const vault = await (program.account as any).vault.fetch(vaultPDA);
+      const [position, vault] = await Promise.all([
+        brixAccounts(program).investorPosition.fetch(positionPDA),
+        brixAccounts(program).vault.fetch(vaultPDA),
+      ]);
 
       const shares = BigInt(position.shares.toString());
       const totalShares = BigInt(vault.totalShares.toString());
 
-      // Busca saldo real do ATA pra calcular valor estimado das shares
-      let ataBalance = BigInt(0);
+      let ataBalance = 0n;
       try {
         const ataInfo = await connection.getTokenAccountBalance(
           new PublicKey(vault.vaultAta),
         );
         ataBalance = BigInt(ataInfo.value.amount);
-      } catch {}
+      } catch {
+        // Missing vault ATA means there is no user position to value yet.
+      }
 
       const totalDeployed = BigInt(vault.totalDeployed.toString());
       const totalAssets = ataBalance + totalDeployed;
-
-      // estimatedValue = shares * totalAssets / totalShares
       const estimatedValueBrz =
         totalShares > 0n ? (shares * totalAssets) / totalShares : 0n;
 
@@ -185,36 +261,40 @@ export function useBrix() {
     } catch {
       setPositionData(null);
     }
-  }, [program, anchorWallet]);
+  }, [
+    authenticated,
+    anchorWallet.publicKey,
+    program,
+    solanaWallet,
+    solanaWalletsReady,
+  ]);
 
   useEffect(() => {
-    fetchVaultData();
+    void Promise.resolve().then(fetchVaultData);
   }, [fetchVaultData]);
 
   useEffect(() => {
-    if (authenticated) {
-      fetchPositionData();
-    }
-  }, [authenticated, fetchPositionData]);
-
-  // --- Ações ---
+    void Promise.resolve().then(fetchPositionData);
+  }, [fetchPositionData]);
 
   async function deposit(amountBrz: number) {
-    if (!program || !anchorWallet) {
-      toast.error("Conecte sua carteira primeiro.");
+    if (!authenticated || !solanaWalletsReady || !solanaWallet) {
+      toast.error("Conecte sua carteira Solana primeiro.");
       return;
     }
 
-    const amountLamports = BigInt(Math.floor(amountBrz * 1_000_000)); // BRZ tem 6 decimais
+    const amountLamports = BigInt(Math.floor(amountBrz * 1_000_000));
     const [vaultPDA] = deriveVaultPDA();
 
-    // Busca o ATA do vault (já criado no initialize_vault)
-    const vault = await (program.account as any).vault.fetch(vaultPDA);
+    const vault = await brixAccounts(program).vault.fetch(vaultPDA);
     const vaultAta = new PublicKey(vault.vaultAta);
-
-    // ATA do investidor para BRZ
     const investorBrzAta = getAssociatedTokenAddressSync(
       BRZ_MINT,
+      anchorWallet.publicKey,
+    );
+    const [position] = derivePositionPDA(
+      program.programId,
+      vaultPDA,
       anchorWallet.publicKey,
     );
 
@@ -222,10 +302,6 @@ export function useBrix() {
     setIsLoading(true);
 
     try {
-      // program.methods.deposit(amount)
-      //   .accounts({ ... }) — passa as contas que o program precisa
-      //   .rpc()             — assina com a wallet e envia pra devnet
-      // Analogia: é como chamar POST /api/vault/deposit com autenticação JWT
       const txSig = await program.methods
         .deposit(new BN(amountLamports.toString()))
         .accounts({
@@ -234,6 +310,9 @@ export function useBrix() {
           brzMint: BRZ_MINT,
           vaultAta,
           investorBrzAta,
+          position,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
         })
         .rpc();
 
@@ -242,8 +321,7 @@ export function useBrix() {
         description: `Explorer: https://explorer.solana.com/tx/${txSig}?cluster=devnet`,
       });
 
-      await fetchVaultData();
-      await fetchPositionData();
+      await Promise.all([fetchVaultData(), fetchPositionData()]);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
       const msg = err instanceof Error ? err.message : String(err);
@@ -254,14 +332,21 @@ export function useBrix() {
   }
 
   async function withdraw(shares: bigint) {
-    if (!program || !anchorWallet) {
-      toast.error("Conecte sua carteira primeiro.");
+    if (!authenticated || !solanaWalletsReady || !solanaWallet) {
+      toast.error("Conecte sua carteira Solana primeiro.");
       return;
     }
 
     const [vaultPDA] = deriveVaultPDA();
+    const vault = await brixAccounts(program).vault.fetch(vaultPDA);
+    const vaultAta = new PublicKey(vault.vaultAta);
     const investorBrzAta = getAssociatedTokenAddressSync(
       BRZ_MINT,
+      anchorWallet.publicKey,
+    );
+    const [position] = derivePositionPDA(
+      program.programId,
+      vaultPDA,
       anchorWallet.publicKey,
     );
 
@@ -273,7 +358,11 @@ export function useBrix() {
         .withdraw(new BN(shares.toString()))
         .accounts({
           investor: anchorWallet.publicKey,
+          vault: vaultPDA,
+          vaultAta,
+          position,
           investorBrzAta,
+          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
 
@@ -282,8 +371,7 @@ export function useBrix() {
         description: `Explorer: https://explorer.solana.com/tx/${txSig}?cluster=devnet`,
       });
 
-      await fetchVaultData();
-      await fetchPositionData();
+      await Promise.all([fetchVaultData(), fetchPositionData()]);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
       const msg = err instanceof Error ? err.message : String(err);
@@ -294,22 +382,25 @@ export function useBrix() {
   }
 
   return {
-    // Estado
     vaultData,
     positionData,
     isLoading,
     authenticated,
     wallet: solanaWallet,
     walletAddress: solanaWallet?.address ?? null,
-    // Ações
     deposit,
     withdraw,
-    refetch: () => { fetchVaultData(); fetchPositionData(); },
+    refetch: () => {
+      void fetchVaultData();
+      void fetchPositionData();
+    },
   };
 }
 
-// Helper: formata lamports BRZ (6 decimais) pra exibição em R$
 export function formatBrz(lamports: bigint): string {
   const value = Number(lamports) / 1_000_000;
-  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }

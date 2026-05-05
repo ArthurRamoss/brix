@@ -1,0 +1,40 @@
+{
+  "contracts": [
+    {
+      "id": "SEL-2026-001",
+      "landlordName": "Owner A",
+      "tenantName": "Tenant A",
+      "propertyCity": "Sao Paulo, SP",
+      "principalBrz": 9600,
+      "repaymentBrz": 11520,
+      "rateBps": 2000,
+      "durationDays": 365,
+      "installments": 12,
+      "insurance": "Porto Seguro"
+    },
+    {
+      "id": "SEL-2026-002",
+      "landlordName": "Owner B",
+      "tenantName": "Tenant B",
+      "propertyCity": "Campinas, SP",
+      "principalBrz": 7200,
+      "repaymentBrz": 7920,
+      "rateBps": 2000,
+      "durationDays": 180,
+      "installments": 6,
+      "insurance": "Too Seguros"
+    },
+    {
+      "id": "SEL-2026-003",
+      "landlordName": "Owner C",
+      "tenantName": "Tenant C",
+      "propertyCity": "Santos, SP",
+      "principalBrz": 4200,
+      "repaymentBrz": 4620,
+      "rateBps": 2000,
+      "durationDays": 180,
+      "installments": 6,
+      "insurance": "Mapfre"
+    }
+  ]
+}

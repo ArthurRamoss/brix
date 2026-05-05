@@ -33,6 +33,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+scripts/demo-state.json
 
 # Build artifacts
 build/
@@ -40,3 +41,4 @@ coverage/
 test-ledger
 .surfpool
 .yarn
+.claude/

@@ -1,4 +1,4 @@
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, type Idl } from "@coral-xyz/anchor";
 import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { connection } from "./connection";
 import IDL from "./brix-idl.json";
@@ -41,8 +41,7 @@ export function getBrixProgram(wallet: AnchorWalletAdapter) {
 
   // No Anchor 0.30+ com o novo formato de IDL, o Program ID é lido
   // diretamente do campo "address" no brix-idl.json — não precisa passar separado.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new Program(IDL as any, provider);
+  return new Program(IDL as Idl, provider);
 }
 
 // Deriva o PDA do vault a partir do admin.

@@ -1,26 +1,302 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Brix — design tokens
+   Ported verbatim from Brix-handoff/brix/project/styles.css
+   ───────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* warm-toned dark neutrals (slight warmth via hue 75) */
+  --bg-0: oklch(0.16 0.005 75);
+  --bg-1: oklch(0.20 0.006 75);
+  --bg-2: oklch(0.24 0.007 75);
+  --bg-3: oklch(0.28 0.008 75);
+  --line: oklch(0.32 0.008 75);
+  --line-soft: oklch(0.26 0.008 75);
+
+  --fg-0: oklch(0.97 0.005 75);
+  --fg-1: oklch(0.78 0.008 75);
+  --fg-2: oklch(0.58 0.008 75);
+  --fg-3: oklch(0.42 0.008 75);
+
+  /* accents */
+  --gold: oklch(0.82 0.16 75);
+  --gold-soft: oklch(0.82 0.16 75 / 0.12);
+  --gold-line: oklch(0.82 0.16 75 / 0.30);
+
+  --teal: oklch(0.78 0.12 195);
+  --teal-soft: oklch(0.78 0.12 195 / 0.12);
+  --teal-line: oklch(0.78 0.12 195 / 0.30);
+
+  --green: oklch(0.80 0.14 150);
+  --red: oklch(0.70 0.18 25);
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 }
 
+/* Expose tokens to Tailwind v4 utilities. We keep the bespoke classes below
+   as the primary surface; Tailwind utilities are an escape hatch. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg-0: var(--bg-0);
+  --color-bg-1: var(--bg-1);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-fg-0: var(--fg-0);
+  --color-fg-1: var(--fg-1);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-gold: var(--gold);
+  --color-teal: var(--teal);
+  --color-green: var(--green);
+  --color-red: var(--red);
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+:where(input, select, textarea):focus-visible {
+  border-color: var(--gold);
+}
+
+/* utilities */
+.mono {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-feature-settings: "tnum";
+}
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* subtle grid pattern for backgrounds */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--line-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+
+/* scroll inside frames */
+.scroll-y { overflow-y: auto; overflow-x: hidden; }
+.scroll-y::-webkit-scrollbar { width: 6px; }
+.scroll-y::-webkit-scrollbar-track { background: transparent; }
+.scroll-y::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+/* button presets */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 15px;
+  transition: background .15s, color .15s, border-color .15s;
+  border: 1px solid transparent;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary {
+  background: var(--gold);
+  color: oklch(0.18 0.02 75);
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) { background: oklch(0.86 0.16 75); }
+.btn-secondary {
+  background: var(--bg-2);
+  border-color: var(--line);
+  color: var(--fg-0);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--bg-3); }
+.btn-ghost { color: var(--fg-1); }
+.btn-ghost:hover:not(:disabled) {
+  color: var(--fg-0);
+  background: var(--bg-2);
+}
+.btn-teal {
+  background: var(--teal);
+  color: oklch(0.18 0.02 195);
+  font-weight: 600;
+}
+.btn-teal:hover:not(:disabled) { background: oklch(0.82 0.12 195); }
+
+.btn-sm { padding: 8px 12px; font-size: 13px; }
+.btn-lg { padding: 16px 24px; font-size: 16px; }
+
+/* form fields */
+.field {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--fg-0);
+  font-size: 16px;
+  transition: border-color .15s, background .15s;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: var(--bg-2);
+}
+.field::placeholder { color: var(--fg-3); }
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-2);
+  margin-bottom: 8px;
+}
+
+/* status pills */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+.pill-pending {
+  background: oklch(0.82 0.16 75 / 0.10);
+  color: var(--gold);
+  border: 1px solid var(--gold-line);
+}
+.pill-registered {
+  background: oklch(0.78 0.12 195 / 0.10);
+  color: var(--teal);
+  border: 1px solid var(--teal-line);
+}
+.pill-funded {
+  background: oklch(0.80 0.14 150 / 0.10);
+  color: var(--green);
+  border: 1px solid oklch(0.80 0.14 150 / 0.30);
+}
+.pill-repaid {
+  background: oklch(0.32 0.008 75);
+  color: var(--fg-1);
+  border: 1px solid var(--line);
+}
+.pill-defaulted {
+  background: oklch(0.70 0.18 25 / 0.10);
+  color: var(--red);
+  border: 1px solid oklch(0.70 0.18 25 / 0.30);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* card */
+.card {
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+/* fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.fade-in { animation: fadeIn .3s ease-out both; }
+
+/* shimmer for loading numbers */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.pulse { animation: pulse 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (max-width: 760px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .card {
+    padding: 18px;
+    border-radius: var(--radius);
+  }
+
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  [style*="font-size: 56px"],
+  [style*="font-size: 48px"],
+  [style*="font-size: 40px"],
+  [style*="font-size: 36px"] {
+    font-size: 30px !important;
+    letter-spacing: 0 !important;
+  }
+
+  [style*="padding: 32px"],
+  [style*="padding: 40px"] {
+    padding: 20px !important;
+  }
 }

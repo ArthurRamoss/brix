@@ -1,259 +1,717 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
-import { useState } from "react";
-import { useBrix, formatBrz } from "../../hooks/use-brix";
-import { PROGRAM_ID } from "../../lib/brix-program";
+// /invest — Investor portal (re-skin).
+// Same on-chain wiring as before (useBrix), new design system shell.
+// Tabs: vault dashboard / deposit / withdraw / positions.
+// Ported from Brix-handoff/brix/project/investor.jsx.
 
-function StatCard({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-}) {
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { usePrivy } from "@privy-io/react-auth";
+import { AppShell, type Tab } from "../../components/shell/AppShell";
+import { I } from "../../components/icons";
+import { KPI } from "../../components/primitives/KPI";
+import { Card } from "../../components/primitives/Card";
+import { TVLChart } from "../../components/primitives/TVLChart";
+import { useT } from "../../lib/i18n";
+import { getPersona } from "../../lib/persona";
+import {
+  fmtBRZ,
+  fmtPct,
+  RECEIVABLES,
+  INVESTORS,
+  TVL_SERIES,
+} from "../../lib/mock-data";
+import { useBrix } from "../../hooks/use-brix";
+
+type TabId = "vault" | "deposit" | "withdraw" | "positions";
+
+export default function InvestPage() {
+  const { t } = useT();
+  const router = useRouter();
+  const { ready, authenticated } = usePrivy();
+  const [tab, setTab] = useState<TabId>("vault");
+
+  // Auth + persona guard. Privy may not be configured (build w/o env) — only redirect when ready.
+  useEffect(() => {
+    if (!ready) return;
+    if (!authenticated) {
+      router.push("/login");
+      return;
+    }
+    const persona = getPersona();
+    if (persona !== "invest") router.push("/login");
+  }, [ready, authenticated, router]);
+
+  const tabs: Tab[] = [
+    { id: "vault", label: t("inv_tab_vault") as string },
+    { id: "deposit", label: t("inv_tab_deposit") as string },
+    { id: "withdraw", label: t("inv_tab_withdraw") as string },
+    { id: "positions", label: t("inv_tab_positions") as string },
+  ];
+
   return (
-    <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-900/50">
-      <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-zinc-100">{value}</p>
-      {sub && <p className="text-xs text-zinc-600 mt-1">{sub}</p>}
+    <AppShell
+      persona="invest"
+      tabs={tabs}
+      activeTab={tab}
+      setActiveTab={(id) => setTab(id as TabId)}
+    >
+      {tab === "vault" && <VaultDashboard setTab={setTab} />}
+      {tab === "deposit" && <DepositTab />}
+      {tab === "withdraw" && <WithdrawTab />}
+      {tab === "positions" && <PositionsTab />}
+    </AppShell>
+  );
+}
+
+// ─── Vault dashboard ─────────────────────────────────────────────────────────
+function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
+  const { t } = useT();
+  const { vaultData } = useBrix();
+
+  // On-chain values fall back to demo numbers when vault not yet seeded on devnet.
+  const tvl =
+    vaultData != null ? Number(vaultData.totalAssets) / 1_000_000 : 98_740;
+  const aprBps = vaultData?.aprBps ?? 1970;
+  const apr = aprBps / 10_000;
+
+  const fundedCount = RECEIVABLES.filter((r) => r.status === "funded").length;
+  // Use ratio of deployed vs total assets as utilization (fallback to demo 0.68).
+  const utilization = vaultData
+    ? Number(vaultData.totalAssets) > 0
+      ? Number(vaultData.totalDeployed) / Number(vaultData.totalAssets)
+      : 0
+    : 0.68;
+  const utilCount = Math.round(utilization * 14);
+
+  const kpiUtilSub = (t("inv_kpi_util_s") as unknown as (n: number) => string)(
+    utilCount,
+  );
+  const backingCount = (t("inv_backing_count") as unknown as (
+    n: number,
+  ) => string)(fundedCount);
+
+  return (
+    <div className="fade-in" style={{ maxWidth: 1280, margin: "0 auto" }}>
+      <div style={{ marginBottom: 32 }}>
+        <div
+          className="mono"
+          style={{
+            fontSize: 12,
+            color: "var(--fg-2)",
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span className="dot" style={{ color: "var(--teal)" }} />
+          {t("inv_kicker") as string}
+        </div>
+        <h1
+          style={{
+            fontSize: 40,
+            fontWeight: 600,
+            letterSpacing: "-0.03em",
+            margin: "8px 0 0",
+          }}
+        >
+          {(tvl > 0
+            ? (t("inv_h1_active") as string)
+            : (t("inv_h1_empty") as string))}
+        </h1>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.6fr 1fr",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <Card style={{ padding: 28, position: "relative", overflow: "hidden" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              marginBottom: 16,
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "var(--fg-2)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  marginBottom: 8,
+                }}
+              >
+                {t("inv_tvl_l") as string}
+              </div>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 56,
+                  fontWeight: 500,
+                  letterSpacing: "-0.03em",
+                  color: "var(--teal)",
+                  lineHeight: 1,
+                }}
+              >
+                {fmtBRZ(tvl)}
+              </div>
+              <div
+                className="mono"
+                style={{ marginTop: 10, fontSize: 13, color: "var(--green)" }}
+              >
+                {t("inv_tvl_delta") as string}
+              </div>
+            </div>
+            <div
+              style={{
+                padding: "10px 14px",
+                background: "var(--teal-soft)",
+                borderRadius: "var(--radius)",
+                border: "1px solid var(--teal-line)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "var(--fg-2)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {t("inv_apr_30d") as string}
+              </div>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 22,
+                  color: "var(--teal)",
+                  fontWeight: 500,
+                }}
+              >
+                {fmtPct(apr)}
+              </div>
+            </div>
+          </div>
+
+          <TVLChart series={TVL_SERIES} mult={tvl > 0 ? 1 : 0} />
+        </Card>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <KPI
+            label={t("inv_kpi_util") as string}
+            value={fmtPct(utilization)}
+            sub={kpiUtilSub}
+            mono
+            tone="gold"
+          />
+          <KPI
+            label={t("inv_kpi_insurance") as string}
+            value="85%"
+            sub={t("inv_kpi_insurance_s") as string}
+            tone="green"
+            mono
+          />
+          <Card style={{ padding: 20 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: "var(--fg-2)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginBottom: 12,
+              }}
+            >
+              {t("inv_actions") as string}
+            </div>
+            <button
+              onClick={() => setTab("deposit")}
+              className="btn btn-teal"
+              style={{ width: "100%", marginBottom: 8 }}
+            >
+              <I.plus size={14} /> {t("inv_deposit_cta") as string}
+            </button>
+            <button
+              onClick={() => setTab("withdraw")}
+              className="btn btn-secondary"
+              style={{ width: "100%" }}
+            >
+              <I.download size={14} /> {t("inv_withdraw_cta") as string}
+            </button>
+          </Card>
+        </div>
+      </div>
+
+      {/* Active receivables backing the vault */}
+      <Card style={{ padding: 0, overflow: "hidden" }}>
+        <div
+          style={{
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--line-soft)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
+            {t("inv_backing_h") as string}
+          </h3>
+          <span
+            className="mono"
+            style={{ fontSize: 12, color: "var(--fg-2)" }}
+          >
+            {backingCount}
+          </span>
+        </div>
+        <div>
+          <div
+            className="mono"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "110px 1.4fr 1fr 100px 80px 100px",
+              padding: "10px 20px",
+              fontSize: 11,
+              color: "var(--fg-2)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
+            <span>{t("ag_th_id") as string}</span>
+            <span>{t("inv_th_property") as string}</span>
+            <span>{t("inv_th_city") as string}</span>
+            <span>{t("ag_th_value") as string}</span>
+            <span>{t("ag_th_rate") as string}</span>
+            <span>{t("ag_th_inst") as string}</span>
+          </div>
+          {RECEIVABLES.filter((r) => r.status === "funded").map((r) => (
+            <div
+              key={r.id}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "110px 1.4fr 1fr 100px 80px 100px",
+                padding: "14px 20px",
+                fontSize: 14,
+                borderTop: "1px solid var(--line-soft)",
+                alignItems: "center",
+              }}
+            >
+              <span
+                className="mono"
+                style={{ fontSize: 12, color: "var(--fg-2)" }}
+              >
+                {r.id}
+              </span>
+              <span
+                style={{
+                  fontSize: 13,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {r.address.split(",")[0]}
+              </span>
+              <span style={{ color: "var(--fg-1)", fontSize: 13 }}>
+                {r.address.split(",").slice(-1)[0]?.trim() || "—"}
+              </span>
+              <span className="mono">{fmtBRZ(r.amount)}</span>
+              <span className="mono" style={{ color: "var(--teal)" }}>
+                {fmtPct(r.rate)}
+              </span>
+              <span className="mono" style={{ color: "var(--fg-1)" }}>
+                {r.paid}/{r.total}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
 
-export default function InvestPage() {
-  const { login, authenticated, ready, logout } = usePrivy();
-  const {
-    vaultData,
-    positionData,
-    isLoading,
-    walletAddress,
-    deposit,
-    withdraw,
-  } = useBrix();
+// ─── Deposit ────────────────────────────────────────────────────────────────
+function DepositTab() {
+  const { t } = useT();
+  const { vaultData, deposit, isLoading } = useBrix();
+  const [amt, setAmt] = useState(1000);
 
-  const [depositAmount, setDepositAmount] = useState("");
-  const [withdrawAll, setWithdrawAll] = useState(false);
+  // Share price derived from vault state when available.
+  const sharePrice = useMemo(() => {
+    if (!vaultData) return 1.0274;
+    const totalShares = Number(vaultData.totalShares);
+    const totalAssets = Number(vaultData.totalAssets);
+    if (totalShares === 0) return 1.0;
+    return totalAssets / totalShares;
+  }, [vaultData]);
 
-  const aprPercent = vaultData ? (vaultData.aprBps / 100).toFixed(0) : "~20";
-  const tvlFormatted = vaultData
-    ? formatBrz(vaultData.totalAssets)
-    : "–";
-  const deployedFormatted = vaultData
-    ? formatBrz(vaultData.totalDeployed)
-    : "–";
-
-  async function handleDeposit() {
-    const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) return;
-    await deposit(amount);
-    setDepositAmount("");
-  }
-
-  async function handleWithdraw() {
-    if (!positionData) return;
-    const shares = withdrawAll
-      ? positionData.shares
-      : positionData.shares / 2n; // saca metade pra demo se não quiser tudo
-    await withdraw(shares);
-  }
+  const shares = sharePrice > 0 ? amt / sharePrice : 0;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-        <a href="/" className="text-amber-400 font-bold text-xl tracking-tight">
-          BRIX
-        </a>
-        <div className="flex items-center gap-4">
-          <a href="/landlord" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-            Proprietários
-          </a>
-          {ready && !authenticated && (
-            <button
-              onClick={login}
-              className="text-sm bg-amber-500 hover:bg-amber-400 text-black font-semibold px-4 py-2 rounded-lg transition-colors"
-            >
-              Entrar
-            </button>
-          )}
-          {authenticated && walletAddress && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-zinc-500 bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800">
-                {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
-              </span>
-              <button
-                onClick={logout}
-                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
-              >
-                Sair
-              </button>
-            </div>
-          )}
-        </div>
-      </nav>
+    <div className="fade-in" style={{ maxWidth: 560, margin: "0 auto" }}>
+      <h1
+        style={{
+          fontSize: 32,
+          fontWeight: 600,
+          letterSpacing: "-0.02em",
+          margin: "0 0 8px",
+        }}
+      >
+        {t("dep_h1") as string}
+      </h1>
+      <p
+        style={{
+          color: "var(--fg-2)",
+          fontSize: 14,
+          margin: "0 0 28px",
+        }}
+      >
+        {t("dep_sub") as string}
+      </p>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-10 space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Vault de Investimento</h1>
-          <p className="text-zinc-500 mt-1">
-            Deposite BRZ e receba yield de recebíveis de aluguel com seguro fiança.
-          </p>
-          <a
-            href={`https://explorer.solana.com/address/${PROGRAM_ID.toBase58()}?cluster=devnet`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-mono text-zinc-700 hover:text-amber-500 transition-colors mt-1 inline-block"
+      <Card style={{ borderColor: "var(--teal-line)" }}>
+        <label className="label">{t("dep_amount_l") as string}</label>
+        <div style={{ position: "relative" }}>
+          <span
+            className="mono"
+            style={{
+              position: "absolute",
+              left: 16,
+              top: 18,
+              color: "var(--fg-3)",
+            }}
           >
-            Program: {PROGRAM_ID.toBase58().slice(0, 16)}... ↗
-          </a>
-        </div>
-
-        {/* Vault stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            label="TVL"
-            value={`BRZ ${tvlFormatted}`}
-            sub="Total no vault"
-          />
-          <StatCard
-            label="Deployado"
-            value={`BRZ ${deployedFormatted}`}
-            sub="Em recebíveis ativos"
-          />
-          <StatCard
-            label="APR Est."
-            value={`${aprPercent}%`}
-            sub="Taxa média dos contratos"
-          />
-          <StatCard
-            label="Status"
-            value={vaultData?.paused ? "Pausado" : "Ativo"}
-            sub={vaultData ? "Vault inicializado" : "Aguardando seed"}
+            BRZ
+          </span>
+          <input
+            type="number"
+            value={amt}
+            onChange={(e) => setAmt(+e.target.value || 0)}
+            className="field tnum mono"
+            style={{
+              paddingLeft: 60,
+              fontSize: 22,
+              padding: "18px 16px 18px 60px",
+            }}
           />
         </div>
-
-        {/* Posição do investidor */}
-        {authenticated && positionData && (
-          <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
-            <p className="text-sm text-amber-400 font-semibold mb-3">Sua posição</p>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-zinc-500 text-xs mb-0.5">Shares</p>
-                <p className="font-mono font-semibold">{positionData.shares.toString()}</p>
-              </div>
-              <div>
-                <p className="text-zinc-500 text-xs mb-0.5">Valor estimado</p>
-                <p className="font-semibold">BRZ {formatBrz(positionData.estimatedValueBrz)}</p>
-              </div>
-              <div>
-                <p className="text-zinc-500 text-xs mb-0.5">Total depositado</p>
-                <p className="font-semibold">BRZ {formatBrz(positionData.totalDeposited)}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Formulário de deposit/withdraw */}
-        {!authenticated ? (
-          <div className="p-8 rounded-xl border border-zinc-800 bg-zinc-900/30 text-center space-y-4">
-            <p className="text-zinc-400">Faça login para depositar e acompanhar sua posição.</p>
+        <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+          {[100, 500, 1000, 5000, "max"].map((v) => (
             <button
-              onClick={login}
-              className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl transition-colors"
+              key={String(v)}
+              onClick={() => setAmt(v === "max" ? 12340 : (v as number))}
+              className="mono"
+              style={{
+                flex: 1,
+                padding: "8px 0",
+                fontSize: 12,
+                background: "var(--bg-2)",
+                border: "1px solid var(--line)",
+                borderRadius: 6,
+                color: "var(--fg-1)",
+              }}
             >
-              Entrar com e-mail
+              {v === "max" ? "max" : `BRZ ${v}`}
             </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Depositar */}
-            <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-4">
-              <h2 className="font-semibold text-zinc-100">Depositar BRZ</h2>
-              <p className="text-xs text-zinc-500">
-                Você recebe shares LP proporcionais. O valor das shares sobe conforme
-                os recebíveis são repagos com juros.
-              </p>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="100.00"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    min="0"
-                    step="0.01"
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500 transition-colors"
-                  />
-                  <span className="flex items-center px-3 text-sm text-zinc-500 bg-zinc-800 border border-zinc-700 rounded-lg">
-                    BRZ
-                  </span>
-                </div>
-                <button
-                  onClick={handleDeposit}
-                  disabled={isLoading || !depositAmount || parseFloat(depositAmount) <= 0}
-                  className="w-full py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold rounded-lg transition-colors text-sm"
-                >
-                  {isLoading ? "Processando..." : "Depositar"}
-                </button>
-              </div>
-              {/* Aviso devnet BRZ */}
-              <div className="p-3 rounded-lg bg-zinc-800/60 border border-zinc-700">
-                <p className="text-xs text-zinc-500">
-                  ⚠️ Em devnet você precisa de <strong className="text-zinc-300">BRZ de teste</strong> na sua wallet.
-                  Rode <code className="text-amber-400">scripts/seed-demo.ts</code> no CP3 pra receber BRZ fake.
-                </p>
-              </div>
-            </div>
+          ))}
+        </div>
 
-            {/* Sacar */}
-            <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-4">
-              <h2 className="font-semibold text-zinc-100">Sacar BRZ</h2>
-              <p className="text-xs text-zinc-500">
-                Queima suas shares e recebe BRZ de volta com os juros proporcionais acumulados.
-              </p>
-              {positionData && positionData.shares > 0n ? (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-zinc-800/60 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Shares disponíveis</span>
-                      <span className="font-mono">{positionData.shares.toString()}</span>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-zinc-500">Valor estimado</span>
-                      <span className="text-amber-400">
-                        BRZ {formatBrz(positionData.estimatedValueBrz)}
-                      </span>
-                    </div>
-                  </div>
-                  <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={withdrawAll}
-                      onChange={(e) => setWithdrawAll(e.target.checked)}
-                      className="accent-amber-500"
-                    />
-                    Sacar tudo
-                  </label>
-                  <button
-                    onClick={handleWithdraw}
-                    disabled={isLoading}
-                    className="w-full py-3 border border-zinc-600 hover:border-zinc-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 hover:text-white font-semibold rounded-lg transition-colors text-sm"
-                  >
-                    {isLoading ? "Processando..." : withdrawAll ? "Sacar tudo" : "Sacar 50%"}
-                  </button>
-                </div>
-              ) : (
-                <div className="p-3 rounded-lg bg-zinc-800/60 text-xs text-zinc-500">
-                  Você ainda não tem posição neste vault. Faça um depósito primeiro.
-                </div>
-              )}
-            </div>
+        <div
+          className="mono"
+          style={{
+            marginTop: 24,
+            paddingTop: 20,
+            borderTop: "1px solid var(--line-soft)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            fontSize: 13,
+          }}
+        >
+          <Row2 l={t("dep_share_price") as string} r={`${sharePrice.toFixed(4)} BRZ`} />
+          <Row2 l={t("dep_shares_est") as string} r={`${shares.toFixed(2)} brxV`} accent />
+          <Row2 l={t("dep_apr_exp") as string} r={fmtPct(0.197)} />
+          <Row2 l={t("dep_lockup") as string} r={t("dep_lockup_v") as string} />
+        </div>
+
+        <button
+          onClick={() => deposit(amt)}
+          disabled={isLoading || amt <= 0}
+          className="btn btn-teal btn-lg"
+          style={{ width: "100%", marginTop: 24 }}
+        >
+          {isLoading ? "…" : (t("dep_confirm") as string)} <I.arrow size={16} />
+        </button>
+        <div
+          style={{
+            marginTop: 14,
+            fontSize: 12,
+            color: "var(--fg-3)",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            justifyContent: "center",
+          }}
+        >
+          <I.shieldCheck size={12} /> {t("dep_signed") as string}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Withdraw ───────────────────────────────────────────────────────────────
+function WithdrawTab() {
+  const { t } = useT();
+  const { positionData, vaultData, withdraw, isLoading } = useBrix();
+
+  const sharePrice = useMemo(() => {
+    if (!vaultData) return 1.0274;
+    const totalShares = Number(vaultData.totalShares);
+    const totalAssets = Number(vaultData.totalAssets);
+    if (totalShares === 0) return 1.0;
+    return totalAssets / totalShares;
+  }, [vaultData]);
+
+  // Convert lamports to whole shares for the input.
+  const maxShares = positionData ? Number(positionData.shares) / 1_000_000 : 0;
+  const [amt, setAmt] = useState<number | null>(null);
+
+  const selectedAmt = amt ?? (maxShares > 0 ? Math.min(500, maxShares) : 0);
+  const youGet = selectedAmt * sharePrice;
+  const overMax = selectedAmt > maxShares;
+
+  const onConfirm = async () => {
+    if (overMax || selectedAmt <= 0) return;
+    // Convert displayed shares back to lamports.
+    const sharesLamports = BigInt(Math.floor(selectedAmt * 1_000_000));
+    await withdraw(sharesLamports);
+  };
+
+  return (
+    <div className="fade-in" style={{ maxWidth: 560, margin: "0 auto" }}>
+      <h1
+        style={{
+          fontSize: 32,
+          fontWeight: 600,
+          letterSpacing: "-0.02em",
+          margin: "0 0 8px",
+        }}
+      >
+        {t("wd_h1") as string}
+      </h1>
+      <p style={{ color: "var(--fg-2)", fontSize: 14, margin: "0 0 28px" }}>
+        {t("wd_sub") as string}
+      </p>
+
+      <Card>
+        <label className="label">{t("wd_shares_l") as string}</label>
+        <input
+          type="number"
+          value={selectedAmt}
+          onChange={(e) => setAmt(+e.target.value || 0)}
+          className="field tnum mono"
+          style={{ fontSize: 22, padding: "18px 16px" }}
+        />
+        <div
+          className="mono"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: 12,
+            color: "var(--fg-2)",
+            marginTop: 8,
+          }}
+        >
+          <span>
+            {t("wd_available") as string}: {maxShares.toFixed(2)} brxV
+          </span>
+          <button onClick={() => setAmt(maxShares)} style={{ color: "var(--teal)" }}>
+            {t("wd_max") as string}
+          </button>
+        </div>
+
+        <div
+          className="mono"
+          style={{
+            marginTop: 24,
+            paddingTop: 20,
+            borderTop: "1px solid var(--line-soft)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            fontSize: 13,
+          }}
+        >
+          <Row2 l={t("wd_you_get") as string} r={fmtBRZ(youGet)} accent />
+          <Row2 l={t("wd_gas") as string} r="~ BRZ 0,02" />
+        </div>
+
+        <button
+          onClick={onConfirm}
+          disabled={isLoading || overMax || selectedAmt <= 0}
+          className="btn btn-secondary btn-lg"
+          style={{ width: "100%", marginTop: 24 }}
+        >
+          {overMax
+            ? (t("wd_insufficient") as string)
+            : (t("wd_confirm") as string)}
+        </button>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Positions ──────────────────────────────────────────────────────────────
+function PositionsTab() {
+  const { t } = useT();
+  const { positionData } = useBrix();
+
+  // Derive numbers from real position when available, fall back to mock investor[0].
+  const me = INVESTORS[0];
+  const deposited = positionData
+    ? Number(positionData.totalDeposited) / 1_000_000
+    : me.deposited;
+  const value = positionData
+    ? Number(positionData.estimatedValueBrz) / 1_000_000
+    : me.value;
+  const sharesNum = positionData
+    ? Number(positionData.shares) / 1_000_000
+    : me.shares;
+  const yieldPct = deposited > 0 ? (value - deposited) / deposited : 0;
+
+  const txDep = t("pos_tx_deposit") as string;
+  const txYield = t("pos_tx_yield") as string;
+
+  return (
+    <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
+      <h1
+        style={{
+          fontSize: 32,
+          fontWeight: 600,
+          letterSpacing: "-0.02em",
+          margin: "0 0 24px",
+        }}
+      >
+        {t("pos_h1") as string}
+      </h1>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <KPI
+          label={t("pos_kpi_dep") as string}
+          value={fmtBRZ(deposited)}
+          sub={t("pos_kpi_dep_s") as string}
+          mono
+        />
+        <KPI
+          label={t("pos_kpi_value") as string}
+          value={fmtBRZ(value)}
+          sub={`+${fmtBRZ(value - deposited)}`}
+          tone="gold"
+          mono
+        />
+        <KPI
+          label={t("pos_kpi_yield") as string}
+          value={`+${fmtPct(yieldPct)}`}
+          sub={t("pos_kpi_yield_s") as string}
+          tone="green"
+          mono
+        />
+        <KPI
+          label={t("pos_kpi_shares") as string}
+          value={sharesNum.toFixed(2)}
+          sub="brxV"
+          mono
+        />
+      </div>
+
+      <Card style={{ padding: 0, overflow: "hidden" }}>
+        <div
+          style={{
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--line-soft)",
+          }}
+        >
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
+            {t("pos_history_h") as string}
+          </h3>
+        </div>
+        {[
+          { d: "14 fev 2026", t: txDep, a: "BRZ 2.000", s: "1.946 brxV", tx: "3pK7…aR9q" },
+          { d: "03 mar 2026", t: txDep, a: "BRZ 2.000", s: "1.974 brxV", tx: "8mLp…cS4w" },
+          { d: "22 mar 2026", t: txYield, a: "+BRZ 167", s: "—", tx: "auto" },
+          { d: "15 abr 2026", t: txYield, a: "+BRZ 225", s: "—", tx: "auto" },
+        ].map((row, i) => (
+          <div
+            key={i}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "120px 1fr 120px 120px 100px",
+              padding: "14px 20px",
+              fontSize: 14,
+              borderTop: "1px solid var(--line-soft)",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span
+              className="mono"
+              style={{ fontSize: 12, color: "var(--fg-2)" }}
+            >
+              {row.d}
+            </span>
+            <span>{row.t}</span>
+            <span className="mono">{row.a}</span>
+            <span className="mono" style={{ color: "var(--fg-2)" }}>
+              {row.s}
+            </span>
+            <span
+              className="mono"
+              style={{ color: "var(--teal)", fontSize: 12 }}
+            >
+              {row.tx}
+            </span>
           </div>
-        )}
-      </main>
+        ))}
+      </Card>
+    </div>
+  );
+}
+
+function Row2({ l, r, accent }: { l: string; r: string; accent?: boolean }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+      }}
+    >
+      <span style={{ color: "var(--fg-2)" }}>{l}</span>
+      <span
+        style={{
+          color: accent ? "var(--teal)" : "var(--fg-0)",
+          fontWeight: accent ? 600 : 400,
+        }}
+      >
+        {r}
+      </span>
     </div>
   );
 }

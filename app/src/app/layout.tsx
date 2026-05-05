@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { Providers } from "../providers/privy-provider";
+import { LangProvider } from "../lib/i18n";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  weight: ["400", "500"],
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Brix — Antecipação de Aluguel On-Chain",
+  title: "Brix — antecipação de aluguel on-chain",
   description:
-    "Protocolo Solana que tokeniza recebíveis de aluguel com taxa imutável em smart contract. Brazil-first via Selectimob.",
+    "vault on-chain lastreado em recebíveis de aluguel. taxa imutável gravada em smart contract. brasil-first via imobiliárias parceiras.",
 };
 
 export default function RootLayout({
@@ -27,12 +30,12 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${plexMono.variable}`}
     >
-      {/* Providers precisa ser "use client", por isso fica num arquivo separado.
-          O layout.tsx em si pode ser server component — Next.js App Router padrão. */}
-      <body className="min-h-full flex flex-col bg-[#0f0f0f] text-zinc-100">
-        <Providers>{children}</Providers>
+      <body>
+        <LangProvider>
+          <Providers>{children}</Providers>
+        </LangProvider>
       </body>
     </html>
   );

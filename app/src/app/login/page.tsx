@@ -115,8 +115,10 @@ export default function LoginPage() {
             </p>
             <button
               type="button"
-              onClick={() => login()}
-              disabled={!ready}
+              onClick={() => {
+                if (!ready) return;
+                login();
+              }}
               className="btn btn-primary btn-lg"
               style={{ width: "100%" }}
             >

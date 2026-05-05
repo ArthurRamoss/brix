@@ -5,7 +5,14 @@
  * Ported from Brix-handoff/brix/project/i18n.jsx.
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
 
 export type Lang = "pt" | "en";
 
@@ -870,11 +877,7 @@ const LangContext = createContext<LangContextValue | null>(null);
 const STORAGE_KEY = "brix_lang";
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === "undefined") return "pt";
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    return saved === "pt" || saved === "en" ? saved : "pt";
-  });
+  const lang = useSyncExternalStore(subscribeToLang, getLangSnapshot, getServerLangSnapshot);
 
   // mirror to <html lang>
   useEffect(() => {
@@ -884,8 +887,9 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
   }, [lang]);
 
   const setLang = useCallback((l: Lang) => {
-    setLangState(l);
-    if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, l);
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(STORAGE_KEY, l);
+    window.dispatchEvent(new Event("brix-lang-change"));
   }, []);
 
   const value = useMemo<LangContextValue>(() => {
@@ -898,6 +902,35 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
   }, [lang, setLang]);
 
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
+}
+
+function getLangSnapshot(): Lang {
+  if (typeof window === "undefined") return "pt";
+  const saved = window.localStorage.getItem(STORAGE_KEY);
+  return saved === "en" ? "en" : "pt";
+}
+
+function getServerLangSnapshot(): Lang {
+  return "pt";
+}
+
+function subscribeToLang(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_KEY) onStoreChange();
+  };
+  const handleCustom = () => onStoreChange();
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener("brix-lang-change", handleCustom as EventListener);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener("brix-lang-change", handleCustom as EventListener);
+  };
 }
 
 export function useT(): LangContextValue {

@@ -3,18 +3,46 @@ import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { connection } from "./connection";
 import IDL from "./brix-idl.json";
 
-// O Program ID vem do .env.local.
-// Analogia: é o "endereço do servidor" — qual contrato queremos chamar.
-export const PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_BRIX_PROGRAM_ID ||
-    "6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94",
+const PROGRAM_ID_DEFAULT = "6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94";
+// Mainnet BRZ mint — fallback "compila" só pra não quebrar build/SSR.
+// Demo real PRECISA de NEXT_PUBLIC_BRZ_MINT apontando pro devnet test mint
+// criado pelo scripts/seed-demo.ts.
+const BRZ_MINT_DEFAULT = "FtgGSFADXBtroxq8VCausXRr2of47QBf5AS1NtZCu4GD";
+
+function parsePubkey(
+  raw: string | undefined,
+  fallback: string,
+  label: string,
+): PublicKey {
+  const value = (raw ?? "").trim();
+  const isPlaceholder =
+    !value ||
+    value.includes("replace_") ||
+    value.includes("your_") ||
+    value.includes("${");
+  if (isPlaceholder) return new PublicKey(fallback);
+  try {
+    return new PublicKey(value);
+  } catch {
+    if (typeof window !== "undefined") {
+      console.warn(
+        `[brix-program] ${label} não é base58 válido ("${value}"). Usando fallback ${fallback}. Ajuste o .env.local pra silenciar.`,
+      );
+    }
+    return new PublicKey(fallback);
+  }
+}
+
+export const PROGRAM_ID = parsePubkey(
+  process.env.NEXT_PUBLIC_BRIX_PROGRAM_ID,
+  PROGRAM_ID_DEFAULT,
+  "NEXT_PUBLIC_BRIX_PROGRAM_ID",
 );
 
-// BRZ mint em devnet (você mesmo vai criar com seed-demo.ts no CP3).
-// Por enquanto, lê do .env.local. Se não tiver, usa placeholder.
-export const BRZ_MINT = new PublicKey(
-  process.env.NEXT_PUBLIC_BRZ_MINT ||
-    "FtgGSFADXBtroxq8VCausXRr2of47QBf5AS1NtZCu4GD", // mainnet mint — substitua pela devnet test mint
+export const BRZ_MINT = parsePubkey(
+  process.env.NEXT_PUBLIC_BRZ_MINT,
+  BRZ_MINT_DEFAULT,
+  "NEXT_PUBLIC_BRZ_MINT",
 );
 
 // O "admin" do vault em devnet é a wallet do Arthur (EFQuU2...).

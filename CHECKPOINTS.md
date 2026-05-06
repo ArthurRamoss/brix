@@ -3,7 +3,11 @@
 > **Regra**: este arquivo é o estado do projeto. Abra toda sessão. Atualize toda sessão.
 > Tag cada conclusão com `git tag cpN-done` para bookmarks rápidos.
 
-**Hoje**: 2026-04-22 · **Submission Frontier**: 2026-05-11 · **Solo founder**.
+**Hoje**: 2026-05-05 · **Submission Frontier**: 2026-05-11 (6 dias) · **Solo founder**.
+
+> ⚠️ **Semana 4 começou** (5–11 mai = SAGRADA: vídeo + submission). A regra do AGENT_BRAIN
+> é "só bug fixes bloqueantes". CP3 ainda tem trabalho residual (rodar seed-demo, gravar
+> ciclo E2E, README quickstart) — fazer o mínimo absoluto e migrar pra CP4.
 
 > **Ideias/features pós-MVP** → `ROADMAP.md`. Nada fora-de-escopo se perde.
 
@@ -105,9 +109,13 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 - [x] Botão "Withdraw" → chama `withdraw` (wired ao program via useBrix hook)
 - [x] Tx links pro Solana Explorer devnet (em todos os toasts de sucesso)
 - [x] Toasts de sucesso/erro (sonner)
-- [ ] Deploy Vercel preview (opcional mas recomendado) — **próximo: Arthur faz `vercel deploy`**
-- [ ] Sign real com Privy embedded Solana wallet → **blocker CP2→CP3**: precisa do seed-demo.ts + BRZ devnet mint
-- [ ] Commit tag: `cp2-done` (marcar após vercel preview + `.env.local` confirmado)
+- [x] **Sign real com Privy embedded Solana wallet** — wired em `use-brix.ts` + `use-agency.ts` via `useSignTransaction` do `@privy-io/react-auth/solana` (commit d3ffe82)
+- [x] **Persona system** (commit d3ffe82): `/login` com seleção landlord/invest/agency, `app/src/lib/persona.ts` + `getPersona()` em todas as rotas privadas
+- [x] **Rotas públicas** `/pub/{landlord,invest,agency}` (showcase pre-login)
+- [x] **i18n PT/EN** completo (`app/src/lib/i18n.tsx`, 914 linhas) + `LangSwitch`
+- [x] **Brand + design system** (commit d3ffe82): Logo, Wordmark, Icons, Card/Field/KPI/Pill/TVLChart primitives, AppShell + nav/footer
+- [ ] Deploy Vercel preview — **pendente: Arthur faz `vercel deploy` da branch main**
+- [ ] Commit tag: `cp2-done` (marcar quando vercel preview rodar com seed-demo aplicado)
 
 ### Fallback
 - Se Privy der atrito → Unified Wallet Adapter (Phantom). Menos UX mas funcional.
@@ -123,18 +131,26 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 
 ### Tasks
 
-- [ ] 1-3 contratos Selectimob anonimizados em `scripts/demo-data.json`
-- [ ] Script admin que popula on-chain (`scripts/seed-demo.ts`)
-- [ ] Ciclo completo simulado: register → deposit → fund → repay → withdraw
-- [ ] Dashboard histórico de txs com links solscan
-- [ ] Polish visual (tipografia, cores, spacing, loading states)
-- [ ] Marca aplicada (brand-design skill se precisar)
-- [ ] README root com quickstart funcional
-- [ ] Regressão: `anchor test` continua passando
+- [x] 1-3 contratos Selectimob anonimizados em `scripts/demo-data.json` (3 contratos: SEL-2026-001/002/003)
+- [x] Script admin que popula on-chain (`scripts/seed-demo.ts`) — cria mint BRZ devnet, init vault, mint demo BRZ pra wallet de teste
+- [x] Polish visual (tipografia, cores, spacing, loading states) — primitives + shell aplicados em todas as rotas
+- [x] Marca aplicada — Logo/Wordmark/Icons portados do protótipo (commit d3ffe82)
+- [x] **Build defensivo** — `brix-program.ts` não crasha mais com `NEXT_PUBLIC_BRZ_MINT` placeholder/inválido (commit pendente, sessão 5 mai)
+- [ ] **Rodar `pnpm demo:seed -- --demo-wallet <pubkey>` em devnet** — popular vault + mintar BRZ pra demo wallet
+- [ ] Atualizar `app/.env.local` e `.env.local` root com `NEXT_PUBLIC_BRZ_MINT` gerado
+- [ ] **Validar ciclo E2E em browser**: login → invest → deposit → agency → register/fund → repay → invest withdraw (golden path da gravação)
+- [ ] Dashboard histórico de txs com links solscan — **deferido pra v2 se apertar**, basta os toasts de tx atual
+- [ ] README root com quickstart funcional — em progresso (sessão 5 mai)
+- [ ] Regressão: `anchor test` continua passando — **última verificação foi CP1 (22 abr); precisa rerun antes do submit**
 - [ ] Commit tag: `cp3-done`
+
+### Decisões pendentes (CP3 → CP4)
+
+- **Demo wallet única vs split**: hoje `register/fund` usa `landlord ?? anchorWallet.publicKey`. Pra demo de 3min, **uma wallet única faz tudo** (login persona invest → deposit; logout → login persona agency → register/fund/repay; volta pra invest → withdraw). Split com `NEXT_PUBLIC_DEMO_LANDLORD_WALLET` só se a narrativa do vídeo precisar — não é blocker.
 
 ### Fallback
 - Se polish demorar → priorizar: loading states > tipografia > cores. Mínimo demonstrável.
+- Se Privy embedded Solana sign der atrito → admin script local roda o ciclo, gravamos a UI mostrando o resultado on-chain (Solana Explorer aberto).
 
 ---
 
@@ -146,7 +162,8 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 
 ### Tasks
 
-- [ ] Roteiro final do pitch (3min) escrito
+- [x] **Roteiro draft do pitch (3min)** — `pitch-script.md` na raiz (sessão 5 mai). EN principal + opção PT-BR pra hook. Inclui checklist técnico pré-gravação.
+- [ ] Roteiro final revisado (após Arthur ler em voz alta + cronometrar)
 - [ ] Gravação screen-demo (OBS, 2-3min)
 - [ ] Edição pitch video (Remotion ou CapCut/DaVinci)
 - [ ] Pitch publicado (YouTube unlisted)
@@ -179,6 +196,22 @@ Adicionar entradas cronológicas do tipo:
 ```
 
 Últimas entradas aqui embaixo (mais novas no topo):
+
+### 2026-05-05 (ter) — worktree `flamboyant-kapitsa-80c31b` — **dia 1 da Semana SAGRADA**
+- Sessões 4 mai trouxeram **muito mais do que o CHECKPOINTS refletia** (commits d3ffe82 + 5b38cf7):
+  - Persona split real: `/login` com escolha landlord/invest/agency + `app/src/lib/persona.ts`.
+  - i18n PT/EN inteiro (`app/src/lib/i18n.tsx` 914 linhas) + `LangSwitch`.
+  - Rotas `/pub/{landlord,invest,agency}` (showcases pré-login).
+  - Brand portado do protótipo (Logo, Wordmark, Icons).
+  - Primitives: Card, Field, KPI, Pill, TVLChart.
+  - Shell: AppShell, LandingNav, PublicNav, PublicFooter.
+  - `use-agency.ts` hook completo (register + fund + repay) com Privy Solana sign real.
+  - `scripts/demo-data.json` (3 contratos Selectimob) + `scripts/seed-demo.ts`.
+- **Bug encontrado pelo codex**: `pnpm --filter app build` quebrava em `/agency` com `Non-base58 character` quando `app/.env.local` tem `NEXT_PUBLIC_BRZ_MINT` placeholder/inválido. Causa: top-level `new PublicKey(process.env...)` em `brix-program.ts`.
+- **Fix aplicado nesta sessão**: `app/src/lib/brix-program.ts` agora tem `parsePubkey()` que detecta placeholder (`replace_`, `your_`, `${`) e cai pro fallback default; também faz try/catch pra base58 inválido com warning client-side. Build não quebra mais sem `.env.local` configurado.
+- CP2 marcado como done de fato (sign real com Privy já estava wired desde d3ffe82).
+- CP3: 5/9 tasks done; falta rodar seed-demo em devnet, validar ciclo E2E, atualizar README, regressão `anchor test`.
+- **PRÓXIMO**: Arthur (1) `pnpm install` no main → (2) `pnpm --filter app build` deve passar agora → (3) `pnpm demo:seed -- --demo-wallet <pubkey-Privy>` em devnet → (4) atualiza `app/.env.local` com `NEXT_PUBLIC_BRZ_MINT` → (5) testa ciclo no browser → (6) tag `cp3-done` → CP4 (vídeo + submission).
 
 ### 2026-04-22 (qua) — PC home (sessão noite 2) — **CP2 FRONTEND ✅ build passando**
 - `build-with-claude` skill executada completamente para CP2.

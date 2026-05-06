@@ -198,6 +198,7 @@ Termos que aparecem ao longo do projeto. Arthur começou sem conhecer a maioria.
 - `strict: true` sempre, sem `any`
 - Componentes funcionais + hooks
 - Estado server-side via React Query quando precisar cache; local com `useState`
+- **Pubkeys vindos de env**: NUNCA usar `new PublicKey(process.env.NEXT_PUBLIC_*)` direto em top-level. Next.js build avalia isso em SSG e quebra com placeholder/inválido. Usar helper que detecta placeholder (`replace_`, `your_`, `${`) e faz try/catch — ver `app/src/lib/brix-program.ts::parsePubkey`. Pubkeys vindos de Privy ou da chain (vault.admin, etc) podem ir direto: já são válidos.
 
 **Comentários**:
 - PT-BR em lógica de domínio (quem é landlord, tenant, agência — específico do produto)

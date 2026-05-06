@@ -69,20 +69,61 @@ solana balance
 git clone https://github.com/ArthurRamoss/brix.git
 cd brix
 cp .env.local.example .env.local
-# preencher: HELIUS_API_KEY, PRIVY_APP_ID, COLOSSEUM_COPILOT_PAT
+cp .env.local.example app/.env.local
+# preencher .env.local (root) e app/.env.local:
+#   HELIUS_API_KEY, NEXT_PUBLIC_PRIVY_APP_ID,
+#   NEXT_PUBLIC_BRIX_PROGRAM_ID (já default 6xon...sy94),
+#   NEXT_PUBLIC_BRZ_MINT (preencher após `pnpm demo:seed`)
 pnpm install
 ```
+
+> **Nota build-safe**: o app tolera `NEXT_PUBLIC_BRZ_MINT` placeholder/inválido sem
+> crashar (`brix-program.ts::parsePubkey`). Mas a demo de transação real precisa do
+> mint correto — rode `pnpm demo:seed` e copie o valor pro `app/.env.local`.
 
 ### 5. Rodar
 
 ```bash
-# Smart contract (quando existir após scaffold)
-anchor build
-anchor test
+# Smart contract
+pnpm program:build           # = anchor build
+pnpm program:test            # = anchor test (LiteSVM, sub-segundos)
 
-# Frontend
-pnpm dev
+# Frontend (dev hot reload)
+pnpm app:dev                 # = pnpm --filter app dev
+
+# Frontend (production build)
+pnpm app:build               # ✅ valida build limpo (~70s, /mnt/c)
 ```
+
+### 6. Demo seed (CP3 — pré-gravação)
+
+```bash
+# 1. Loga no app uma vez pra Privy criar a embedded Solana wallet.
+#    Copia o address (botão de copy no /landlord ou /invest após login).
+
+# 2. Roda o seed em devnet (precisa do admin keypair `EFQuU2...sy94`):
+pnpm demo:seed -- --demo-wallet <PRIVY_WALLET_PUBKEY>
+
+# Output: cria devnet BRZ test mint (se não existe), inicializa vault,
+# minta 100k BRZ pra demo wallet. Grava `scripts/demo-state.json`.
+
+# 3. Copia o `NEXT_PUBLIC_BRZ_MINT` do output pro `app/.env.local`.
+# 4. Reinicia `pnpm app:dev` pra pegar o env atualizado.
+```
+
+### 7. Golden path do vídeo (3min, 1 wallet)
+
+```
+login (persona invest)  → /invest         → deposita 50k BRZ → vault TVL sobe
+logout
+login (persona agency)  → /agency         → register SEL-2026-001 → fund_landlord
+                                          → BRZ chega na ATA (vira "PIX recebido" na narrativa)
+                                          → repay (parcela ou full)
+logout
+login (persona invest)  → /invest         → withdraw → recebe principal + juros
+```
+
+Tx links pro Solana Explorer aparecem em todos os toasts — usar pra prova on-chain no vídeo.
 
 ---
 

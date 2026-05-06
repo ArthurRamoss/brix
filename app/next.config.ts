@@ -1,10 +1,12 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Next.js 16 usa Turbopack por default. Módulos Node (fs, net, tls, crypto)
   // são stubados automaticamente pelo Turbopack no bundle do browser — não
   // precisa de polyfill manual como no webpack.
-  turbopack: {},
+  // root explícito silencia o warning de "multiple lockfiles" em worktrees.
+  turbopack: { root: path.resolve(__dirname, "..") },
   // Mantém o webpack config pra caso alguém rode com --webpack explicitamente.
   webpack: (config, { isServer }) => {
     if (!isServer) {

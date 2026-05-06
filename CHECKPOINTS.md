@@ -17,19 +17,20 @@
 
 Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 
-| Tool | Versão | Notas |
-|---|---|---|
-| Rust | 1.95.0 | via rustup, profile minimal |
-| Solana CLI | **3.1.14 (Agave)** | via `release.anza.xyz/stable/install` — Solana virou Agave/Anza; numeração resetou (ex-Solana 1.18.x agora é Agave 3.x) |
-| Anchor | **1.0.1** | via `avm install latest` — Anchor jumped 0.31→1.0 |
-| Node | 20.20.2 | via nvm (default alias) |
-| pnpm | 10.33.1 | via corepack |
-| protobuf-compiler | apt | necessário pra alguns deps do Anchor |
+| Tool              | Versão             | Notas                                                                                                                   |
+| ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Rust              | 1.95.0             | via rustup, profile minimal                                                                                             |
+| Solana CLI        | **3.1.14 (Agave)** | via `release.anza.xyz/stable/install` — Solana virou Agave/Anza; numeração resetou (ex-Solana 1.18.x agora é Agave 3.x) |
+| Anchor            | **1.0.1**          | via `avm install latest` — Anchor jumped 0.31→1.0                                                                       |
+| Node              | 20.20.2            | via nvm (default alias)                                                                                                 |
+| pnpm              | 10.33.1            | via corepack                                                                                                            |
+| protobuf-compiler | apt                | necessário pra alguns deps do Anchor                                                                                    |
 
 **Keypair devnet**: `EFQuU2ii5HhG1r7nRCoMQNNA9YnSDnG2UGPvUZSG3dRs` — seed phrase salva pelo Arthur (gerenciador seguro).
 **Validação**: `anchor init` + `anchor build` produziu `.so` + IDL com sucesso.
 
 ### Pendências não-bloqueantes
+
 - [ ] Airdrop devnet (faucet rate-limited hoje; pegar 2 SOL em https://faucet.solana.com/ quando necessário)
 - [x] Conta Helius criada, API key em `.env.local` (free tier, validada com `getHealth` → ok)
 - [x] Conta Privy criada — App ID `cmoa0jx8500v30cl78buc8dop`
@@ -80,11 +81,13 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 - [ ] Commit tag: `cp1-done`
 
 ### Just-in-time reading (quando relevante)
+
 - Anchor Book: https://www.anchor-lang.com/ (Book + 101)
 - Solana Cookbook → PDA section
 - `.agents/data/solana-knowledge/` (6 partes)
 
 ### Fallback se travar
+
 - Se `fund_landlord` ficar complexo → mover lógica pra cliente admin script, program só escreve status.
 - Se repayment partial estiver dando merda → suportar só full repay no MVP.
 
@@ -118,6 +121,7 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 - [ ] Commit tag: `cp2-done` (marcar quando vercel preview rodar com seed-demo aplicado)
 
 ### Fallback
+
 - Se Privy der atrito → Unified Wallet Adapter (Phantom). Menos UX mas funcional.
 - Se tempo apertar → cortar `/invest` flow, admin script deposita em nome do investor pra demo.
 
@@ -149,6 +153,7 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 - **Demo wallet única vs split**: hoje `register/fund` usa `landlord ?? anchorWallet.publicKey`. Pra demo de 3min, **uma wallet única faz tudo** (login persona invest → deposit; logout → login persona agency → register/fund/repay; volta pra invest → withdraw). Split com `NEXT_PUBLIC_DEMO_LANDLORD_WALLET` só se a narrativa do vídeo precisar — não é blocker.
 
 ### Fallback
+
 - Se polish demorar → priorizar: loading states > tipografia > cores. Mínimo demonstrável.
 - Se Privy embedded Solana sign der atrito → admin script local roda o ciclo, gravamos a UI mostrando o resultado on-chain (Solana Explorer aberto).
 
@@ -174,6 +179,7 @@ Versões validadas em WSL2 Ubuntu 24.04 (user `ramos`):
 - [ ] Commit tag: `cp4-submitted`
 
 ### Conteúdo do pitch (estrutura do brix.md seção "Pitch video")
+
 1. Hook história da mãe (15s) — APÓS estabelecer macro
 2. Capital inefficiency macro (30s) — LEAD com isso, não transparency
 3. Por que quebra on-chain também (20s) — Goldfinch
@@ -198,6 +204,7 @@ Adicionar entradas cronológicas do tipo:
 Últimas entradas aqui embaixo (mais novas no topo):
 
 ### 2026-05-05 (ter) — worktree `flamboyant-kapitsa-80c31b` — **dia 1 da Semana SAGRADA**
+
 - Sessões 4 mai trouxeram **muito mais do que o CHECKPOINTS refletia** (commits d3ffe82 + 5b38cf7):
   - Persona split real: `/login` com escolha landlord/invest/agency + `app/src/lib/persona.ts`.
   - i18n PT/EN inteiro (`app/src/lib/i18n.tsx` 914 linhas) + `LangSwitch`.
@@ -214,6 +221,7 @@ Adicionar entradas cronológicas do tipo:
 - **PRÓXIMO**: Arthur (1) `pnpm install` no main → (2) `pnpm --filter app build` deve passar agora → (3) `pnpm demo:seed -- --demo-wallet <pubkey-Privy>` em devnet → (4) atualiza `app/.env.local` com `NEXT_PUBLIC_BRZ_MINT` → (5) testa ciclo no browser → (6) tag `cp3-done` → CP4 (vídeo + submission).
 
 ### 2026-04-22 (qua) — PC home (sessão noite 2) — **CP2 FRONTEND ✅ build passando**
+
 - `build-with-claude` skill executada completamente para CP2.
 - Criados: `privy-provider.tsx` (Privy v3 + Buffer polyfill + Sonner), `layout.tsx` atualizado, landing page (`page.tsx`), `/landlord` page, `/invest` page, `use-brix.ts` hook, `brix-program.ts`, `connection.ts`, `mock-data.ts`.
 - Bugs resolvidos durante CP2:
@@ -233,6 +241,7 @@ Adicionar entradas cronológicas do tipo:
 - **PRÓXIMO**: Arthur confirma `.env.local` → `pnpm --filter app dev` → testa local → `vercel deploy` → tag `cp2-done` → CP3.
 
 ### 2026-04-22 (qua) — PC home (sessão noite) — **CP1 CORE PROGRAM ✅ em devnet**
+
 - `build-defi-protocol` skill executada completamente.
 - Escrito: `state.rs` (Vault / Receivable / InvestorPosition / ReceivableStatus), `error.rs` (13 variants), `constants.rs` (seeds + bps), 6 instructions em módulos separados, `lib.rs` com 6 entrypoints.
 - Modelo de contabilidade: `total_assets = vault_ata.amount + total_deployed`; shares LP-like `shares = amount * total_shares / total_assets` (round down); `fund_landlord` conserva total_assets; `repay` cresce total_assets pelo juros_part; withdraw queima shares pro-rata.
@@ -248,6 +257,7 @@ Adicionar entradas cronológicas do tipo:
 - **PRÓXIMO**: Arthur salvar program ID em `.env.local` + commit `cp1-done` tag → CP2 (Privy Provider + landing + `/landlord` + `/invest` flows).
 
 ### 2026-04-22 (qua) — PC home (sessão tarde)
+
 - Helius free tier ativado, API key validada via `getHealth → ok`.
 - **Scaffold executado** via skill `scaffold-project`:
   - `anchor init brix-scaffold` em `/tmp` → renomeado pra `brix` → merge no repo root.
@@ -262,6 +272,7 @@ Adicionar entradas cronológicas do tipo:
 - **PRÓXIMO**: Arthur pega 2 SOL devnet via web faucet → skill `build-defi-protocol` escreve state.rs + instructions de CP1.
 
 ### 2026-04-22 (qua) — PC home (sessão manhã)
+
 - **Toolchain resolvido**: WSL2 Ubuntu 24.04 instalado; BIOS virtualization habilitada. Rust 1.95.0, Agave 3.1.14, Anchor 1.0.1, Node 20.20.2, pnpm 10.33.1.
 - Anchor jumped 0.30→1.x (ecossistema) — todas as refs de versão atualizadas em `README.md`, `AGENT_BRAIN.md`, `CHECKPOINTS.md`.
 - Keypair devnet: `EFQuU2ii5HhG1r7nRCoMQNNA9YnSDnG2UGPvUZSG3dRs`. Airdrop caiu em rate limit; usar web faucet depois.
@@ -269,6 +280,7 @@ Adicionar entradas cronológicas do tipo:
 - Scripts de setup reutilizáveis em `.agents/setup-*.sh`.
 
 ### 2026-04-18 (sáb) — PC home
+
 - Deep dive Copilot Apr 18 concluído (18 JSON em `research/copilot-deep-dive-2026-04-18/`)
 - `brix.md` reescrito com winning frame (capital inefficiency, RWA lending, BRZ, não BRLA)
 - Arquivos-cérebro criados: `.agents/AGENT_BRAIN.md`, `CHECKPOINTS.md` (este), `README.md`, `.env.local.example`, `.gitignore` ampliado

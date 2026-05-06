@@ -9,6 +9,7 @@
 ## 1. Propósito deste arquivo
 
 Cérebro persistente do agente. Toda sessão **começa** lendo:
+
 1. Este arquivo (`.agents/AGENT_BRAIN.md`) — convenções, skills, workflow
 2. `brix.md` (raiz) — contexto de produto, pitch, problema, solução
 3. `CHECKPOINTS.md` (raiz) — onde paramos, qual tarefa ativa
@@ -35,19 +36,19 @@ Detalhes completos em `brix.md`. Este arquivo não duplica pitch.
 
 ## 4. Stack canônico (não mudar sem discussão explícita)
 
-| Camada | Escolha | Versão instalada (22 abr) | Observação |
-|---|---|---|---|
-| Smart contract | Anchor (Rust) em Solana devnet | **1.0.1** | Anchor pulou 0.31→1.0; Agave 3.x exige Anchor 1.x |
-| Solana CLI | Agave (Anza) | **3.1.14** | Ex-Solana Labs virou Anza/Agave; numeração resetou |
-| Rust toolchain | stable | **1.95.0** | via rustup |
-| Frontend | Next.js 14+ App Router + TypeScript | pnpm-scaffolded | `create-solana-dapp` template quando for scaffolar |
-| Auth / wallet | Privy.io (embedded wallet, email login) | App ID: `cmoa0jx8500v30cl78buc8dop` | Sponsor Frontier |
-| RPC | Helius | pendente criação conta | Sponsor Frontier, free tier devnet suficiente pra MVP |
-| Stablecoin | **BRZ (Transfero)** | mainnet mint `FtgGSFADXBtroxq8VCausXRr2of47QBf5AS1NtZCu4GD` | NATIVO em Solana. NUNCA BRLA (não existe em Solana) |
-| Off-ramp PIX | **Mockado no MVP** | — | Não construir. Mencionar LocalPay/Sendryx/Transfero como integração futura |
-| Package manager | pnpm | **10.33.1** (via corepack) | Menos disco, rápido |
-| Node | LTS 20 | **20.20.2** (via nvm) | `nvm use default` necessário pra não pegar Windows node do PATH interop |
-| Testes Anchor | LiteSVM (unit) + devnet (integration) | litesvm 0.10.0 (vem com scaffold) | `anchor test` |
+| Camada          | Escolha                                 | Versão instalada (22 abr)                                   | Observação                                                                 |
+| --------------- | --------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Smart contract  | Anchor (Rust) em Solana devnet          | **1.0.1**                                                   | Anchor pulou 0.31→1.0; Agave 3.x exige Anchor 1.x                          |
+| Solana CLI      | Agave (Anza)                            | **3.1.14**                                                  | Ex-Solana Labs virou Anza/Agave; numeração resetou                         |
+| Rust toolchain  | stable                                  | **1.95.0**                                                  | via rustup                                                                 |
+| Frontend        | Next.js 14+ App Router + TypeScript     | pnpm-scaffolded                                             | `create-solana-dapp` template quando for scaffolar                         |
+| Auth / wallet   | Privy.io (embedded wallet, email login) | App ID: `cmoa0jx8500v30cl78buc8dop`                         | Sponsor Frontier                                                           |
+| RPC             | Helius                                  | pendente criação conta                                      | Sponsor Frontier, free tier devnet suficiente pra MVP                      |
+| Stablecoin      | **BRZ (Transfero)**                     | mainnet mint `FtgGSFADXBtroxq8VCausXRr2of47QBf5AS1NtZCu4GD` | NATIVO em Solana. NUNCA BRLA (não existe em Solana)                        |
+| Off-ramp PIX    | **Mockado no MVP**                      | —                                                           | Não construir. Mencionar LocalPay/Sendryx/Transfero como integração futura |
+| Package manager | pnpm                                    | **10.33.1** (via corepack)                                  | Menos disco, rápido                                                        |
+| Node            | LTS 20                                  | **20.20.2** (via nvm)                                       | `nvm use default` necessário pra não pegar Windows node do PATH interop    |
+| Testes Anchor   | LiteSVM (unit) + devnet (integration)   | litesvm 0.10.0 (vem com scaffold)                           | `anchor test`                                                              |
 
 **Explicitamente NÃO usar**: Metaplex/NFTs, World ID, Arcium. Sem justificativa de produto.
 
@@ -56,6 +57,7 @@ Detalhes completos em `brix.md`. Este arquivo não duplica pitch.
 ## 5. Regras de posicionamento (Copilot gap analysis — NUNCA violar)
 
 Winning tags que devem aparecer em pitch, submission, grant, qualquer material público:
+
 - `rwa tokenization`
 - `lending`
 - `stablecoin payments`
@@ -63,6 +65,7 @@ Winning tags que devem aparecer em pitch, submission, grant, qualquer material p
 - Problema: **capital inefficiency** ("R$ bilhões em aluguéis futuros parados")
 
 **PROIBIDO como headline** (zero winners no Colosseum corpus):
+
 - ❌ `smart contract escrow` como solution tag
 - ❌ `lack of transparency` como problema
 - ❌ `high platform fees` como problema
@@ -81,22 +84,22 @@ Detalhes em `memory/project_brix_winning_frame.md`.
 
 Full router em `.agents/SKILL_ROUTER.md`. Quick reference:
 
-| Intent | Skill |
-|---|---|
-| Setup inicial do projeto | `scaffold-project` |
-| Construir smart contract DeFi | `build-defi-protocol` |
-| Guia passo-a-passo do MVP | `build-with-claude` |
-| Debugar programa Anchor | `debug-program` |
-| Code review | `review-and-iterate` |
-| Review visual/produto | `product-review`, `frontend-design-guidelines` |
-| Paleta/brand | `brand-design` |
-| Pitch deck | `create-pitch-deck` |
-| Vídeo pitch | `marketing-video` |
-| Submission final | `submit-to-hackathon` |
-| Research hackathon adicional | `colosseum-copilot` |
-| Research DeFi TVL | `defillama-research` |
-| Deploy mainnet (futuro v2) | `deploy-to-mainnet` |
-| Tutorial Solana/Anchor | `virtual-solana-incubator`, `solana-beginner` |
+| Intent                        | Skill                                          |
+| ----------------------------- | ---------------------------------------------- |
+| Setup inicial do projeto      | `scaffold-project`                             |
+| Construir smart contract DeFi | `build-defi-protocol`                          |
+| Guia passo-a-passo do MVP     | `build-with-claude`                            |
+| Debugar programa Anchor       | `debug-program`                                |
+| Code review                   | `review-and-iterate`                           |
+| Review visual/produto         | `product-review`, `frontend-design-guidelines` |
+| Paleta/brand                  | `brand-design`                                 |
+| Pitch deck                    | `create-pitch-deck`                            |
+| Vídeo pitch                   | `marketing-video`                              |
+| Submission final              | `submit-to-hackathon`                          |
+| Research hackathon adicional  | `colosseum-copilot`                            |
+| Research DeFi TVL             | `defillama-research`                           |
+| Deploy mainnet (futuro v2)    | `deploy-to-mainnet`                            |
+| Tutorial Solana/Anchor        | `virtual-solana-incubator`, `solana-beginner`  |
 
 **Memória persistente** do agente em `C:\Users\Ramos\.claude\projects\C--Users-Ramos-Desktop-brix\memory\`. Já contém: user identity, scope, tech stack, winning frame, narrative guardrails.
 
@@ -107,21 +110,25 @@ Full router em `.agents/SKILL_ROUTER.md`. Quick reference:
 Arthur desenvolve de PCs diferentes em janelas curtas. Regras duras:
 
 ### Início de sessão
+
 ```bash
 cd brix
 git pull --rebase origin main
 pnpm install          # se package.json/lock mudaram
 cat CHECKPOINTS.md    # ler onde paramos
 ```
+
 Depois abre Claude Code. Primeira mensagem sugerida: "lê AGENT_BRAIN, CHECKPOINTS e brix.md, depois me diga onde paramos."
 
 ### Durante sessão
+
 - Incrementos pequenos
 - Commit por unidade lógica (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `wip:`)
 - Mensagens em inglês ou PT-BR, consistência importa menos que clareza
 - Nunca acumular muito sem commit
 
 ### Fim de sessão (obrigatório)
+
 ```bash
 # Editar CHECKPOINTS.md: marcar subtasks done, anotar "próximo: X"
 git add -A
@@ -140,12 +147,14 @@ git push origin main
 Termos que aparecem ao longo do projeto. Arthur começou sem conhecer a maioria. Expandir conforme surgem.
 
 ### Infraestrutura & CLI
+
 - **Solana CLI**: ferramenta de terminal pra falar com a rede. Comandos: `solana airdrop`, `solana balance`, `solana program deploy`. Análogo a `gcloud`/`aws`.
 - **devnet**: rede de teste pública da Solana, SOL grátis via `solana airdrop`. Produção é `mainnet-beta`. `localnet` é uma instância local pra dev.
 - **RPC (Remote Procedure Call)**: servidor HTTP/WebSocket que sua aplicação usa pra falar com a rede. Helius é provedor premium (grátis até X credits). URL tipo `https://devnet.helius-rpc.com/?api-key=XXX`.
 - **keypair**: par de chave pública (endereço da wallet) + chave privada. Arquivo `~/.config/solana/id.json`. Nunca commitar.
 
 ### Model de contas
+
 - **Account (conta)**: unidade de dados em Solana. Tem owner (um program) e data (bytes). Diferente de EVM, onde storage fica DENTRO do contract.
 - **Program**: código deployado (análogo a smart contract EVM). Stateless. Lê/escreve dados em accounts.
 - **PDA (Program Derived Address)**: endereço determinístico derivado de `seeds + program_id`. Não tem private key. Usado pra contas "propriedade" do program. Ex: `seeds = [b"vault", admin.key().as_ref()]`.
@@ -154,12 +163,14 @@ Termos que aparecem ao longo do projeto. Arthur começou sem conhecer a maioria.
 - **rent exemption**: contas pagam SOL de aluguel OU mantêm saldo mínimo pra não serem deletadas. Anchor calcula automático.
 
 ### SPL Tokens
+
 - **SPL Token Program**: program padrão da Solana pra tokens fungíveis (≈ ERC-20).
 - **Mint**: a "definição" do token (total supply, decimals, authority). Análogo ao token contract em EVM.
 - **Token Account**: conta que guarda saldo de um Mint específico pra um dono específico. Um usuário tem 1 Token Account por token.
 - **ATA (Associated Token Account)**: Token Account com endereço determinístico (derivado de owner + mint). Padrão pra não ter N Token Accounts soltos.
 
 ### Anchor (framework)
+
 - **#[program]**: macro que marca o módulo de instructions.
 - **#[account]**: macro que marca uma struct como conta persistente.
 - **#[derive(Accounts)]**: macro que valida contas passadas à instruction.
@@ -173,6 +184,7 @@ Termos que aparecem ao longo do projeto. Arthur começou sem conhecer a maioria.
 - **#[error_code]**: define erros custom do program.
 
 ### DeFi
+
 - **Vault**: conta que guarda ativos coletivos (em Brix: BRZ dos investidores).
 - **Escrow**: contrato que segura valor até uma condição (em Brix: recebível vinculado ao repayment).
 - **TVL (Total Value Locked)**: soma de ativos dentro do protocolo. Métrica principal de "uso".
@@ -189,22 +201,26 @@ Termos que aparecem ao longo do projeto. Arthur começou sem conhecer a maioria.
 ## 9. Convenções de código
 
 **Rust (programs/)**:
+
 - `snake_case` pra tudo
 - Erros via `#[error_code] pub enum BrixError { ... }`
 - Seeds de PDA sempre documentados no módulo
 - Um instruction por arquivo quando crescer (inicialmente pode ficar tudo em `lib.rs`)
 
 **TypeScript (frontend/)**:
+
 - `strict: true` sempre, sem `any`
 - Componentes funcionais + hooks
 - Estado server-side via React Query quando precisar cache; local com `useState`
 - **Pubkeys vindos de env**: NUNCA usar `new PublicKey(process.env.NEXT_PUBLIC_*)` direto em top-level. Next.js build avalia isso em SSG e quebra com placeholder/inválido. Usar helper que detecta placeholder (`replace_`, `your_`, `${`) e faz try/catch — ver `app/src/lib/brix-program.ts::parsePubkey`. Pubkeys vindos de Privy ou da chain (vault.admin, etc) podem ir direto: já são válidos.
 
 **Comentários**:
+
 - PT-BR em lógica de domínio (quem é landlord, tenant, agência — específico do produto)
 - Inglês em boilerplate técnico
 
 **Não commitar nunca**:
+
 - `.env.local`, `.env`, qualquer `*.keypair.json`
 - `target/`, `node_modules/`, `.anchor/`
 - Build artifacts (`dist/`, `.next/`)

@@ -55,8 +55,12 @@ export const VAULT_ADMIN = new PublicKey(
 // Privy nos dá um objeto parecido mas não idêntico — adaptamos aqui.
 export interface AnchorWalletAdapter {
   publicKey: PublicKey;
-  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T>;
-  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]>;
+  signTransaction<T extends Transaction | VersionedTransaction>(
+    tx: T,
+  ): Promise<T>;
+  signAllTransactions<T extends Transaction | VersionedTransaction>(
+    txs: T[],
+  ): Promise<T[]>;
 }
 
 // Retorna o Program<Brix> tipado pelo IDL.

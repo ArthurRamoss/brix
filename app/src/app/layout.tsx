@@ -30,6 +30,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
+      data-scroll-behavior="smooth"
       className={`${plexSans.variable} ${plexMono.variable}`}
     >
       <body>

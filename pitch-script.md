@@ -50,8 +50,9 @@
 >
 > [/invest] investor deposits 50 thousand brz into the vault. tvl updates. shares minted.
 >
-> [/agency] selectimob registers a 9.6k receivable for owner A. one click → on-chain register
-> + fund_landlord. owner A receives BRZ. in production this off-ramps to PIX via transfero.
+> [/agency] selectimob registers a 9.6k receivable for owner A. one click triggers
+> register_receivable then fund_landlord. owner A receives BRZ. in production this
+> off-ramps to PIX via transfero.
 >
 > [/agency] tenant pays selectimob. selectimob calls repay on-chain. the vault grows by the
 > interest portion. owner A's debt closes.
@@ -114,6 +115,7 @@ estiver boa. recomendação: tentar uma take cada e comparar.
 `rwa tokenization` · `lending` · `stablecoin payments` · `oracle`
 
 **proibido como headline** (zero winners no corpus colosseum):
+
 - ❌ smart contract escrow como solution tag
 - ❌ lack of transparency como problema (transparência é mecanismo, não headline)
 - ❌ high platform fees / high barrier to entry como problema

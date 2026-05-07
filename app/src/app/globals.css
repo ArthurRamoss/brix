@@ -273,6 +273,14 @@ a {
   }
 }
 
+/* data tables that should scroll horizontally instead of collapsing to 1 col */
+.data-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.data-table-scroll::-webkit-scrollbar { height: 6px; }
+.data-table-scroll::-webkit-scrollbar-track { background: transparent; }
+.data-table-scroll::-webkit-scrollbar-thumb {
+  background: var(--line); border-radius: 3px;
+}
+
 @media (max-width: 760px) {
   body {
     overflow-x: hidden;
@@ -283,9 +291,24 @@ a {
     border-radius: var(--radius);
   }
 
+  /* Stack any inline grid by default — most cards/forms use this and look
+     better column-by-column on mobile. Tables that should keep their column
+     layout opt out by living inside .data-table-scroll, which we exempt below. */
   [style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
   }
+
+  /* Opt-out: inside .data-table-scroll the original grid is preserved and
+     the wrapper handles horizontal scroll. min-width keeps cells readable. */
+  .data-table-scroll [style*="grid-template-columns"] {
+    grid-template-columns: var(--mobile-grid-cols, 120px 1.5fr 1fr 100px 80px 100px 100px) !important;
+    min-width: 760px;
+  }
+
+  /* Page padding on mobile — matches AppShell content padding to keep
+     headers and CTAs from hugging the edge. */
+  .app-content { padding: 20px 16px !important; }
+  .app-header { padding: 12px 16px !important; gap: 8px !important; }
 
   [style*="font-size: 56px"],
   [style*="font-size: 48px"],

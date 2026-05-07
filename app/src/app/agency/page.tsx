@@ -389,7 +389,7 @@ function Portfolio({ setTab }: { setTab: (id: TabId) => void }) {
             </button>
           </div>
 
-          <div>
+          <div className="data-table-scroll">
             <div
               className="mono"
               style={{

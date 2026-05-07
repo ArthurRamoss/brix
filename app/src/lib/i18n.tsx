@@ -241,6 +241,8 @@ const pt = {
   shell_landlord: "proprietário",
   shell_agency: "imobiliária",
   shell_investor: "investidor",
+  shell_wallet_tip:
+    "endereço da sua wallet solana (criada pela Privy quando você logou).",
 
   // landlord portal
   ll_tab_overview: "visão geral",
@@ -791,6 +793,8 @@ const en = {
   shell_landlord: "owner",
   shell_agency: "agency",
   shell_investor: "investor",
+  shell_wallet_tip:
+    "your solana wallet address (created by Privy when you signed in).",
 
   ll_tab_overview: "overview",
   ll_tab_simulate: "simulate",

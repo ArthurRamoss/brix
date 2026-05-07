@@ -5,7 +5,7 @@
 // Tabs: vault dashboard / deposit / withdraw / positions.
 // Ported from Brix-handoff/brix/project/investor.jsx.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { AppShell, type Tab } from "../../components/shell/AppShell";
@@ -283,7 +283,14 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
             {backingCount}
           </span>
         </div>
-        <div>
+        <div
+          className="data-table-scroll"
+          style={
+            {
+              "--mobile-grid-cols": "110px 1.4fr 1fr 100px 80px 100px",
+            } as CSSProperties
+          }
+        >
           <div
             className="mono"
             style={{

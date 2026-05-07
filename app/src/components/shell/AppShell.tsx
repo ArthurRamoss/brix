@@ -74,6 +74,7 @@ export function AppShell({
       style={{ minHeight: "100vh", background: "var(--bg-0)", color: "var(--fg-0)" }}
     >
       <header
+        className="app-header"
         style={{
           display: "flex",
           alignItems: "center",
@@ -161,17 +162,25 @@ export function AppShell({
                 color: "var(--fg-1)",
                 border: "1px solid var(--line)",
               }}
+              title={t("shell_wallet_tip") as string}
             >
               {shortAddr(address)}
             </div>
           )}
           <button
             onClick={handleLogout}
-            style={{ padding: 8, color: "var(--fg-2)", borderRadius: 6 }}
-            title={t("shell_logout")}
-            aria-label={t("shell_logout")}
+            style={{
+              padding: 8,
+              color: "var(--fg-2)",
+              borderRadius: 6,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            title={t("shell_logout") as string}
+            aria-label={t("shell_logout") as string}
           >
-            <I.x size={16} />
+            <I.logout size={16} />
           </button>
         </div>
       </header>
@@ -212,7 +221,9 @@ export function AppShell({
         </div>
       )}
 
-      <div style={{ padding: 32 }}>{children}</div>
+      <div className="app-content" style={{ padding: 32 }}>
+        {children}
+      </div>
     </div>
   );
 }

@@ -310,16 +310,35 @@ a {
   .app-content { padding: 20px 16px !important; }
   .app-header { padding: 12px 16px !important; gap: 8px !important; }
 
-  [style*="font-size: 56px"],
-  [style*="font-size: 48px"],
-  [style*="font-size: 40px"],
-  [style*="font-size: 36px"] {
-    font-size: 30px !important;
-    letter-spacing: 0 !important;
-  }
+  /* Heading scaling — match each big size to a sane mobile size. The previous
+     blanket 30px floor missed 88px (hero) and undersized smaller heads. */
+  [style*="font-size: 88px"] { font-size: 34px !important; letter-spacing: -0.02em !important; line-height: 1.05 !important; }
+  [style*="font-size: 64px"] { font-size: 30px !important; letter-spacing: -0.02em !important; }
+  [style*="font-size: 56px"] { font-size: 28px !important; letter-spacing: -0.01em !important; line-height: 1.1 !important; }
+  [style*="font-size: 48px"] { font-size: 26px !important; letter-spacing: -0.01em !important; }
+  [style*="font-size: 40px"] { font-size: 24px !important; letter-spacing: -0.01em !important; line-height: 1.15 !important; }
+  [style*="font-size: 36px"] { font-size: 22px !important; }
+  [style*="font-size: 32px"] { font-size: 22px !important; }
+  [style*="font-size: 28px"] { font-size: 20px !important; }
 
+  /* Generous paddings collapse on mobile so content doesn't feel boxed in. */
   [style*="padding: 32px"],
-  [style*="padding: 40px"] {
+  [style*="padding: 40px"],
+  [style*="padding: 48px"] {
     padding: 20px !important;
   }
+  /* Section padding "120px 48px" is the landing's vertical-rhythm pattern. */
+  [style*="padding: 120px 48px"],
+  [style*="padding: 80px 48px"],
+  [style*="padding: 96px 48px"] {
+    padding: 56px 18px !important;
+  }
+  /* Landing nav padding "20px 48px" → "16px 18px" on mobile. */
+  [style*="padding: 20px 48px"] {
+    padding: 14px 18px !important;
+  }
+
+  /* Backstop: ensure Tailwind's `hidden` always wins over `md:flex` /
+     `md:inline-flex` on mobile. Some style precedences can flip it otherwise. */
+  .hidden { display: none !important; }
 }

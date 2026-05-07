@@ -369,6 +369,10 @@ const pt = {
   inv_kpi_util_s: (n: number) => `${n} contratos ativos`,
   inv_kpi_insurance: "seguro fiança",
   inv_kpi_insurance_s: "dos contratos cobertos",
+  inv_kpi_active: "contratos ativos",
+  inv_kpi_active_s: (n: number) =>
+    n === 1 ? "lastreando o vault" : `${n} lastreando o vault`,
+  inv_kpi_active_s_empty: "vault aguarda primeiro recebível",
   inv_actions: "ações",
   inv_deposit_cta: "depositar",
   inv_withdraw_cta: "sacar",
@@ -445,6 +449,141 @@ const pt = {
     "saca quando quiser. share price = principal + yield acumulado.",
   ] as const,
   how_try_as: (kicker: string) => `experimentar como ${kicker}`,
+
+  // login extras (new flow: only investor + agency self-register)
+  log_checking: "verificando seu cadastro",
+  log_landlord_note_h: "é proprietário?",
+  log_landlord_note_p:
+    "sua imobiliária te cadastra na plataforma. depois é só logar com o email que ela usou — seus contratos aparecem aqui automaticamente.",
+
+  // agency — new keys
+  ag_tab_clients: "clientes",
+  ag_new_advance: "novo adiantamento",
+
+  // agency clients (CRM)
+  clients_kicker: "carteira de clientes",
+  clients_h: "clientes",
+  clients_sub: (n: number) =>
+    `${n} ${n === 1 ? "proprietário cadastrado" : "proprietários cadastrados"}`,
+  clients_new: "novo cliente",
+  clients_cancel: "cancelar",
+  clients_save: "salvar",
+  clients_form_h: "cadastrar proprietário",
+  clients_form_name_l: "nome",
+  clients_form_name_ph: "nome completo",
+  clients_form_email_l: "email",
+  clients_form_addr_l: "endereço do imóvel",
+  clients_form_addr_ph: "rua, número, complemento, cidade",
+  clients_form_rent_l: "aluguel mensal (BRZ)",
+  clients_form_pix_l: "chave PIX",
+  clients_form_pix_ph: "opcional · default: email",
+  clients_st_rent: "aluguel",
+  clients_st_active: "contratos ativos",
+  clients_advance: "antecipar",
+
+  // register receivable — new keys
+  reg_mode_existing: "cliente da carteira",
+  reg_mode_new: "cadastrar agora",
+  reg_pick_client_l: "selecionar proprietário",
+
+  // repay — new key
+  repay_empty: "sem contratos financiados pra registrar pagamento.",
+
+  // landlord portal — new flow keys
+  ll_tab_history: "histórico",
+  ll_not_linked_h: "ainda não cadastrado",
+  ll_not_linked_p:
+    "sua imobiliária ainda não te adicionou. peça pra eles te cadastrarem usando este email — depois recarregue a página.",
+  ll_h1_empty: "ainda não há contratos antecipados",
+  ll_h1_active: "seus contratos antecipados",
+  ll_partner: "imobiliária parceira",
+  ll_property: "imóvel",
+  ll_total_received: "total recebido via brix",
+  ll_pix_sent: "PIX enviado para",
+  ll_no_active: "nenhum contrato ativo no momento.",
+  ll_history_h: "histórico de contratos",
+  ll_history_empty: "nenhum contrato encerrado ainda.",
+  ll_repayment_total: "total a quitar",
+  ll_view_tx: "ver transação on-chain",
+  ll_partner_city: "cidade",
+
+  // agency onboarding (founding partner application)
+  ob_kicker: "candidatura · imobiliária parceira",
+  ob_h1: "torne sua imobiliária um parceiro fundador",
+  ob_sub:
+    "antes de operar pelo brix, sua imobiliária passa por uma checagem rápida de KYB, CRECI e modelo de gestão. preenche aqui e o time entra em contato.",
+  ob_company_l: "nome da imobiliária",
+  ob_company_ph: "ex: Selectimob",
+  ob_contact_l: "contato responsável",
+  ob_contact_ph: "nome de quem assina pela empresa",
+  ob_email_l: "email corporativo",
+  ob_cnpj_l: "CNPJ",
+  ob_creci_l: "CRECI",
+  ob_website_l: "site",
+  ob_city_l: "cidade / UF",
+  ob_contracts_l: "contratos sob gestão",
+  ob_contracts_help:
+    "número aproximado de contratos de aluguel ativos hoje na imobiliária.",
+  ob_disclaimer:
+    "ao enviar, você autoriza o time brix a entrar em contato pra validar os dados acima. nada é registrado on-chain antes da aprovação.",
+  ob_submit: "enviar candidatura",
+  ob_done_kicker: "candidatura recebida",
+  ob_done_h: "obrigado, {company}",
+  ob_done_p:
+    "vamos validar os dados em até 48h úteis e responder por email. enquanto isso, nenhum cliente seu é cadastrado e nada acontece on-chain.",
+  ob_demo_label: "modo demo",
+  ob_demo_p:
+    "este é um protótipo — você pode simular a aprovação agora pra ver o painel da imobiliária.",
+  ob_demo_cta: "simular aprovação e entrar",
+
+  // agency portfolio empty state
+  ag_empty_h: "ainda não há recebíveis registrados",
+  ag_empty_p:
+    "registre o primeiro adiantamento de aluguel pra ver no portfólio. cada recebível é registrado on-chain com taxa imutável.",
+  ag_empty_cta: "registrar primeiro recebível",
+
+  // agency clients — extras
+  clients_empty_h: "sua carteira de clientes tá vazia",
+  clients_empty_p:
+    "cadastre os proprietários antes de antecipar contratos. cada cliente pode ter vários imóveis.",
+  clients_empty_cta: "adicionar primeiro proprietário",
+  clients_form_cpf_l: "CPF",
+  clients_form_phone_l: "telefone",
+  clients_st_props: "imóveis",
+  clients_props_h: "imóveis vinculados",
+  clients_add_prop: "adicionar imóvel",
+  clients_no_props: "esse proprietário ainda não tem imóveis cadastrados.",
+  clients_prop_addr_l: "endereço do imóvel",
+  clients_prop_addr_ph: "rua, número, complemento, cidade",
+  clients_prop_rent_l: "aluguel mensal (BRZ)",
+
+  // register receivable — extras
+  reg_pick_client_ph: "selecione um proprietário…",
+  reg_pick_property_l: "imóvel",
+  reg_no_clients_h: "sem clientes ainda",
+  reg_no_clients_p:
+    "antes de antecipar você precisa cadastrar pelo menos um proprietário na carteira.",
+  reg_no_clients_cta: "ir pra clientes",
+  reg_no_props_for_client:
+    "esse proprietário ainda não tem imóveis cadastrados.",
+  reg_no_props_cta: "adicionar imóvel agora →",
+  reg_pre_total: "valor total cedido",
+  reg_pre_apr: "taxa anual",
+  reg_months_help: "entre 3 e 12 meses · taxa cresce levemente com o prazo.",
+
+  // repay — empty state extras
+  repay_empty_h: "sem contratos financiados",
+  repay_empty_p:
+    "registre e financie um recebível antes de receber repagamentos do inquilino.",
+  repay_empty_cta: "ver portfólio",
+
+  // invest — empty states
+  inv_backing_empty:
+    "vault aguardando primeiro recebível · ainda não há contratos sendo lastreados.",
+  pos_history_empty:
+    "sem histórico ainda · faça seu primeiro depósito pra começar a render.",
+  pos_history_pending:
+    "histórico em curso · próximas transações aparecem aqui automaticamente.",
 };
 
 // `pt` is inferred with narrow literal types — we cast `en` afterwards so
@@ -776,6 +915,10 @@ const en = {
   inv_kpi_util_s: (n: number) => `${n} active contracts`,
   inv_kpi_insurance: "rent insurance",
   inv_kpi_insurance_s: "of contracts covered",
+  inv_kpi_active: "active contracts",
+  inv_kpi_active_s: (n: number) =>
+    n === 1 ? "backing the vault" : `${n} backing the vault`,
+  inv_kpi_active_s_empty: "vault waiting for first receivable",
   inv_actions: "actions",
   inv_deposit_cta: "deposit",
   inv_withdraw_cta: "withdraw",
@@ -851,6 +994,140 @@ const en = {
     "withdraw whenever. share price = principal + accrued yield.",
   ] as const,
   how_try_as: (kicker: string) => `try as ${kicker}`,
+
+  // login extras (new flow: only investor + agency self-register)
+  log_checking: "checking your registration",
+  log_landlord_note_h: "are you a property owner?",
+  log_landlord_note_p:
+    "your agency adds you to the platform. just log in with the email they used — your contracts show up here automatically.",
+
+  // agency — new keys
+  ag_tab_clients: "clients",
+  ag_new_advance: "new advance",
+
+  // agency clients (CRM)
+  clients_kicker: "client roster",
+  clients_h: "clients",
+  clients_sub: (n: number) =>
+    `${n} ${n === 1 ? "owner registered" : "owners registered"}`,
+  clients_new: "new client",
+  clients_cancel: "cancel",
+  clients_save: "save",
+  clients_form_h: "register owner",
+  clients_form_name_l: "name",
+  clients_form_name_ph: "full name",
+  clients_form_email_l: "email",
+  clients_form_addr_l: "property address",
+  clients_form_addr_ph: "street, number, unit, city",
+  clients_form_rent_l: "monthly rent (BRZ)",
+  clients_form_pix_l: "PIX key",
+  clients_form_pix_ph: "optional · defaults to email",
+  clients_st_rent: "rent",
+  clients_st_active: "active contracts",
+  clients_advance: "advance",
+
+  // register receivable — new keys
+  reg_mode_existing: "from roster",
+  reg_mode_new: "register now",
+  reg_pick_client_l: "select owner",
+
+  // repay — new key
+  repay_empty: "no funded contracts to register a payment for.",
+
+  // landlord portal — new flow keys
+  ll_tab_history: "history",
+  ll_not_linked_h: "not linked yet",
+  ll_not_linked_p:
+    "your agency hasn't added you yet. ask them to register you with this email — then refresh the page.",
+  ll_h1_empty: "no advances yet",
+  ll_h1_active: "your active advances",
+  ll_partner: "partner agency",
+  ll_property: "property",
+  ll_total_received: "total received via brix",
+  ll_pix_sent: "PIX sent to",
+  ll_no_active: "no active contracts right now.",
+  ll_history_h: "contract history",
+  ll_history_empty: "no completed contracts yet.",
+  ll_repayment_total: "total to repay",
+  ll_view_tx: "view on-chain transaction",
+  ll_partner_city: "city",
+
+  // agency onboarding (founding partner application)
+  ob_kicker: "application · partner agency",
+  ob_h1: "become a founding partner agency",
+  ob_sub:
+    "before operating through brix, your agency goes through a quick KYB, license and management model check. fill this in and the team will be in touch.",
+  ob_company_l: "agency name",
+  ob_company_ph: "e.g. Selectimob",
+  ob_contact_l: "contact in charge",
+  ob_contact_ph: "name of who signs for the company",
+  ob_email_l: "company email",
+  ob_cnpj_l: "tax id (CNPJ)",
+  ob_creci_l: "real-estate license (CRECI)",
+  ob_website_l: "website",
+  ob_city_l: "city / state",
+  ob_contracts_l: "contracts under management",
+  ob_contracts_help:
+    "approximate number of active rental contracts your agency manages today.",
+  ob_disclaimer:
+    "by submitting you authorize the brix team to contact you to verify the data above. nothing is recorded on-chain before approval.",
+  ob_submit: "submit application",
+  ob_done_kicker: "application received",
+  ob_done_h: "thanks, {company}",
+  ob_done_p:
+    "we'll review the data within 48 business hours and reply by email. nothing is registered on-chain and no clients are added until approval.",
+  ob_demo_label: "demo mode",
+  ob_demo_p:
+    "this is a prototype — you can simulate approval right now to see the agency dashboard.",
+  ob_demo_cta: "simulate approval and enter",
+
+  // agency portfolio empty state
+  ag_empty_h: "no receivables yet",
+  ag_empty_p:
+    "register the first rental advance to see it in the portfolio. each receivable is recorded on-chain with an immutable rate.",
+  ag_empty_cta: "register first receivable",
+
+  // agency clients — extras
+  clients_empty_h: "your client roster is empty",
+  clients_empty_p:
+    "register property owners before advancing contracts. each client can have multiple properties.",
+  clients_empty_cta: "add first owner",
+  clients_form_cpf_l: "tax id (CPF)",
+  clients_form_phone_l: "phone",
+  clients_st_props: "properties",
+  clients_props_h: "linked properties",
+  clients_add_prop: "add property",
+  clients_no_props: "this owner has no properties registered yet.",
+  clients_prop_addr_l: "property address",
+  clients_prop_addr_ph: "street, number, unit, city",
+  clients_prop_rent_l: "monthly rent (BRZ)",
+
+  // register receivable — extras
+  reg_pick_client_ph: "select an owner…",
+  reg_pick_property_l: "property",
+  reg_no_clients_h: "no clients yet",
+  reg_no_clients_p:
+    "before advancing you need to register at least one owner in your roster.",
+  reg_no_clients_cta: "go to clients",
+  reg_no_props_for_client: "this owner has no properties registered yet.",
+  reg_no_props_cta: "add a property now →",
+  reg_pre_total: "total assigned",
+  reg_pre_apr: "annual rate",
+  reg_months_help: "between 3 and 12 months · rate scales lightly with term.",
+
+  // repay — empty state extras
+  repay_empty_h: "no funded contracts",
+  repay_empty_p:
+    "register and fund a receivable before posting tenant repayments.",
+  repay_empty_cta: "view portfolio",
+
+  // invest — empty states
+  inv_backing_empty:
+    "vault waiting for its first receivable · no contracts being backed yet.",
+  pos_history_empty:
+    "no history yet · make your first deposit to start earning.",
+  pos_history_pending:
+    "history pending · upcoming transactions will appear here automatically.",
 };
 
 // Widened value type — translations can be strings, function-valued

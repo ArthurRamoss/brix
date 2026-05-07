@@ -1,34 +1,44 @@
 "use client";
 
-// /landlord — Property owner POV.
-// Tabs: overview (snapshot of one funded contract) / simulate / contracts (read-only).
-// register_receivable + fund_landlord moved to /agency.
-// Ported from Brix-handoff/brix/project/landlord.jsx.
+// /landlord — Property owner POV (passive).
+// New flow: the agency onboards landlords by adding them to its private client
+// roster. When the landlord logs in with the email the agency registered,
+// /login auto-routes here and we show contracts linked by email.
+// No on-chain action from this side; the agency runs the advance and PIX-off-ramp
+// in production. This screen is a status portal.
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
+import Link from "next/link";
 import { AppShell, type Tab } from "../../components/shell/AppShell";
 import { I } from "../../components/icons";
-import { KPI } from "../../components/primitives/KPI";
 import { Card } from "../../components/primitives/Card";
 import { Pill } from "../../components/primitives/Pill";
 import { useT } from "../../lib/i18n";
 import { getPersona } from "../../lib/persona";
+import { fmtBRZ, fmtPct } from "../../lib/mock-data";
 import {
-  RECEIVABLES,
-  fmtBRZ,
-  fmtPct,
-  type ProtoReceivable,
-} from "../../lib/mock-data";
+  getAgencyApplication,
+  getClientByEmail,
+  getContractsByClientId,
+  type AgencyApplication,
+  type AgencyClient,
+  type AgencyContract,
+} from "../../lib/agency-clients";
 
-type TabId = "overview" | "simulate" | "contracts";
+type TabId = "overview" | "history";
 
 export default function LandlordPage() {
   const { t } = useT();
   const router = useRouter();
-  const { ready, authenticated } = usePrivy();
+  const { ready, authenticated, user } = usePrivy();
   const [tab, setTab] = useState<TabId>("overview");
+  const [client, setClient] = useState<AgencyClient | null>(null);
+  const [contracts, setContracts] = useState<AgencyContract[]>([]);
+  const [agencyApp, setAgencyApp] = useState<AgencyApplication | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -36,13 +46,29 @@ export default function LandlordPage() {
       router.push("/login");
       return;
     }
-    if (getPersona() !== "landlord") router.push("/login");
-  }, [ready, authenticated, router]);
+    if (getPersona() !== "landlord") {
+      router.push("/login");
+      return;
+    }
+    const email =
+      user?.email?.address ??
+      (
+        user?.linkedAccounts.find((a) => a.type === "email") as
+          | { address?: string }
+          | undefined
+      )?.address;
+    if (email) {
+      const c = getClientByEmail(email);
+      setClient(c);
+      if (c) setContracts(getContractsByClientId(c.id));
+    }
+    setAgencyApp(getAgencyApplication());
+    setHydrated(true);
+  }, [ready, authenticated, user, router]);
 
   const tabs: Tab[] = [
     { id: "overview", label: t("ll_tab_overview") as string },
-    { id: "simulate", label: t("ll_tab_simulate") as string },
-    { id: "contracts", label: t("ll_tab_contracts") as string },
+    { id: "history", label: t("ll_tab_history") as string },
   ];
 
   return (
@@ -52,23 +78,153 @@ export default function LandlordPage() {
       activeTab={tab}
       setActiveTab={(id) => setTab(id as TabId)}
     >
-      {tab === "overview" && <Overview setTab={setTab} />}
-      {tab === "simulate" && <Simulator />}
-      {tab === "contracts" && <Contracts />}
+      {!hydrated ? null : !client ? (
+        <NotLinked />
+      ) : tab === "overview" ? (
+        <Overview client={client} contracts={contracts} agencyApp={agencyApp} />
+      ) : (
+        <History contracts={contracts} />
+      )}
     </AppShell>
   );
 }
 
-// ─── Overview ───────────────────────────────────────────────────────────────
-function Overview({ setTab }: { setTab: (id: TabId) => void }) {
+// ─── Not linked yet ─────────────────────────────────────────────────────────
+function NotLinked() {
   const { t } = useT();
-  const repayFn = t("ll_repay_progress") as unknown as (
-    a: number,
-    b: number,
-  ) => string;
+  return (
+    <div className="fade-in" style={{ maxWidth: 540, margin: "60px auto" }}>
+      <Card style={{ padding: 32, textAlign: "center" }}>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            margin: "0 auto 20px",
+            background: "var(--bg-2)",
+            color: "var(--fg-2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <I.building size={26} />
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px" }}>
+          {t("ll_not_linked_h") as string}
+        </h2>
+        <p
+          style={{
+            color: "var(--fg-2)",
+            fontSize: 14,
+            margin: "0 0 20px",
+            lineHeight: 1.6,
+          }}
+        >
+          {t("ll_not_linked_p") as string}
+        </p>
+        <Link href="/" className="btn btn-secondary">
+          {t("nav_back_site") as string}
+        </Link>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Partner agency card ────────────────────────────────────────────────────
+function PartnerCard({ agencyApp }: { agencyApp: AgencyApplication | null }) {
+  const { t } = useT();
+  const name = agencyApp?.companyName ?? "—";
+  const isSelectimob = name.toLowerCase().trim() === "selectimob";
+  return (
+    <Card style={{ marginBottom: 20 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            background: "var(--gold-soft)",
+            color: "var(--gold)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <I.shield size={20} />
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div className="mono" style={{ fontSize: 11, color: "var(--fg-3)" }}>
+            {t("ll_partner") as string}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginTop: 4,
+            }}
+          >
+            <span style={{ fontSize: 16, fontWeight: 600 }}>{name}</span>
+            {isSelectimob && (
+              <Image
+                src="/selectimob.png"
+                alt="Selectimob"
+                width={88}
+                height={18}
+                style={{ height: 18, width: "auto" }}
+              />
+            )}
+          </div>
+        </div>
+        {agencyApp?.city && (
+          <div style={{ textAlign: "right" }}>
+            <div
+              className="mono"
+              style={{ fontSize: 11, color: "var(--fg-3)" }}
+            >
+              {t("ll_partner_city") as string}
+            </div>
+            <div style={{ fontSize: 13, marginTop: 4 }}>{agencyApp.city}</div>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+// ─── Overview ───────────────────────────────────────────────────────────────
+function Overview({
+  client,
+  contracts,
+  agencyApp,
+}: {
+  client: AgencyClient;
+  contracts: AgencyContract[];
+  agencyApp: AgencyApplication | null;
+}) {
+  const { t } = useT();
+
+  const active = useMemo(
+    () =>
+      contracts.filter(
+        (c) => c.status === "funded" || c.status === "registered",
+      ),
+    [contracts],
+  );
+  const totalAdvanced = active.reduce((s, c) => s + c.principalBrz, 0);
+  const lastFunded = active.find((c) => c.status === "funded");
+
   return (
     <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 28 }}>
         <div
           className="mono"
           style={{
@@ -78,430 +234,98 @@ function Overview({ setTab }: { setTab: (id: TabId) => void }) {
             letterSpacing: "0.06em",
           }}
         >
-          {t("ll_greet") as string}
+          {t("ll_greet") as string}, {client.name}
         </div>
         <h1
           style={{
-            fontSize: 40,
+            fontSize: 36,
             fontWeight: 600,
             letterSpacing: "-0.03em",
             margin: "8px 0 0",
             textWrap: "pretty" as const,
           }}
         >
-          {t("ll_overview_h1_a") as string}{" "}
-          <span style={{ color: "var(--gold)" }}>BRZ 8.702</span>{" "}
-          {t("ll_overview_h1_b") as string}
+          {active.length === 0
+            ? (t("ll_h1_empty") as string)
+            : (t("ll_h1_active") as string)}
         </h1>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: 16,
-          marginBottom: 24,
-        }}
-      >
-        <KPI
-          label={t("ll_kpi1_l") as string}
-          value="BRZ 9.600"
-          sub={t("ll_kpi1_s") as string}
-          tone="gold"
-        />
-        <KPI
-          label={t("ll_kpi2_l") as string}
-          value={t("ll_kpi2_v") as string}
-          sub={t("ll_kpi2_s") as string}
-          mono
-        />
-        <KPI
-          label={t("ll_kpi3_l") as string}
-          value={t("ll_kpi3_v") as string}
-          sub={t("ll_kpi3_s") as string}
-          tone="green"
-        />
-      </div>
+      <PartnerCard agencyApp={agencyApp} />
 
-      <Card style={{ marginBottom: 24 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 16,
-          }}
-        >
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
-            {t("ll_repay_h") as string}
-          </h3>
-          <Pill status="funded">funded</Pill>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: 12,
-            marginBottom: 12,
-          }}
-        >
-          <span className="mono" style={{ fontSize: 32, fontWeight: 500 }}>
-            4 / 6
-          </span>
-          <span style={{ color: "var(--fg-2)", fontSize: 14 }}>
-            {t("ll_repay_paid") as string}
-          </span>
-        </div>
-        <div
-          style={{
-            height: 6,
-            background: "var(--bg-2)",
-            borderRadius: 3,
-            overflow: "hidden",
-            marginBottom: 8,
-          }}
-        >
-          <div
-            style={{
-              width: "66.6%",
-              height: "100%",
-              background: "var(--gold)",
-              borderRadius: 3,
-            }}
-          />
-        </div>
-        <div
-          className="mono"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: 12,
-            color: "var(--fg-2)",
-          }}
-        >
-          <span>{repayFn(6400, 9600)}</span>
-          <span>
-            {t("ll_repay_next") as string}: 05 mai · BRZ 1.600
-          </span>
-        </div>
-      </Card>
-
-      <button
-        onClick={() => setTab("simulate")}
-        className="btn btn-primary btn-lg"
-        style={{ width: "100%" }}
-      >
-        {t("ll_simulate_cta") as string} <I.arrow size={16} />
-      </button>
-    </div>
-  );
-}
-
-// ─── Simulator ──────────────────────────────────────────────────────────────
-function Simulator() {
-  const { t } = useT();
-  const [rent, setRent] = useState(2400);
-  const [months, setMonths] = useState(6);
-  const [submitted, setSubmitted] = useState(false);
-
-  const apr = 0.18 + Math.max(0, months - 3) * 0.004;
-  const total = rent * months;
-  const fee = total * apr * (months / 12);
-  const youGet = total - fee;
-  const monthlyRepay = total / months;
-
-  if (submitted) {
-    return (
-      <div className="fade-in" style={{ maxWidth: 720, margin: "40px auto" }}>
-        <div
-          style={{
-            padding: 40,
-            borderRadius: "var(--radius-xl)",
-            background: "var(--bg-1)",
-            border: "1px solid var(--gold)",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              background: "var(--gold-soft)",
-              color: "var(--gold)",
-              margin: "0 auto 20px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <I.check size={28} />
-          </div>
-          <h2
-            style={{
-              fontSize: 28,
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              margin: "0 0 8px",
-            }}
-          >
-            {t("sim_done_h") as string}
-          </h2>
-          <p style={{ color: "var(--fg-1)", fontSize: 15, margin: "0 0 24px" }}>
-            {t("sim_done_p_a") as string}{" "}
-            {fmtBRZ(youGet).replace("BRZ ", "")}{" "}
-            {t("sim_done_p_b") as string}
+      {active.length === 0 ? (
+        <Card style={{ padding: 32, textAlign: "center" }}>
+          <p style={{ color: "var(--fg-2)", margin: 0 }}>
+            {t("ll_no_active") as string}
           </p>
-          <button
-            onClick={() => setSubmitted(false)}
-            className="btn btn-secondary"
+        </Card>
+      ) : (
+        <>
+          <Card
+            style={{
+              marginBottom: 16,
+              padding: 24,
+              background:
+                "linear-gradient(135deg, var(--gold-soft) 0%, var(--bg-1) 100%)",
+              borderColor: "var(--gold)",
+            }}
           >
-            {t("sim_done_again") as string}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
-      <h1
-        style={{
-          fontSize: 32,
-          fontWeight: 600,
-          letterSpacing: "-0.02em",
-          margin: "0 0 8px",
-        }}
-      >
-        {t("sim_h1") as string}
-      </h1>
-      <p style={{ color: "var(--fg-2)", fontSize: 14, margin: "0 0 32px" }}>
-        {t("sim_sub") as string}
-      </p>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 24,
-        }}
-      >
-        <Card>
-          <div style={{ marginBottom: 24 }}>
-            <label className="label">{t("sim_rent_l") as string}</label>
-            <div style={{ position: "relative" }}>
-              <span
-                className="mono"
-                style={{
-                  position: "absolute",
-                  left: 16,
-                  top: 14,
-                  color: "var(--fg-3)",
-                  fontSize: 16,
-                }}
-              >
-                BRZ
-              </span>
-              <input
-                type="number"
-                value={rent}
-                onChange={(e) => setRent(+e.target.value || 0)}
-                className="field tnum mono"
-                style={{ paddingLeft: 56 }}
-              />
+            <div className="mono" style={{ fontSize: 11, color: "var(--fg-2)" }}>
+              {t("ll_total_received") as string}
             </div>
-            <input
-              type="range"
-              min={800}
-              max={12000}
-              step={100}
-              value={rent}
-              onChange={(e) => setRent(+e.target.value)}
-              style={{
-                width: "100%",
-                marginTop: 12,
-                accentColor: "oklch(0.82 0.16 75)",
-              }}
-            />
-          </div>
-          <div>
-            <label className="label">{t("sim_months_l") as string}</label>
             <div
+              className="mono"
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gap: 6,
+                fontSize: 40,
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                color: "var(--gold)",
                 marginTop: 4,
               }}
             >
-              {[3, 6, 8, 10, 12].map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMonths(m)}
-                  className="mono"
-                  style={{
-                    padding: "12px 0",
-                    fontSize: 14,
-                    fontWeight: 500,
-                    background: months === m ? "var(--gold)" : "var(--bg-2)",
-                    color:
-                      months === m ? "oklch(0.18 0.02 75)" : "var(--fg-1)",
-                    border:
-                      "1px solid " +
-                      (months === m ? "var(--gold)" : "var(--line)"),
-                    borderRadius: "var(--radius)",
-                  }}
-                >
-                  {m}
-                </button>
-              ))}
+              {fmtBRZ(totalAdvanced)}
             </div>
-          </div>
-          <div
-            style={{
-              marginTop: 32,
-              paddingTop: 20,
-              borderTop: "1px solid var(--line-soft)",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              fontSize: 12,
-              color: "var(--fg-2)",
-            }}
-          >
-            <I.shieldCheck size={16} />
-            <span>{t("sim_insurance_note") as string}</span>
-          </div>
-        </Card>
+            {lastFunded && (
+              <div
+                style={{
+                  marginTop: 10,
+                  fontSize: 13,
+                  color: "var(--fg-2)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <I.check size={14} />
+                {t("ll_pix_sent") as string}
+                {client.pixKey ? (
+                  <span className="mono" style={{ color: "var(--fg-1)" }}>
+                    {client.pixKey.length > 24
+                      ? client.pixKey.slice(0, 24) + "…"
+                      : client.pixKey}
+                  </span>
+                ) : null}
+              </div>
+            )}
+          </Card>
 
-        <div
-          style={{
-            background: "var(--bg-1)",
-            border: "1px solid var(--gold)",
-            borderRadius: "var(--radius-lg)",
-            padding: 28,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            className="mono"
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              padding: "6px 12px",
-              background: "var(--gold)",
-              color: "oklch(0.18 0.02 75)",
-              fontSize: 11,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              borderBottomLeftRadius: 8,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <I.lock size={12} /> {t("sim_immutable") as string}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {active.map((c) => (
+              <ContractCard key={c.id} c={c} />
+            ))}
           </div>
-
-          <div
-            style={{
-              fontSize: 12,
-              color: "var(--fg-2)",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              marginBottom: 8,
-            }}
-          >
-            {t("sim_you_get") as string}
-          </div>
-          <div
-            className="mono"
-            style={{
-              fontSize: 48,
-              fontWeight: 500,
-              letterSpacing: "-0.03em",
-              color: "var(--gold)",
-              lineHeight: 1,
-            }}
-          >
-            {fmtBRZ(youGet)}
-          </div>
-          <div
-            className="mono"
-            style={{ fontSize: 13, color: "var(--fg-2)", marginTop: 8 }}
-          >
-            {t("sim_eta") as string}
-          </div>
-
-          <div
-            className="mono"
-            style={{
-              marginTop: 28,
-              paddingTop: 20,
-              borderTop: "1px solid var(--line-soft)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              fontSize: 13,
-            }}
-          >
-            <Row l={t("sim_r_assigned") as string} r={`${months} × ${fmtBRZ(rent)}`} />
-            <Row l={t("sim_r_total") as string} r={fmtBRZ(total)} />
-            <Row l={t("sim_r_apr") as string} r={fmtPct(apr)} accent />
-            <Row l={t("sim_r_cost") as string} r={`-${fmtBRZ(fee)}`} />
-            <Row l={t("sim_r_monthly") as string} r={fmtBRZ(monthlyRepay)} />
-          </div>
-
-          <button
-            onClick={() => setSubmitted(true)}
-            className="btn btn-primary btn-lg"
-            style={{ width: "100%", marginTop: 24 }}
-          >
-            {t("sim_submit") as string} <I.arrow size={16} />
-          </button>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
 
-function Row({ l, r, accent }: { l: string; r: string; accent?: boolean }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "baseline",
-      }}
-    >
-      <span style={{ color: "var(--fg-2)" }}>{l}</span>
-      <span
-        style={{
-          color: accent ? "var(--gold)" : "var(--fg-0)",
-          fontWeight: accent ? 600 : 400,
-        }}
-      >
-        {r}
-      </span>
-    </div>
-  );
-}
-
-// ─── Contracts (read-only) ──────────────────────────────────────────────────
-function Contracts() {
+// ─── History ────────────────────────────────────────────────────────────────
+function History({ contracts }: { contracts: AgencyContract[] }) {
   const { t } = useT();
-  // For demo: filter receivables by a single landlord identity. Real version would
-  // call program.account.receivable.all() filtered by landlord wallet — out of
-  // scope for MVP since seed-demo populates with a fixed demo landlord anyway.
-  const mine = RECEIVABLES.filter(
-    (r) => r.landlord === "Marina Toledo" || r.id === "BRX-0421",
+  const past = contracts.filter(
+    (c) => c.status === "repaid" || c.status === "defaulted",
   );
-  const fallback = RECEIVABLES[5];
-  const list = mine.length > 0 ? [...mine, fallback] : [fallback];
-
   return (
     <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
       <h1
@@ -512,19 +336,33 @@ function Contracts() {
           margin: "0 0 24px",
         }}
       >
-        {t("contracts_h") as string}
+        {t("ll_history_h") as string}
       </h1>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {list.map((r, i) => (
-          <ContractRow key={`${r.id}-${i}`} r={r} />
-        ))}
-      </div>
+      {past.length === 0 ? (
+        <Card style={{ padding: 32, textAlign: "center" }}>
+          <p style={{ color: "var(--fg-2)", margin: 0 }}>
+            {t("ll_history_empty") as string}
+          </p>
+        </Card>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {past.map((c) => (
+            <ContractCard key={c.id} c={c} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function ContractRow({ r }: { r: ProtoReceivable }) {
+// ─── Contract card ──────────────────────────────────────────────────────────
+function ContractCard({ c }: { c: AgencyContract }) {
   const { t } = useT();
+  const apr = c.rateBps / 10_000;
+  const progress =
+    c.installmentsTotal > 0
+      ? Math.round((c.installmentsPaid / c.installmentsTotal) * 100)
+      : 0;
   return (
     <Card style={{ padding: 22 }}>
       <div
@@ -533,26 +371,18 @@ function ContractRow({ r }: { r: ProtoReceivable }) {
           alignItems: "flex-start",
           gap: 12,
           marginBottom: 14,
+          flexWrap: "wrap",
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="mono" style={{ fontSize: 12, color: "var(--fg-2)" }}>
-            {r.id}
+            {c.id}
           </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 500,
-              marginTop: 2,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {r.address}
+          <div style={{ fontSize: 15, fontWeight: 500, marginTop: 2 }}>
+            {c.propertyAddress}
           </div>
         </div>
-        <Pill status={r.status}>{r.status}</Pill>
+        <Pill status={c.status}>{c.status}</Pill>
       </div>
       <div
         style={{
@@ -560,16 +390,81 @@ function ContractRow({ r }: { r: ProtoReceivable }) {
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: 16,
           fontSize: 13,
+          marginBottom: c.status === "funded" ? 14 : 0,
         }}
       >
-        <Cell l={t("cell_advanced") as string} v={fmtBRZ(r.amount)} mono />
-        <Cell l={t("cell_rate") as string} v={fmtPct(r.rate)} accent mono />
-        <Cell l={t("cell_installments") as string} v={`${r.paid} / ${r.total}`} mono />
+        <Cell l={t("cell_advanced") as string} v={fmtBRZ(c.principalBrz)} mono />
+        <Cell l={t("cell_rate") as string} v={fmtPct(apr)} accent mono />
+        <Cell
+          l={t("cell_installments") as string}
+          v={`${c.installmentsPaid} / ${c.installmentsTotal}`}
+          mono
+        />
         <Cell
           l={t("cell_insurance") as string}
-          v={r.fee ? (t("cell_insurance_active") as string) : "—"}
+          v={
+            c.hasInsurance
+              ? c.insurer ?? (t("cell_insurance_active") as string)
+              : "—"
+          }
         />
       </div>
+      {c.status === "funded" && (
+        <>
+          <div
+            style={{
+              height: 6,
+              background: "var(--bg-2)",
+              borderRadius: 3,
+              overflow: "hidden",
+              marginBottom: 6,
+            }}
+          >
+            <div
+              style={{
+                width: `${progress}%`,
+                height: "100%",
+                background: "var(--gold)",
+                borderRadius: 3,
+              }}
+            />
+          </div>
+          <div
+            className="mono"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+              color: "var(--fg-2)",
+            }}
+          >
+            <span>{progress}%</span>
+            <span>
+              {t("ll_repayment_total") as string}: {fmtBRZ(c.repaymentBrz)}
+            </span>
+          </div>
+        </>
+      )}
+      {c.fundSig && (
+        <div
+          style={{
+            marginTop: 12,
+            paddingTop: 12,
+            borderTop: "1px solid var(--line-soft)",
+            fontSize: 12,
+            color: "var(--fg-3)",
+          }}
+        >
+          <a
+            href={`https://explorer.solana.com/tx/${c.fundSig}?cluster=devnet`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--fg-2)", display: "inline-flex", gap: 4 }}
+          >
+            <I.link size={12} /> {t("ll_view_tx") as string}
+          </a>
+        </div>
+      )}
     </Card>
   );
 }

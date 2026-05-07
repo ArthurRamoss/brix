@@ -15,13 +15,11 @@ import { Card } from "../../components/primitives/Card";
 import { TVLChart } from "../../components/primitives/TVLChart";
 import { useT } from "../../lib/i18n";
 import { getPersona } from "../../lib/persona";
+import { fmtBRZ, fmtPct, TVL_SERIES } from "../../lib/mock-data";
 import {
-  fmtBRZ,
-  fmtPct,
-  RECEIVABLES,
-  INVESTORS,
-  TVL_SERIES,
-} from "../../lib/mock-data";
+  getAgencyContracts,
+  type AgencyContract,
+} from "../../lib/agency-clients";
 import { useBrix } from "../../hooks/use-brix";
 
 type TabId = "vault" | "deposit" | "withdraw" | "positions";
@@ -69,21 +67,24 @@ export default function InvestPage() {
 function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
   const { t } = useT();
   const { vaultData } = useBrix();
+  const [funded, setFunded] = useState<AgencyContract[]>([]);
 
-  // On-chain values fall back to demo numbers when vault not yet seeded on devnet.
+  useEffect(() => {
+    setFunded(getAgencyContracts().filter((c) => c.status === "funded"));
+  }, []);
+
+  // On-chain values; 0 when vault not yet seeded on devnet (empty state shows).
   const tvl =
-    vaultData != null ? Number(vaultData.totalAssets) / 1_000_000 : 98_740;
-  const aprBps = vaultData?.aprBps ?? 1970;
+    vaultData != null ? Number(vaultData.totalAssets) / 1_000_000 : 0;
+  const aprBps = vaultData?.aprBps ?? 0;
   const apr = aprBps / 10_000;
 
-  const fundedCount = RECEIVABLES.filter((r) => r.status === "funded").length;
-  // Use ratio of deployed vs total assets as utilization (fallback to demo 0.68).
-  const utilization = vaultData
-    ? Number(vaultData.totalAssets) > 0
+  const fundedCount = funded.length;
+  const utilization =
+    vaultData && Number(vaultData.totalAssets) > 0
       ? Number(vaultData.totalDeployed) / Number(vaultData.totalAssets)
-      : 0
-    : 0.68;
-  const utilCount = Math.round(utilization * 14);
+      : 0;
+  const utilCount = Math.round(utilization * Math.max(1, fundedCount));
 
   const kpiUtilSub = (t("inv_kpi_util_s") as unknown as (n: number) => string)(
     utilCount,
@@ -167,12 +168,14 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
               >
                 {fmtBRZ(tvl)}
               </div>
-              <div
-                className="mono"
-                style={{ marginTop: 10, fontSize: 13, color: "var(--green)" }}
-              >
-                {t("inv_tvl_delta") as string}
-              </div>
+              {tvl > 0 && (
+                <div
+                  className="mono"
+                  style={{ marginTop: 10, fontSize: 13, color: "var(--green)" }}
+                >
+                  {t("inv_tvl_delta") as string}
+                </div>
+              )}
             </div>
             <div
               style={{
@@ -216,13 +219,6 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
             mono
             tone="gold"
           />
-          <KPI
-            label={t("inv_kpi_insurance") as string}
-            value="85%"
-            sub={t("inv_kpi_insurance_s") as string}
-            tone="green"
-            mono
-          />
           <Card style={{ padding: 20 }}>
             <div
               style={{
@@ -250,6 +246,19 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
               <I.download size={14} /> {t("inv_withdraw_cta") as string}
             </button>
           </Card>
+          <KPI
+            label={t("inv_kpi_active") as string}
+            value={String(fundedCount)}
+            sub={
+              fundedCount === 0
+                ? (t("inv_kpi_active_s_empty") as string)
+                : (t("inv_kpi_active_s") as unknown as (n: number) => string)(
+                    fundedCount,
+                  )
+            }
+            tone="green"
+            mono
+          />
         </div>
       </div>
 
@@ -294,46 +303,59 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
             <span>{t("ag_th_rate") as string}</span>
             <span>{t("ag_th_inst") as string}</span>
           </div>
-          {RECEIVABLES.filter((r) => r.status === "funded").map((r) => (
+          {funded.length === 0 ? (
             <div
-              key={r.id}
               style={{
-                display: "grid",
-                gridTemplateColumns: "110px 1.4fr 1fr 100px 80px 100px",
-                padding: "14px 20px",
-                fontSize: 14,
-                borderTop: "1px solid var(--line-soft)",
-                alignItems: "center",
+                padding: 32,
+                textAlign: "center",
+                fontSize: 13,
+                color: "var(--fg-3)",
               }}
             >
-              <span
-                className="mono"
-                style={{ fontSize: 12, color: "var(--fg-2)" }}
-              >
-                {r.id}
-              </span>
-              <span
+              {t("inv_backing_empty") as string}
+            </div>
+          ) : (
+            funded.map((c) => (
+              <div
+                key={c.id}
                 style={{
-                  fontSize: 13,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  display: "grid",
+                  gridTemplateColumns: "110px 1.4fr 1fr 100px 80px 100px",
+                  padding: "14px 20px",
+                  fontSize: 14,
+                  borderTop: "1px solid var(--line-soft)",
+                  alignItems: "center",
                 }}
               >
-                {r.address.split(",")[0]}
-              </span>
-              <span style={{ color: "var(--fg-1)", fontSize: 13 }}>
-                {r.address.split(",").slice(-1)[0]?.trim() || "—"}
-              </span>
-              <span className="mono">{fmtBRZ(r.amount)}</span>
-              <span className="mono" style={{ color: "var(--teal)" }}>
-                {fmtPct(r.rate)}
-              </span>
-              <span className="mono" style={{ color: "var(--fg-1)" }}>
-                {r.paid}/{r.total}
-              </span>
-            </div>
-          ))}
+                <span
+                  className="mono"
+                  style={{ fontSize: 12, color: "var(--fg-2)" }}
+                >
+                  {c.id}
+                </span>
+                <span
+                  style={{
+                    fontSize: 13,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {c.propertyAddress.split(",")[0]}
+                </span>
+                <span style={{ color: "var(--fg-1)", fontSize: 13 }}>
+                  {c.propertyAddress.split(",").slice(-1)[0]?.trim() || "—"}
+                </span>
+                <span className="mono">{fmtBRZ(c.principalBrz)}</span>
+                <span className="mono" style={{ color: "var(--teal)" }}>
+                  {fmtPct(c.rateBps / 10_000)}
+                </span>
+                <span className="mono" style={{ color: "var(--fg-1)" }}>
+                  {c.installmentsPaid}/{c.installmentsTotal}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </Card>
     </div>
@@ -577,21 +599,15 @@ function PositionsTab() {
   const { t } = useT();
   const { positionData } = useBrix();
 
-  // Derive numbers from real position when available, fall back to mock investor[0].
-  const me = INVESTORS[0];
+  // Derive numbers from real on-chain position; 0 when not yet deposited.
   const deposited = positionData
     ? Number(positionData.totalDeposited) / 1_000_000
-    : me.deposited;
+    : 0;
   const value = positionData
     ? Number(positionData.estimatedValueBrz) / 1_000_000
-    : me.value;
-  const sharesNum = positionData
-    ? Number(positionData.shares) / 1_000_000
-    : me.shares;
+    : 0;
+  const sharesNum = positionData ? Number(positionData.shares) / 1_000_000 : 0;
   const yieldPct = deposited > 0 ? (value - deposited) / deposited : 0;
-
-  const txDep = t("pos_tx_deposit") as string;
-  const txYield = t("pos_tx_yield") as string;
 
   return (
     <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
@@ -652,43 +668,18 @@ function PositionsTab() {
             {t("pos_history_h") as string}
           </h3>
         </div>
-        {[
-          { d: "14 fev 2026", t: txDep, a: "BRZ 2.000", s: "1.946 brxV", tx: "3pK7…aR9q" },
-          { d: "03 mar 2026", t: txDep, a: "BRZ 2.000", s: "1.974 brxV", tx: "8mLp…cS4w" },
-          { d: "22 mar 2026", t: txYield, a: "+BRZ 167", s: "—", tx: "auto" },
-          { d: "15 abr 2026", t: txYield, a: "+BRZ 225", s: "—", tx: "auto" },
-        ].map((row, i) => (
-          <div
-            key={i}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "120px 1fr 120px 120px 100px",
-              padding: "14px 20px",
-              fontSize: 14,
-              borderTop: "1px solid var(--line-soft)",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <span
-              className="mono"
-              style={{ fontSize: 12, color: "var(--fg-2)" }}
-            >
-              {row.d}
-            </span>
-            <span>{row.t}</span>
-            <span className="mono">{row.a}</span>
-            <span className="mono" style={{ color: "var(--fg-2)" }}>
-              {row.s}
-            </span>
-            <span
-              className="mono"
-              style={{ color: "var(--teal)", fontSize: 12 }}
-            >
-              {row.tx}
-            </span>
-          </div>
-        ))}
+        <div
+          style={{
+            padding: 32,
+            textAlign: "center",
+            fontSize: 13,
+            color: "var(--fg-3)",
+          }}
+        >
+          {deposited > 0
+            ? (t("pos_history_pending") as string)
+            : (t("pos_history_empty") as string)}
+        </div>
       </Card>
     </div>
   );

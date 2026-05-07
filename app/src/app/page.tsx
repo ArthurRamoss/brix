@@ -3,6 +3,7 @@
 // Landing — full marketing surface ported from
 // Brix-handoff/brix/project/landing.jsx.
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { LandingNav } from "../components/shell/LandingNav";
@@ -692,15 +693,21 @@ function Partners() {
             >
               {t("partners_founding") as string}
             </div>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-              }}
+            <a
+              href="https://selectimob.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-flex" }}
+              aria-label="Selectimob"
             >
-              Selectimob
-            </div>
+              <Image
+                src="/selectimob.png"
+                alt="Selectimob"
+                width={198}
+                height={40}
+                style={{ height: 40, width: "auto" }}
+              />
+            </a>
             <div
               className="mono"
               style={{

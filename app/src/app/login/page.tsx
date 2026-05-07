@@ -2,8 +2,10 @@
 
 // /login — hybrid flow:
 //  1. Not Privy-authenticated → "Continue with email" CTA opens Privy modal.
-//  2. Authenticated, no persona → persona picker (proprietário / imobiliária / investidor).
-//  3. On select → persist persona to localStorage and redirect to /{persona}.
+//  2. Authenticated, email is in agency clients list → auto-redirect to /landlord
+//     with persona=landlord (the agency invited them).
+//  3. Otherwise → persona picker (imobiliária / investidor only). Self-registering
+//     as landlord is NOT allowed; landlords are onboarded BY their agency.
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,26 +16,55 @@ import { LangSwitch } from "../../components/shell/LangSwitch";
 import { I } from "../../components/icons";
 import { useT } from "../../lib/i18n";
 import { setPersona, type Persona } from "../../lib/persona";
+import {
+  getAgencyStatus,
+  getClientByEmail,
+} from "../../lib/agency-clients";
+
+type SelectablePersona = "agency" | "invest";
 
 export default function LoginPage() {
   const { t } = useT();
   const router = useRouter();
-  const { ready, authenticated, login } = usePrivy();
+  const { ready, authenticated, login, user } = usePrivy();
   const [chosen, setChosen] = useState<Persona | null>(null);
+  const [autoChecked, setAutoChecked] = useState(false);
 
-  // If user logs in via Privy modal, we'll fall through to the persona picker.
-  // If they had previously chosen a persona, AppShell handles that — but on /login
-  // we always show the picker so they can change it.
+  // After Privy auth, check email against agency client list. If match,
+  // auto-route to /landlord — the user is a tenant of an existing agency.
+  useEffect(() => {
+    if (!ready || !authenticated || autoChecked) return;
+    const email =
+      user?.email?.address ??
+      (user?.linkedAccounts.find(
+        (a) => a.type === "email",
+      ) as { address?: string } | undefined)?.address;
+    if (email) {
+      const client = getClientByEmail(email);
+      if (client) {
+        setPersona("landlord");
+        setChosen("landlord");
+        setAutoChecked(true);
+        return;
+      }
+    }
+    setAutoChecked(true);
+  }, [ready, authenticated, user, autoChecked]);
 
   useEffect(() => {
     if (chosen) {
-      const target = chosen === "landlord" ? "/landlord" : chosen === "agency" ? "/agency" : "/invest";
+      let target: string;
+      if (chosen === "landlord") target = "/landlord";
+      else if (chosen === "agency") {
+        target =
+          getAgencyStatus() === "approved" ? "/agency" : "/agency/onboard";
+      } else target = "/invest";
       const tm = setTimeout(() => router.push(target), 300);
       return () => clearTimeout(tm);
     }
   }, [chosen, router]);
 
-  const onChoose = (p: Persona) => {
+  const onChoose = (p: SelectablePersona) => {
     setPersona(p);
     setChosen(p);
   };
@@ -139,6 +170,13 @@ export default function LoginPage() {
               </Link>
             </div>
           </div>
+        ) : !autoChecked ? (
+          <div
+            className="fade-in mono"
+            style={{ color: "var(--fg-2)", fontSize: 13 }}
+          >
+            {t("log_checking") as string}…
+          </div>
         ) : (
           <div className="fade-in">
             <h2
@@ -146,29 +184,12 @@ export default function LoginPage() {
                 fontSize: 24,
                 fontWeight: 600,
                 letterSpacing: "-0.02em",
-                margin: "0 0 8px",
+                margin: "0 0 24px",
               }}
             >
               {t("log_persona_h") as string}
             </h2>
-            <p
-              style={{
-                color: "var(--fg-2)",
-                fontSize: 14,
-                margin: "0 0 24px",
-              }}
-            >
-              {t("log_persona_sub") as string}
-            </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <PersonaOpt
-                active={chosen === "landlord"}
-                onClick={() => onChoose("landlord")}
-                title={t("log_p_landlord_t") as string}
-                desc={t("log_p_landlord_d") as string}
-                tone="gold"
-                icon={<I.building size={20} />}
-              />
               <PersonaOpt
                 active={chosen === "agency"}
                 onClick={() => onChoose("agency")}
@@ -185,6 +206,33 @@ export default function LoginPage() {
                 tone="teal"
                 icon={<I.trending size={20} />}
               />
+            </div>
+            <div
+              style={{
+                marginTop: 20,
+                padding: 14,
+                background: "var(--bg-2)",
+                border: "1px solid var(--line-soft)",
+                borderRadius: "var(--radius)",
+                fontSize: 12.5,
+                color: "var(--fg-2)",
+                lineHeight: 1.5,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 4,
+                  color: "var(--fg-1)",
+                  fontWeight: 500,
+                }}
+              >
+                <I.building size={13} />
+                {t("log_landlord_note_h") as string}
+              </div>
+              {t("log_landlord_note_p") as string}
             </div>
           </div>
         )}
@@ -242,10 +290,8 @@ function PersonaOpt({
       >
         {icon}
       </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 600, fontSize: 15 }}>{title}</span>
-        </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div>
         <div style={{ fontSize: 13, color: "var(--fg-2)", marginTop: 2 }}>
           {desc}
         </div>

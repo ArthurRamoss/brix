@@ -702,11 +702,12 @@ function Partners() {
               aria-label="Selectimob"
             >
               <Image
-                src="/selectimob.png"
+                src="/select-logo.svg"
                 alt="Selectimob"
-                width={198}
-                height={40}
-                style={{ height: 40, width: "auto" }}
+                width={237}
+                height={48}
+                unoptimized
+                style={{ height: 48, width: "auto" }}
               />
             </a>
             <div

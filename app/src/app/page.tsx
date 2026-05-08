@@ -40,8 +40,9 @@ function Hero() {
 
   return (
     <section
+      className="hero-section"
       style={{
-        padding: "88px 48px 96px",
+        padding: "32px 48px 72px",
         position: "relative",
         overflow: "hidden",
       }}

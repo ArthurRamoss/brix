@@ -42,7 +42,7 @@ export default function PublicAgencyPage() {
       {/* Hero */}
       <section
         style={{
-          padding: "96px 48px 100px",
+          padding: "32px 48px 64px",
           position: "relative",
           overflow: "hidden",
         }}

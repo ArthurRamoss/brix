@@ -26,15 +26,16 @@ export function PublicNav({ tone }: PublicNavProps) {
 
   return (
     <div
+      className="app-header"
       style={{
         display: "flex",
         alignItems: "center",
-        padding: "20px 48px",
-        borderBottom: "1px solid var(--line-soft)",
+        gap: 12,
+        padding: "14px 24px",
+        borderBottom: "1px solid var(--line)",
         position: "sticky",
         top: 0,
-        background: "oklch(0.16 0.005 75 / 0.85)",
-        backdropFilter: "blur(8px)",
+        background: "var(--bg-1)",
         zIndex: 10,
       }}
     >

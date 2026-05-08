@@ -5,7 +5,6 @@
 // / register (3-step wizard) / repay.
 // Owns the register_receivable + fund_landlord + repay flows via use-agency.
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
@@ -92,8 +91,6 @@ export default function AgencyPage() {
 
 // ─── Operator badge (shows the agency that signed up) ──────────────────────
 function OperatorBadge({ application }: { application: AgencyApplication | null }) {
-  const isSelectimob =
-    application?.companyName?.toLowerCase().trim() === "selectimob";
   return (
     <div
       className="mono"
@@ -112,19 +109,9 @@ function OperatorBadge({ application }: { application: AgencyApplication | null 
       }}
     >
       <span>operated by</span>
-      {isSelectimob ? (
-        <Image
-          src="/selectimob.png"
-          alt="Selectimob"
-          width={88}
-          height={18}
-          style={{ height: 18, width: "auto" }}
-        />
-      ) : (
-        <span style={{ color: "var(--fg-1)", textTransform: "none" }}>
-          {application?.companyName ?? "—"}
-        </span>
-      )}
+      <span style={{ color: "var(--fg-1)", textTransform: "none" }}>
+        {application?.companyName ?? "—"}
+      </span>
     </div>
   );
 }

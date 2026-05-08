@@ -7,7 +7,6 @@
 // No on-chain action from this side; the agency runs the advance and PIX-off-ramp
 // in production. This screen is a status portal.
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
@@ -135,7 +134,6 @@ function NotLinked() {
 function PartnerCard({ agencyApp }: { agencyApp: AgencyApplication | null }) {
   const { t } = useT();
   const name = agencyApp?.companyName ?? "—";
-  const isSelectimob = name.toLowerCase().trim() === "selectimob";
   return (
     <Card style={{ marginBottom: 20 }}>
       <div
@@ -164,24 +162,8 @@ function PartnerCard({ agencyApp }: { agencyApp: AgencyApplication | null }) {
           <div className="mono" style={{ fontSize: 11, color: "var(--fg-3)" }}>
             {t("ll_partner") as string}
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginTop: 4,
-            }}
-          >
+          <div style={{ marginTop: 4 }}>
             <span style={{ fontSize: 16, fontWeight: 600 }}>{name}</span>
-            {isSelectimob && (
-              <Image
-                src="/selectimob.png"
-                alt="Selectimob"
-                width={88}
-                height={18}
-                style={{ height: 18, width: "auto" }}
-              />
-            )}
           </div>
         </div>
         {agencyApp?.city && (

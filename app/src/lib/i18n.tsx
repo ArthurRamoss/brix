@@ -495,7 +495,14 @@ const pt = {
 
   // agency — new keys
   ag_tab_clients: "clientes",
+  ag_tab_history: "histórico",
   ag_new_advance: "novo adiantamento",
+  ag_status_awaiting_l: "aguardando 1ª parcela",
+  ag_status_in_progress_l: "em curso",
+  ag_status_settled_l: "liquidados",
+  ag_history_h: "histórico de operações",
+  ag_history_sub:
+    "todas as antecipações liberadas e parcelas processadas pela sua imobiliária. ordenado do mais recente.",
 
   // agency clients (CRM)
   clients_kicker: "carteira de clientes",
@@ -1085,7 +1092,14 @@ const en = {
 
   // agency — new keys
   ag_tab_clients: "clients",
+  ag_tab_history: "history",
   ag_new_advance: "new advance",
+  ag_status_awaiting_l: "awaiting 1st installment",
+  ag_status_in_progress_l: "in progress",
+  ag_status_settled_l: "settled",
+  ag_history_h: "operation history",
+  ag_history_sub:
+    "every advance you released and every installment you processed. newest first.",
 
   // agency clients (CRM)
   clients_kicker: "client roster",

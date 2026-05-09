@@ -14,6 +14,7 @@ import { KPI } from "../../components/primitives/KPI";
 import { Card } from "../../components/primitives/Card";
 import { Pill } from "../../components/primitives/Pill";
 import { ContractSteps } from "../../components/primitives/ContractSteps";
+import { RecentEvents } from "../../components/primitives/RecentEvents";
 import { useT } from "../../lib/i18n";
 import { getPersona } from "../../lib/persona";
 import { fmtBRZ, fmtBRZShort, fmtPct, contractIdBytes } from "../../lib/mock-data";
@@ -35,8 +36,14 @@ import {
 } from "../../lib/agency-clients";
 import { useAgency } from "../../hooks/use-agency";
 
-type TabId = "portfolio" | "clients" | "register" | "repay";
-const VALID_TABS: TabId[] = ["portfolio", "clients", "register", "repay"];
+type TabId = "portfolio" | "clients" | "register" | "repay" | "history";
+const VALID_TABS: TabId[] = [
+  "portfolio",
+  "clients",
+  "register",
+  "repay",
+  "history",
+];
 
 function readPrivyEmail(user: ReturnType<typeof usePrivy>["user"]): string {
   return (
@@ -99,6 +106,7 @@ export default function AgencyPage() {
     { id: "clients", label: t("ag_tab_clients") as string },
     { id: "register", label: t("ag_tab_register") as string },
     { id: "repay", label: t("ag_tab_repay") as string },
+    { id: "history", label: t("ag_tab_history") as string },
   ];
 
   return (
@@ -114,8 +122,10 @@ export default function AgencyPage() {
         <Clients setTab={setTab} />
       ) : tab === "register" ? (
         <RegisterReceivable setTab={setTab} />
-      ) : (
+      ) : tab === "repay" ? (
         <RegisterRepayment setTab={setTab} />
+      ) : (
+        <History />
       )}
     </AppShell>
   );
@@ -313,6 +323,21 @@ function Portfolio({ setTab }: { setTab: (id: TabId) => void }) {
   const active = contracts.filter((r) => r.status === "funded").length;
   const defaultCount = contracts.filter((r) => r.status === "defaulted").length;
 
+  // Status breakdown for the strip below the KPIs. Splits "funded" into two
+  // operationally distinct buckets: contracts that haven't received any
+  // installment yet (the agency is waiting on the tenant for month one) vs
+  // contracts already collecting installments.
+  const awaitingFirst = contracts.filter(
+    (r) => r.status === "funded" && r.installmentsPaid === 0,
+  ).length;
+  const inProgress = contracts.filter(
+    (r) =>
+      r.status === "funded" &&
+      r.installmentsPaid > 0 &&
+      r.installmentsPaid < r.installmentsTotal,
+  ).length;
+  const settled = contracts.filter((r) => r.status === "repaid").length;
+
   const kpi3Sub = (t("ag_kpi3_s") as unknown as (n: number) => string)(active);
 
   return (
@@ -385,6 +410,14 @@ function Portfolio({ setTab }: { setTab: (id: TabId) => void }) {
           mono
         />
       </div>
+
+      {contracts.length > 0 && (
+        <StatusStrip
+          awaitingFirst={awaitingFirst}
+          inProgress={inProgress}
+          settled={settled}
+        />
+      )}
 
       {loading ? (
         <SkeletonRows />
@@ -1845,6 +1878,152 @@ function Row2({ l, r, accent }: { l: string; r: string; accent?: boolean }) {
       >
         {r}
       </span>
+    </div>
+  );
+}
+
+// ─── Status strip ──────────────────────────────────────────────────────────
+// Compact 3-up summary above the receivables table. Splits the operationally
+// distinct buckets the agency needs at a glance: contracts where they're
+// waiting on the tenant for the first payment, contracts with installments
+// already coming in, and contracts fully settled.
+function StatusStrip({
+  awaitingFirst,
+  inProgress,
+  settled,
+}: {
+  awaitingFirst: number;
+  inProgress: number;
+  settled: number;
+}) {
+  const { t } = useT();
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: 12,
+        marginBottom: 24,
+      }}
+    >
+      <StatusCell
+        label={t("ag_status_awaiting_l") as string}
+        value={awaitingFirst}
+        tone="amber"
+      />
+      <StatusCell
+        label={t("ag_status_in_progress_l") as string}
+        value={inProgress}
+        tone="teal"
+      />
+      <StatusCell
+        label={t("ag_status_settled_l") as string}
+        value={settled}
+        tone="green"
+      />
+    </div>
+  );
+}
+
+function StatusCell({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "amber" | "teal" | "green";
+}) {
+  const color =
+    tone === "amber"
+      ? "var(--gold)"
+      : tone === "teal"
+        ? "var(--teal)"
+        : "var(--green)";
+  return (
+    <div
+      style={{
+        padding: "14px 18px",
+        background: "var(--bg-1)",
+        border: "1px solid var(--line)",
+        borderRadius: "var(--radius)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+      }}
+    >
+      <div
+        className="mono"
+        style={{
+          fontSize: 11,
+          color: "var(--fg-2)",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            display: "inline-block",
+            width: 8,
+            height: 8,
+            borderRadius: 999,
+            background: color,
+            marginRight: 8,
+            verticalAlign: "middle",
+          }}
+        />
+        {label}
+      </div>
+      <div
+        className="mono"
+        style={{
+          fontSize: 22,
+          fontWeight: 500,
+          color,
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+// ─── History tab ───────────────────────────────────────────────────────────
+// Vault events triggered by THIS agency operator (fund + repay), via the
+// `email` filter on listVaultEvents. RecentEvents handles the rendering;
+// here we just frame it with the page title and pass the right filter.
+function History() {
+  const { t } = useT();
+  const { user } = usePrivy();
+  const email = readPrivyEmail(user);
+
+  return (
+    <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
+      <h1
+        style={{
+          fontSize: 32,
+          fontWeight: 600,
+          letterSpacing: "-0.02em",
+          margin: "0 0 8px",
+        }}
+      >
+        {t("ag_history_h") as string}
+      </h1>
+      <p
+        style={{
+          color: "var(--fg-2)",
+          marginTop: 0,
+          marginBottom: 24,
+          fontSize: 14,
+        }}
+      >
+        {t("ag_history_sub") as string}
+      </p>
+      <Card style={{ padding: 0, overflow: "hidden" }}>
+        <RecentEvents email={email || undefined} limit={200} />
+      </Card>
     </div>
   );
 }

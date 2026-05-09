@@ -120,7 +120,8 @@ export default function InvestPage() {
 function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
   const { t } = useT();
   const { user } = usePrivy();
-  const { vaultData } = useBrix();
+  const { vaultData, walletAddress } = useBrix();
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [funded, setFunded] = useState<AgencyContract[]>([]);
   const [events, setEvents] = useState<VaultEvent[]>([]);
 
@@ -548,7 +549,7 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
               {t("inv_actions") as string}
             </div>
             <button
-              onClick={() => setTab("deposit")}
+              onClick={() => setDepositModalOpen(true)}
               className="btn btn-teal"
               style={{ width: "100%", marginBottom: 8 }}
             >
@@ -562,6 +563,16 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
               <I.download size={14} /> {t("inv_withdraw_cta") as string}
             </button>
           </Card>
+          {depositModalOpen && (
+            <DepositModal
+              walletAddress={walletAddress}
+              onClose={() => setDepositModalOpen(false)}
+              onProceedToVault={() => {
+                setDepositModalOpen(false);
+                setTab("deposit");
+              }}
+            />
+          )}
           <Card style={{ padding: 0, overflow: "hidden" }}>
             <div
               style={{
@@ -1220,6 +1231,255 @@ function Row2({ l, r, accent }: { l: string; r: string; accent?: boolean }) {
       >
         {r}
       </span>
+    </div>
+  );
+}
+
+// ─── Deposit modal ──────────────────────────────────────────────────────────
+// Two-step UX: depositing into the vault requires BRZ in the user's wallet
+// first. The modal makes that explicit. The "add BRZ to wallet" button hits
+// /api/admin/mint-brz for the demo (server-signs with the test mint
+// authority); in production this becomes a Transfero on-ramp / external
+// transfer / wallet connect — same modal slot, different backend.
+function DepositModal({
+  walletAddress,
+  onClose,
+  onProceedToVault,
+}: {
+  walletAddress: string | null;
+  onClose: () => void;
+  onProceedToVault: () => void;
+}) {
+  const { t } = useT();
+  const [busy, setBusy] = useState(false);
+  const [doneMsg, setDoneMsg] = useState<string | null>(null);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  // Close on Escape.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const mintToWallet = async () => {
+    if (!walletAddress) {
+      setErrMsg("wallet not connected");
+      return;
+    }
+    setBusy(true);
+    setErrMsg(null);
+    try {
+      const res = await fetch("/api/admin/mint-brz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipient: walletAddress, amount: 50_000 }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setErrMsg(data.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setDoneMsg(t("inv_deposit_modal_wallet_done") as string);
+    } catch (err) {
+      setErrMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        zIndex: 100,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--bg-0)",
+          border: "1px solid var(--line)",
+          borderRadius: "var(--radius)",
+          maxWidth: 540,
+          width: "100%",
+          padding: 28,
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+          <h2 style={{ margin: 0, fontSize: 22, letterSpacing: "-0.02em" }}>
+            {t("inv_deposit_modal_h") as string}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="fechar"
+            style={{
+              background: "transparent",
+              border: 0,
+              color: "var(--fg-2)",
+              fontSize: 20,
+              cursor: "pointer",
+              padding: 4,
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <p style={{ color: "var(--fg-2)", margin: "0 0 24px", fontSize: 13 }}>
+          {t("inv_deposit_modal_sub") as string}
+        </p>
+
+        {/* Step 1 — wallet */}
+        <div
+          style={{
+            background: "var(--bg-1)",
+            border: "1px solid var(--gold-line)",
+            borderRadius: "var(--radius)",
+            padding: 20,
+            marginBottom: 12,
+          }}
+        >
+          <div
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: "var(--gold)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: 6,
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                display: "inline-block",
+                width: 18,
+                height: 18,
+                borderRadius: 999,
+                background: "var(--gold-soft)",
+                color: "var(--gold)",
+                textAlign: "center",
+                lineHeight: "18px",
+                fontSize: 11,
+                marginRight: 8,
+              }}
+            >
+              1
+            </span>
+            passo 1
+          </div>
+          <h3 style={{ margin: "8px 0 6px", fontSize: 16 }}>
+            {t("inv_deposit_modal_wallet_t") as string}
+          </h3>
+          <p style={{ fontSize: 13, color: "var(--fg-2)", margin: "0 0 16px", lineHeight: 1.5 }}>
+            {t("inv_deposit_modal_wallet_d") as string}
+          </p>
+          <button
+            onClick={mintToWallet}
+            disabled={busy || !!doneMsg || !walletAddress}
+            className="btn"
+            style={{
+              width: "100%",
+              background: doneMsg ? "var(--bg-2)" : "var(--gold)",
+              color: doneMsg ? "var(--green)" : "var(--bg-0)",
+              border: 0,
+              padding: "10px 16px",
+              borderRadius: 8,
+              fontWeight: 500,
+              cursor: busy || doneMsg ? "default" : "pointer",
+              opacity: !walletAddress ? 0.5 : 1,
+            }}
+          >
+            {doneMsg
+              ? doneMsg
+              : busy
+                ? (t("inv_deposit_modal_wallet_busy") as string)
+                : (t("inv_deposit_modal_wallet_btn") as string)}
+          </button>
+          {errMsg && (
+            <pre
+              style={{
+                marginTop: 12,
+                padding: 10,
+                background: "var(--bg-2)",
+                borderRadius: 6,
+                fontSize: 11,
+                color: "#f88",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-all",
+              }}
+            >
+              {errMsg}
+            </pre>
+          )}
+        </div>
+
+        {/* Step 2 — vault */}
+        <div
+          style={{
+            background: "var(--bg-1)",
+            border: "1px solid var(--teal-line)",
+            borderRadius: "var(--radius)",
+            padding: 20,
+          }}
+        >
+          <div
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: "var(--teal)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: 6,
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                display: "inline-block",
+                width: 18,
+                height: 18,
+                borderRadius: 999,
+                background: "var(--teal-soft)",
+                color: "var(--teal)",
+                textAlign: "center",
+                lineHeight: "18px",
+                fontSize: 11,
+                marginRight: 8,
+              }}
+            >
+              2
+            </span>
+            passo 2
+          </div>
+          <h3 style={{ margin: "8px 0 6px", fontSize: 16 }}>
+            {t("inv_deposit_modal_vault_t") as string}
+          </h3>
+          <p style={{ fontSize: 13, color: "var(--fg-2)", margin: "0 0 16px", lineHeight: 1.5 }}>
+            {t("inv_deposit_modal_vault_d") as string}
+          </p>
+          <button
+            onClick={onProceedToVault}
+            className="btn btn-teal"
+            style={{ width: "100%" }}
+          >
+            {t("inv_deposit_modal_vault_btn") as string}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

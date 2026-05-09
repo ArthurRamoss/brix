@@ -413,6 +413,20 @@ const pt = {
   inv_actions: "ações",
   inv_deposit_cta: "depositar",
   inv_withdraw_cta: "sacar",
+  inv_deposit_modal_h: "como você quer depositar?",
+  inv_deposit_modal_sub:
+    "primeiro adicione BRZ na sua carteira, depois invista no vault.",
+  inv_deposit_modal_wallet_t: "adicionar BRZ na carteira",
+  inv_deposit_modal_wallet_d:
+    "comprar, receber ou mintar BRZ pra usar no vault. (em produção: integração Transfero — comprar via PIX, receber transferência ou conectar carteira externa)",
+  inv_deposit_modal_wallet_btn: "mintar 50.000 BRZ (demo)",
+  inv_deposit_modal_wallet_busy: "mintando…",
+  inv_deposit_modal_wallet_done: "✓ 50.000 BRZ na sua carteira",
+  inv_deposit_modal_vault_t: "depositar no vault",
+  inv_deposit_modal_vault_d:
+    "investir o BRZ que já tá na sua carteira. recebe shares (brxV) que valorizam por parcela paga.",
+  inv_deposit_modal_vault_btn: "ir pro depósito →",
+  inv_deposit_modal_close: "fechar",
   inv_backing_h: "recebíveis lastreando o vault",
   inv_backing_count: (n: number) => `${n} ativos`,
   inv_th_property: "imóvel",
@@ -1011,6 +1025,20 @@ const en = {
   inv_actions: "actions",
   inv_deposit_cta: "deposit",
   inv_withdraw_cta: "withdraw",
+  inv_deposit_modal_h: "how do you want to deposit?",
+  inv_deposit_modal_sub:
+    "first add BRZ to your wallet, then invest into the vault.",
+  inv_deposit_modal_wallet_t: "add BRZ to your wallet",
+  inv_deposit_modal_wallet_d:
+    "buy, receive or mint BRZ to use in the vault. (in production: Transfero integration — buy with PIX, receive a transfer, or connect external wallet)",
+  inv_deposit_modal_wallet_btn: "mint 50,000 BRZ (demo)",
+  inv_deposit_modal_wallet_busy: "minting…",
+  inv_deposit_modal_wallet_done: "✓ 50,000 BRZ in your wallet",
+  inv_deposit_modal_vault_t: "deposit into the vault",
+  inv_deposit_modal_vault_d:
+    "invest the BRZ already in your wallet. you get shares (brxV) that grow as installments come in.",
+  inv_deposit_modal_vault_btn: "go to deposit →",
+  inv_deposit_modal_close: "close",
   inv_backing_h: "receivables backing the vault",
   inv_backing_count: (n: number) => `${n} active`,
   inv_th_property: "property",

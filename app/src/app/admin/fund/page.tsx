@@ -194,6 +194,11 @@ export default function FundAdminPage() {
         </pre>
       )}
 
+      <MintBrzSection
+        recipient={wallet?.address ?? null}
+        onDone={refreshBalances}
+      />
+
       <p
         style={{
           marginTop: 32,
@@ -205,10 +210,185 @@ export default function FundAdminPage() {
           color: "var(--fg-3)",
         }}
       >
-        ⚠ temporary admin tool · delete <code>app/src/app/admin/</code> after
-        the program upgrade lands.
+        ⚠ temporary admin tool · delete <code>app/src/app/admin/</code> +{" "}
+        <code>app/src/app/api/admin/mint-brz/</code> before any non-devnet
+        ship.
       </p>
     </PageShell>
+  );
+}
+
+// ─── Mint test BRZ section ─────────────────────────────────────────────────
+// Posts to /api/admin/mint-brz which signs server-side with the admin (=
+// test mint authority) keypair and creates the recipient ATA if missing.
+function MintBrzSection({
+  recipient,
+  onDone,
+}: {
+  recipient: string | null;
+  onDone: () => void;
+}) {
+  const [target, setTarget] = useState(recipient ?? "");
+  const [amount, setAmount] = useState(50_000);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string>("");
+
+  // Sync default target with the connected wallet when it lands.
+  useEffect(() => {
+    if (recipient && !target) setTarget(recipient);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipient]);
+
+  const mint = async () => {
+    setBusy(true);
+    setStatus("minting...");
+    try {
+      const res = await fetch("/api/admin/mint-brz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipient: target.trim(), amount }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        signature?: string;
+        explorer?: string;
+        ata?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        setStatus(`✗ ${data.error ?? `HTTP ${res.status}`}`);
+        return;
+      }
+      setStatus(
+        `✓ minted ${amount} BRZ → ${data.ata?.slice(0, 8)}… · ${data.explorer}`,
+      );
+      onDone();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setStatus(`✗ ${msg}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        marginTop: 40,
+        paddingTop: 32,
+        borderTop: "1px solid var(--line-soft)",
+      }}
+    >
+      <h2
+        style={{
+          fontSize: 18,
+          fontWeight: 600,
+          margin: "0 0 8px",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        mint test BRZ
+      </h2>
+      <p
+        style={{
+          color: "var(--fg-2)",
+          marginTop: 0,
+          marginBottom: 24,
+          fontSize: 13,
+        }}
+      >
+        server-signs with the devnet test mint authority (= same admin keypair
+        as the brix vault). creates the recipient ATA on the fly.
+      </p>
+
+      <Row label="recipient (any solana pubkey)">
+        <input
+          type="text"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          placeholder="paste a pubkey or use the connected wallet"
+          style={{
+            background: "var(--bg-1)",
+            border: "1px solid var(--line)",
+            borderRadius: 6,
+            color: "var(--fg-0)",
+            fontFamily: "monospace",
+            fontSize: 12,
+            padding: "8px 12px",
+            flex: 1,
+            minWidth: 0,
+          }}
+        />
+      </Row>
+
+      <div
+        style={{
+          marginTop: 12,
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
+        <label style={{ fontSize: 13, color: "var(--fg-2)" }}>
+          amount (BRZ):
+        </label>
+        <input
+          type="number"
+          step="10000"
+          min="1"
+          value={amount}
+          onChange={(e) => setAmount(parseInt(e.target.value, 10) || 0)}
+          style={{
+            background: "var(--bg-1)",
+            border: "1px solid var(--line)",
+            borderRadius: 6,
+            color: "var(--fg-0)",
+            fontFamily: "monospace",
+            fontSize: 14,
+            padding: "8px 12px",
+            width: 140,
+          }}
+        />
+        <button
+          onClick={mint}
+          disabled={busy || amount <= 0 || !target.trim()}
+          style={{
+            background: "var(--gold)",
+            color: "var(--bg-0)",
+            border: 0,
+            borderRadius: 6,
+            padding: "10px 18px",
+            fontWeight: 500,
+            fontSize: 14,
+            cursor: "pointer",
+          }}
+        >
+          {busy ? "…" : `mint ${amount.toLocaleString("pt-BR")} BRZ`}
+        </button>
+      </div>
+
+      {status && (
+        <pre
+          style={{
+            marginTop: 16,
+            padding: 16,
+            background: "var(--bg-1)",
+            border: "1px solid var(--line)",
+            borderRadius: 6,
+            fontSize: 12,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-all",
+            color: status.startsWith("✓")
+              ? "var(--green)"
+              : status.startsWith("✗")
+                ? "#f88"
+                : "var(--fg-2)",
+          }}
+        >
+          {status}
+        </pre>
+      )}
+    </div>
   );
 }
 

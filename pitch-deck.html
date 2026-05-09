@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Brix — Colosseum Frontier pitch</title>
+    <style>
+      :root {
+        --bg-0: oklch(0.16 0.005 75);
+        --bg-1: oklch(0.20 0.006 75);
+        --bg-2: oklch(0.24 0.007 75);
+        --line: oklch(0.32 0.008 75);
+        --line-soft: oklch(0.26 0.008 75);
+        --fg-0: oklch(0.97 0.005 75);
+        --fg-1: oklch(0.78 0.008 75);
+        --fg-2: oklch(0.58 0.008 75);
+        --fg-3: oklch(0.42 0.008 75);
+        --gold: oklch(0.82 0.16 75);
+        --gold-soft: oklch(0.82 0.16 75 / 0.12);
+        --teal: oklch(0.78 0.12 195);
+        --teal-soft: oklch(0.78 0.12 195 / 0.12);
+        --green: oklch(0.78 0.18 145);
+        --radius: 12px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-0);
+        color: var(--fg-0);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto;
+        font-size: 16px;
+        height: 100%;
+        overflow: hidden;
+      }
+      .mono {
+        font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+      }
+      .deck {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+      }
+      .slide {
+        display: none;
+        max-width: 1080px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 64px 56px;
+      }
+      .slide.active {
+        display: block;
+        animation: fadeIn 0.4s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .kicker {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--fg-2);
+        font-size: 12px;
+        margin-bottom: 16px;
+        font-family: ui-monospace, "SF Mono", monospace;
+      }
+      .kicker .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--teal);
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+      h1 {
+        font-size: 64px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        margin: 0 0 24px;
+      }
+      h2 {
+        font-size: 44px;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        line-height: 1.1;
+        margin: 0 0 24px;
+      }
+      h3 {
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        margin: 0 0 12px;
+        color: var(--fg-0);
+      }
+      p {
+        font-size: 18px;
+        line-height: 1.55;
+        color: var(--fg-1);
+        margin: 0 0 16px;
+      }
+      .subtitle {
+        font-size: 22px;
+        color: var(--fg-1);
+        line-height: 1.45;
+        max-width: 800px;
+      }
+      .stat {
+        font-family: ui-monospace, "SF Mono", monospace;
+        font-size: 56px;
+        color: var(--teal);
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+      .stat-gold {
+        color: var(--gold);
+      }
+      .stat-fg {
+        color: var(--fg-0);
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 32px;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 32px;
+      }
+      .card {
+        background: var(--bg-1);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 24px;
+      }
+      .card .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--fg-2);
+        margin-bottom: 12px;
+        font-family: ui-monospace, monospace;
+      }
+      .card .number {
+        font-family: ui-monospace, monospace;
+        font-size: 36px;
+        color: var(--gold);
+        line-height: 1;
+        margin-bottom: 8px;
+        letter-spacing: -0.02em;
+      }
+      .card .number.teal {
+        color: var(--teal);
+      }
+      .card .number.fg {
+        color: var(--fg-0);
+      }
+      .card .desc {
+        font-size: 14px;
+        color: var(--fg-2);
+        line-height: 1.4;
+      }
+      ul {
+        padding-left: 0;
+        list-style: none;
+      }
+      li {
+        font-size: 18px;
+        color: var(--fg-1);
+        padding: 10px 0 10px 24px;
+        position: relative;
+        line-height: 1.5;
+      }
+      li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 18px;
+        width: 8px;
+        height: 8px;
+        background: var(--teal);
+        border-radius: 999px;
+      }
+      li.gold::before {
+        background: var(--gold);
+      }
+      strong {
+        color: var(--fg-0);
+        font-weight: 600;
+      }
+      .accent {
+        color: var(--teal);
+      }
+      .accent-gold {
+        color: var(--gold);
+      }
+      .nav {
+        position: fixed;
+        bottom: 18px;
+        right: 24px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        z-index: 10;
+      }
+      .nav button {
+        background: var(--bg-1);
+        color: var(--fg-1);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        font-size: 18px;
+        font-family: inherit;
+      }
+      .nav button:hover {
+        background: var(--bg-2);
+      }
+      .nav .counter {
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--fg-2);
+        margin: 0 8px;
+      }
+      .url {
+        font-family: ui-monospace, monospace;
+        font-size: 14px;
+        color: var(--teal);
+        word-break: break-all;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--gold-soft);
+        color: var(--gold);
+        font-size: 11px;
+        font-family: ui-monospace, monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border: 1px solid var(--gold);
+        border-color: oklch(0.82 0.16 75 / 0.30);
+      }
+      .pill.teal {
+        background: var(--teal-soft);
+        color: var(--teal);
+        border-color: oklch(0.78 0.12 195 / 0.30);
+      }
+      .quote {
+        border-left: 3px solid var(--teal);
+        padding: 12px 0 12px 24px;
+        font-size: 22px;
+        color: var(--fg-0);
+        font-style: italic;
+        line-height: 1.5;
+        max-width: 800px;
+        margin: 32px 0;
+      }
+      .quote .attr {
+        display: block;
+        font-style: normal;
+        font-size: 14px;
+        color: var(--fg-2);
+        margin-top: 12px;
+        font-family: ui-monospace, monospace;
+      }
+      .compare {
+        margin-top: 24px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .compare > div {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        padding: 14px 20px;
+        font-size: 15px;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .compare > div:last-child {
+        border-bottom: 0;
+      }
+      .compare .row-h {
+        background: var(--bg-1);
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--fg-2);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .compare .ok {
+        color: var(--teal);
+      }
+      .compare .no {
+        color: var(--fg-3);
+      }
+      .footer-strip {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 14px 28px;
+        background: var(--bg-1);
+        border-top: 1px solid var(--line-soft);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        color: var(--fg-3);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .demo-frame {
+        margin-top: 24px;
+        background: var(--bg-1);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 24px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 24px;
+        align-items: center;
+      }
+      .demo-frame .qr {
+        width: 120px;
+        height: 120px;
+        background: var(--fg-0);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--bg-0);
+        font-family: monospace;
+        font-size: 10px;
+      }
+      .ask {
+        font-size: 28px;
+        color: var(--gold);
+        font-weight: 500;
+        line-height: 1.4;
+        max-width: 800px;
+      }
+      .ask strong {
+        color: var(--gold);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck" id="deck">
+      <!-- 1 · Title -->
+      <section class="slide active">
+        <div class="kicker"><span class="dot"></span>colosseum frontier · solana · may 2026</div>
+        <h1 style="font-size: 88px;">brix.</h1>
+        <p class="subtitle" style="font-size: 28px; max-width: 880px; color: var(--fg-0);">
+          aluguel é renda previsível.<br />
+          não devia precisar esperar 12 meses.
+        </p>
+        <div style="margin-top: 48px; display: flex; gap: 24px; align-items: center;">
+          <span class="pill teal">RWA Lending</span>
+          <span class="pill">Stablecoin Payments</span>
+          <span class="pill teal">Brasil First</span>
+        </div>
+        <p class="mono" style="margin-top: 32px; font-size: 13px; color: var(--fg-2);">
+          arthur ramos · github.com/ArthurRamoss/brix
+        </p>
+      </section>
+
+      <!-- 2 · Hook (founder story) -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>02 · o gancho</div>
+        <h2>minha mãe tem uma imobiliária. 700 contratos.</h2>
+        <p class="subtitle">
+          ela quase assinou com uma fintech pra antecipar aluguel dos clientes. na simulação,
+          taxa de <strong class="accent">18% a.a</strong>. na hora de assinar, <strong class="accent-gold">32%</strong>.
+        </p>
+        <div class="quote">
+          "eles mudam o pricing entre o quote e o contrato. é o pão com manteiga do
+          mercado. ninguém faz nada porque a regra mora num termo de uso, não no
+          contrato."
+          <span class="attr">— pesquisa de campo, abr 2026</span>
+        </div>
+        <p style="font-size: 22px; color: var(--fg-0); margin-top: 24px;">
+          com brix, a taxa é gravada no <strong class="accent">smart contract</strong> no momento
+          da assinatura. impossível mudar. nunca.
+        </p>
+      </section>
+
+      <!-- 3 · Problem (macro) -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>03 · o problema</div>
+        <h2>capital ineficiente — bilhões em renda futura travados</h2>
+        <div class="grid-3">
+          <div class="card">
+            <div class="label">crédito imobiliário br</div>
+            <div class="number">−54%</div>
+            <div class="desc">
+              SBPE caiu de R$19,9bi → R$9,1bi no 1S25. CBIC.
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">famílias alugam no br</div>
+            <div class="number teal">17,4%</div>
+            <div class="desc">
+              13M+ unidades alugadas. IBGE PNAD 2023.
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">gap on-chain solana</div>
+            <div class="number">~$0</div>
+            <div class="desc">
+              RWA lending TVL no DefiLlama é praticamente zero — quase tudo é T-bills.
+            </div>
+          </div>
+        </div>
+        <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2);">
+          off-chain: pricing opaco e bait-and-switch.
+          on-chain: nenhum projeto colosseum dominou recebíveis de aluguel ainda.
+        </p>
+      </section>
+
+      <!-- 4 · Why now -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>04 · por que agora</div>
+        <h2>3 forças que alinharam em 2026</h2>
+        <div class="grid-3">
+          <div class="card">
+            <div class="label">macro</div>
+            <h3>bancos saíram</h3>
+            <p style="font-size: 15px; color: var(--fg-2); margin: 0;">
+              corte de 54% no crédito imobiliário br abriu vácuo. 13M+ proprietários sem
+              instrumento.
+            </p>
+          </div>
+          <div class="card">
+            <div class="label">solana</div>
+            <h3>RWA momentum</h3>
+            <p style="font-size: 15px; color: var(--fg-2); margin: 0;">
+              $2B+ de RWA TVL em solana em 2026, mas categoria <strong>lending</strong> tá
+              vazia. Goldfinch ($103M→$1.6M) e Credix ($1 TVL) caíram por <strong>falta
+              de seguro</strong>.
+            </p>
+          </div>
+          <div class="card">
+            <div class="label">br stack</div>
+            <h3>BRZ + PIX prontos</h3>
+            <p style="font-size: 15px; color: var(--fg-2); margin: 0;">
+              BRZ (Transfero) é stablecoin nativa em solana desde 2021. off-ramp PIX
+              via API. trilho completo, sem cripto na ponta.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 · Solution -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>05 · a solução</div>
+        <h2>vault on-chain lastreado em recebíveis com seguro fiança</h2>
+        <ul style="margin-top: 24px; max-width: 880px;">
+          <li>
+            <strong>taxa imutável:</strong> gravada no smart contract no momento da
+            assinatura. fim do bait-and-switch.
+          </li>
+          <li class="gold">
+            <strong>seguro fiança como escudo estrutural:</strong> ~85% dos contratos da
+            Selectimob já carregam seguro fiança. <em>default real perto de zero</em>.
+            isso é o que matou Goldfinch.
+          </li>
+          <li>
+            <strong>off-ramp PIX:</strong> proprietário recebe BRZ → vira PIX em até 24h
+            via Transfero. nunca toca em cripto.
+          </li>
+          <li class="gold">
+            <strong>originação distribuída:</strong> imobiliárias parceiras validam o
+            contrato off-chain e assinam on-chain. não depende de nós conhecermos cada
+            inquilino.
+          </li>
+        </ul>
+      </section>
+
+      <!-- 6 · Demo -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>06 · demo · solana devnet</div>
+        <h2>fluxo end-to-end funcionando</h2>
+        <p class="subtitle">
+          1 transação, 4 personas, ~6 RPC calls. tudo on-chain devnet.
+        </p>
+        <ul style="margin-top: 24px; max-width: 880px;">
+          <li>
+            <strong>imobiliária</strong> cadastra cliente + imóvel → registra recebível
+            on-chain (taxa imutável)
+          </li>
+          <li>
+            <strong>vault</strong> financia automaticamente — proprietário recebe BRZ
+          </li>
+          <li>
+            <strong>investidor</strong> deposita → recebe shares (brxV) que valorizam por
+            parcela
+          </li>
+          <li>
+            <strong>imobiliária</strong> processa repagamento mensal → vault recebe
+            principal + juros
+          </li>
+        </ul>
+        <div class="demo-frame">
+          <div class="qr">QR aqui</div>
+          <div>
+            <div class="label mono" style="font-size: 11px; text-transform: uppercase; color: var(--fg-2); letter-spacing: 0.06em; margin-bottom: 8px;">
+              demo ao vivo
+            </div>
+            <div class="url">brix.app · localhost:3000</div>
+            <div class="mono" style="font-size: 12px; color: var(--fg-3); margin-top: 12px;">
+              programa: 6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94 · solana devnet
+            </div>
+            <div class="mono" style="font-size: 12px; color: var(--fg-3);">
+              repo: github.com/ArthurRamoss/brix
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 · Why crypto necessary -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>07 · por que blockchain</div>
+        <h2>se tirar a cadeia, o produto desaparece.</h2>
+        <div class="compare">
+          <div class="row-h">
+            <span></span><span>brix on-chain</span><span>off-chain</span>
+          </div>
+          <div>
+            <span>taxa <strong>imutável</strong> após assinatura</span>
+            <span class="ok">sim</span><span class="no">não</span>
+          </div>
+          <div>
+            <span>contraparte <strong>verificável</strong> publicamente</span>
+            <span class="ok">on-chain</span><span class="no">fechada</span>
+          </div>
+          <div>
+            <span>investidor entra/sai sem intermediário</span>
+            <span class="ok">vault liquidez</span><span class="no">aguarda FIDC</span>
+          </div>
+          <div>
+            <span>composabilidade pra outros protocolos</span>
+            <span class="ok">sim</span><span class="no">não</span>
+          </div>
+        </div>
+        <p style="margin-top: 32px; font-size: 16px; color: var(--fg-2);">
+          a regra precisa morar no contrato, não no termo de uso. <strong>essa é a tese.</strong>
+        </p>
+      </section>
+
+      <!-- 8 · Traction -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>08 · tração</div>
+        <h2>piloto pronto dia um, zero CAC</h2>
+        <div class="grid-3">
+          <div class="card">
+            <div class="label">selectimob (familia)</div>
+            <div class="number">700+</div>
+            <div class="desc">contratos ativos sob gestão</div>
+          </div>
+          <div class="card">
+            <div class="label">~85% c/ seguro fiança</div>
+            <div class="number teal">~595</div>
+            <div class="desc">
+              contratos já protegidos por porto/too/mapfre — protocolo herda
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">mvp devnet</div>
+            <div class="number fg">live</div>
+            <div class="desc">
+              vault + register + fund + repay + 4 portais funcionando agora
+            </div>
+          </div>
+        </div>
+        <p style="margin-top: 32px; font-size: 18px; color: var(--fg-1);">
+          imobiliária parceira já intermedeia o pagamento de aluguel — smart contract
+          plugue na rotina existente. <strong>day one origination, zero acquisition cost.</strong>
+        </p>
+      </section>
+
+      <!-- 9 · Ask -->
+      <section class="slide">
+        <div class="kicker"><span class="dot"></span>09 · ask</div>
+        <h2>onde brix vai a partir daqui</h2>
+        <p class="ask" style="margin-bottom: 32px;">
+          <strong>colosseum frontier</strong> — qualificação na <strong>track payments &amp;
+          stablecoins</strong> + grant pra fechar a integração com Transfero (PIX off-ramp
+          real) e ativar o piloto Selectimob na rede.
+        </p>
+        <div class="grid-2">
+          <div class="card">
+            <div class="label">próximos 90 dias</div>
+            <h3 style="margin-bottom: 12px;">de devnet pra mainnet piloto</h3>
+            <ul style="padding: 0; margin: 0;">
+              <li style="padding: 6px 0 6px 20px; font-size: 14px;">
+                Transfero off-ramp PIX (parceria já mapeada)
+              </li>
+              <li class="gold" style="padding: 6px 0 6px 20px; font-size: 14px;">
+                cessão de crédito (Art. 286 CC) com escritório jurídico
+              </li>
+              <li style="padding: 6px 0 6px 20px; font-size: 14px;">
+                10–20 contratos vivos do roster Selectimob
+              </li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="label">12 meses</div>
+            <h3 style="margin-bottom: 12px;">phase 2: short-term rentals globalmente</h3>
+            <ul style="padding: 0; margin: 0;">
+              <li style="padding: 6px 0 6px 20px; font-size: 14px;">
+                STR Scout (já construído) vira underwriting engine
+              </li>
+              <li class="gold" style="padding: 6px 0 6px 20px; font-size: 14px;">
+                AirDNA data → modelagem de risco por unidade
+              </li>
+              <li style="padding: 6px 0 6px 20px; font-size: 14px;">
+                vertical aplicável a qualquer mercado com stablecoin local
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 · Contact -->
+      <section class="slide" style="text-align: left;">
+        <div class="kicker"><span class="dot"></span>10 · obrigado</div>
+        <h1 style="font-size: 64px; margin-bottom: 32px;">vamos conversar.</h1>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px;">
+          <div class="card">
+            <div class="label">arthur ramos</div>
+            <div class="mono" style="font-size: 16px; color: var(--fg-0); margin-top: 8px;">
+              github · @ArthurRamoss
+            </div>
+            <div class="mono" style="font-size: 14px; color: var(--fg-2); margin-top: 4px;">
+              repo · github.com/ArthurRamoss/brix
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">live demo</div>
+            <div class="url" style="font-size: 18px; margin-top: 8px;">
+              localhost:3000/invest
+            </div>
+            <div class="mono" style="font-size: 12px; color: var(--fg-3); margin-top: 8px;">
+              programa devnet · 6xon…sy94
+            </div>
+          </div>
+        </div>
+        <p style="margin-top: 48px; font-size: 14px; color: var(--fg-3);" class="mono">
+          built on solana · stablecoin-native · global ambition
+        </p>
+      </section>
+    </div>
+
+    <div class="nav">
+      <button onclick="nav(-1)" aria-label="Anterior">←</button>
+      <span class="counter" id="counter">1 / 10</span>
+      <button onclick="nav(1)" aria-label="Próximo">→</button>
+    </div>
+
+    <script>
+      const slides = document.querySelectorAll(".slide");
+      let idx = 0;
+      const total = slides.length;
+      function show(i) {
+        idx = ((i % total) + total) % total;
+        slides.forEach((s, k) => s.classList.toggle("active", k === idx));
+        document.getElementById("counter").textContent = `${idx + 1} / ${total}`;
+      }
+      function nav(d) {
+        show(idx + d);
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          nav(1);
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          nav(-1);
+        } else if (e.key === "Home") {
+          show(0);
+        } else if (e.key === "End") {
+          show(total - 1);
+        }
+      });
+    </script>
+  </body>
+</html>

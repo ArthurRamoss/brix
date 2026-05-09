@@ -262,6 +262,17 @@ a {
 }
 .pulse { animation: pulse 2s ease-in-out infinite; }
 
+/* marquee band on landing — keyframes here (not inline in JSX) so React 19 +
+   Turbopack can't strip the <style> tag during build. Content is duplicated
+   3x in the JSX, so translateX(-33.33%) loops seamlessly. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-33.33%); }
+}
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -270,6 +281,11 @@ a {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+  /* Marquee carries information (program ID, key tags) — keep it moving even
+     under reduce-motion. Slower so it's accessible-friendly. */
+  .marquee-track {
+    animation: marquee 80s linear infinite !important;
   }
 }
 

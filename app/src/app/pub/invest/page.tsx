@@ -115,7 +115,7 @@ export default function PublicInvestPage() {
               marginBottom: 32,
             }}
           >
-            <VaultStat n="~20%" l={t("pub_inv_s1") as string} tone="teal" />
+            <VaultStat n="15–40%" l={t("pub_inv_s1") as string} tone="teal" />
             <VaultStat n="85%" l={t("pub_inv_s2") as string} />
             <VaultStat n="0" l={t("pub_inv_s3") as string} />
             <VaultStat n="∞" l={t("pub_inv_s4") as string} />

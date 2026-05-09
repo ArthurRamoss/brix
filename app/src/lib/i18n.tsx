@@ -80,8 +80,8 @@ const pt = {
     "recebíveis com seguro fiança quando a regulação local oferece. default real perto de zero.",
   aud_inv_b2: "vault em stablecoin com share price crescente. saca quando quiser.",
   aud_inv_b3: "todo recebível tem hash on-chain. auditoria pública, contraparte verificada.",
-  aud_inv_stat_n: "+19,7% a.a.",
-  aud_inv_stat_l: "apr médio do vault nos últimos 90 dias",
+  aud_inv_stat_n: "15–40% a.a.",
+  aud_inv_stat_l: "intervalo de yield ao investidor (depende do contrato)",
 
   // how
   sec02_kicker: "o fluxo",
@@ -707,8 +707,8 @@ const en = {
     "receivables backed by rent insurance where local regulation supports it. real default rate near zero.",
   aud_inv_b2: "stablecoin-denominated vault with rising share price. withdraw anytime.",
   aud_inv_b3: "every receivable has an on-chain hash. public audit, verified counterparty.",
-  aud_inv_stat_n: "+19.7% apr",
-  aud_inv_stat_l: "vault average over the last 90 days",
+  aud_inv_stat_n: "15–40% apr",
+  aud_inv_stat_l: "investor yield range (depends on contract terms)",
 
   sec02_kicker: "the flow",
   how_h2: "four steps. one contract. zero rate surprises.",

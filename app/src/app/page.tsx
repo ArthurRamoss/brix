@@ -166,7 +166,7 @@ function Hero() {
           }}
         >
           <Stat n="immutable" l={t("stat_protected") as string} />
-          <Stat n="~20%" l={t("stat_apr_target") as string} />
+          <Stat n="15–40%" l={t("stat_apr_target") as string} />
           <Stat n="$ 4.5T" l={t("stat_credit_cut") as string} sub />
           <Stat n="0" l={t("stat_no_bait") as string} sub />
         </div>
@@ -218,14 +218,14 @@ function ImmutableRateBand() {
       }}
     >
       <div
-        className="mono"
+        className="mono marquee-track"
         style={{
           display: "flex",
           gap: 48,
           whiteSpace: "nowrap",
-          animation: "marquee 40s linear infinite",
           fontSize: 13,
           color: "var(--fg-2)",
+          willChange: "transform",
         }}
       >
         {[0, 1, 2].map((i) => (
@@ -240,7 +240,6 @@ function ImmutableRateBand() {
           </span>
         ))}
       </div>
-      <style>{`@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-33.33%) } }`}</style>
     </section>
   );
 }
@@ -570,7 +569,7 @@ function Traction() {
             <TractionRow n="R$ 9,1bi" l={t("trac_r3") as string} />
             <TractionRow n="$ 4.5T" l={t("trac_r4") as string} />
             <TractionRow n="95%" l={t("trac_r5") as string} />
-            <TractionRow n="~20%" l={t("trac_r6") as string} small />
+            <TractionRow n="15–40%" l={t("trac_r6") as string} small />
           </div>
         </div>
       </div>

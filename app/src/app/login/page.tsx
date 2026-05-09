@@ -42,43 +42,57 @@ export default function LoginPage() {
   //   3. Else → fall through to the picker.
   useEffect(() => {
     if (!ready || !authenticated || autoChecked) return;
-    const email =
-      user?.email?.address ??
-      (user?.linkedAccounts.find(
-        (a) => a.type === "email",
-      ) as { address?: string } | undefined)?.address;
-    if (email) {
-      const client = getClientByEmail(email);
-      if (client) {
-        setPersona("landlord");
-        setEmailPersona(email, "landlord");
-        setChosen("landlord");
-        setAutoChecked(true);
-        return;
+    void (async () => {
+      const email =
+        user?.email?.address ??
+        (user?.linkedAccounts.find(
+          (a) => a.type === "email",
+        ) as { address?: string } | undefined)?.address;
+      if (email) {
+        const client = await getClientByEmail(email);
+        if (client) {
+          setPersona("landlord");
+          setEmailPersona(email, "landlord");
+          setChosen("landlord");
+          setAutoChecked(true);
+          return;
+        }
+        const remembered = getEmailPersona(email);
+        if (remembered) {
+          setPersona(remembered);
+          setChosen(remembered);
+          setAutoChecked(true);
+          return;
+        }
       }
-      const remembered = getEmailPersona(email);
-      if (remembered) {
-        setPersona(remembered);
-        setChosen(remembered);
-        setAutoChecked(true);
-        return;
-      }
-    }
-    setAutoChecked(true);
+      setAutoChecked(true);
+    })();
   }, [ready, authenticated, user, autoChecked]);
 
   useEffect(() => {
-    if (chosen) {
-      let target: string;
+    if (!chosen) return;
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    void (async () => {
+      let target = "/invest";
       if (chosen === "landlord") target = "/landlord";
       else if (chosen === "agency") {
-        target =
-          getAgencyStatus() === "approved" ? "/agency" : "/agency/onboard";
-      } else target = "/invest";
-      const tm = setTimeout(() => router.push(target), 300);
-      return () => clearTimeout(tm);
-    }
-  }, [chosen, router]);
+        const email =
+          user?.email?.address ??
+          (user?.linkedAccounts.find(
+            (a) => a.type === "email",
+          ) as { address?: string } | undefined)?.address;
+        const status = email ? await getAgencyStatus(email) : "none";
+        target = status === "approved" ? "/agency" : "/agency/onboard";
+      }
+      if (cancelled) return;
+      timeoutId = setTimeout(() => router.push(target), 300);
+    })();
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [chosen, router, user]);
 
   const onChoose = (p: SelectablePersona) => {
     setPersona(p);

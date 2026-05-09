@@ -15,6 +15,7 @@ import { AppShell, type Tab } from "../../components/shell/AppShell";
 import { I } from "../../components/icons";
 import { Card } from "../../components/primitives/Card";
 import { Pill } from "../../components/primitives/Pill";
+import { ContractSteps } from "../../components/primitives/ContractSteps";
 import { useT } from "../../lib/i18n";
 import { getPersona } from "../../lib/persona";
 import { fmtBRZ, fmtPct } from "../../lib/mock-data";
@@ -49,20 +50,31 @@ export default function LandlordPage() {
       router.push("/login");
       return;
     }
-    const email =
-      user?.email?.address ??
-      (
-        user?.linkedAccounts.find((a) => a.type === "email") as
-          | { address?: string }
-          | undefined
-      )?.address;
-    if (email) {
-      const c = getClientByEmail(email);
-      setClient(c);
-      if (c) setContracts(getContractsByClientId(c.id));
-    }
-    setAgencyApp(getAgencyApplication());
-    setHydrated(true);
+    void (async () => {
+      const email =
+        user?.email?.address ??
+        (
+          user?.linkedAccounts.find((a) => a.type === "email") as
+            | { address?: string }
+            | undefined
+        )?.address;
+      if (email) {
+        const c = await getClientByEmail(email);
+        setClient(c);
+        if (c) {
+          const cContracts = await getContractsByClientId(c.id);
+          setContracts(cContracts);
+        }
+        // For MVP single-agency demo: pull *the* agency app via the email
+        // the agency itself used to onboard. We don't know that here, so we
+        // fall back to fetching by the landlord's email — returns null if
+        // they're not also an agency, which is fine. Future: query a list
+        // endpoint or pin the agency identity server-side.
+        const app = await getAgencyApplication(email);
+        setAgencyApp(app);
+      }
+      setHydrated(true);
+    })();
   }, [ready, authenticated, user, router]);
 
   const tabs: Tab[] = [
@@ -391,62 +403,15 @@ function ContractCard({ c }: { c: AgencyContract }) {
           }
         />
       </div>
-      {c.status === "funded" && (
-        <>
-          <div
-            style={{
-              height: 6,
-              background: "var(--bg-2)",
-              borderRadius: 3,
-              overflow: "hidden",
-              marginBottom: 6,
-            }}
-          >
-            <div
-              style={{
-                width: `${progress}%`,
-                height: "100%",
-                background: "var(--gold)",
-                borderRadius: 3,
-              }}
-            />
-          </div>
-          <div
-            className="mono"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 12,
-              color: "var(--fg-2)",
-            }}
-          >
-            <span>{progress}%</span>
-            <span>
-              {t("ll_repayment_total") as string}: {fmtBRZ(c.repaymentBrz)}
-            </span>
-          </div>
-        </>
-      )}
-      {c.fundSig && (
-        <div
-          style={{
-            marginTop: 12,
-            paddingTop: 12,
-            borderTop: "1px solid var(--line-soft)",
-            fontSize: 12,
-            color: "var(--fg-3)",
-          }}
-        >
-          <a
-            href={`https://explorer.solana.com/tx/${c.fundSig}?cluster=devnet`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "var(--fg-2)", display: "inline-flex", gap: 4 }}
-          >
-            <I.link size={12} /> {t("ll_view_tx") as string}
-          </a>
-        </div>
-      )}
+      <div
+        style={{
+          marginTop: 14,
+          paddingTop: 14,
+          borderTop: "1px solid var(--line-soft)",
+        }}
+      >
+        <ContractSteps contract={c} />
+      </div>
     </Card>
   );
 }

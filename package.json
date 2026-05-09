@@ -14,10 +14,12 @@
     "app:dev": "pnpm --filter app dev",
     "app:build": "pnpm --filter app build",
     "demo:seed": "tsx scripts/seed-demo.ts",
+    "appwrite:bootstrap": "tsx scripts/appwrite-bootstrap.ts",
     "lint": "prettier \"**/*.{js,ts,tsx,json,md}\" --check --ignore-path .prettierignore",
     "lint:fix": "prettier \"**/*.{js,ts,tsx,json,md}\" --write --ignore-path .prettierignore"
   },
   "devDependencies": {
+    "node-appwrite": "^24.1.0",
     "prettier": "^3.3.3",
     "tsx": "^4.21.0"
   },

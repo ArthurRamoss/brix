@@ -46,23 +46,7 @@ export default function AgencyOnboardPage() {
       return;
     }
     setPersona("agency");
-    const status = getAgencyStatus();
-    if (status === "approved") {
-      router.push("/agency");
-      return;
-    }
-    const existing = getAgencyApplication();
-    if (existing) {
-      setForm({
-        companyName: existing.companyName ?? "",
-        contactName: existing.contactName ?? "",
-        email: existing.email ?? "",
-        website: existing.website ?? "",
-        city: existing.city ?? "",
-        contractsUnderManagement: existing.contractsUnderManagement ?? 0,
-      });
-      if (status === "pending") setStage("submitted");
-    } else {
+    void (async () => {
       const email =
         user?.email?.address ??
         (
@@ -71,9 +55,27 @@ export default function AgencyOnboardPage() {
             | undefined
         )?.address ??
         "";
-      setForm((prev) => ({ ...prev, email }));
-    }
-    setHydrated(true);
+      const status = email ? await getAgencyStatus(email) : "none";
+      if (status === "approved") {
+        router.push("/agency");
+        return;
+      }
+      const existing = email ? await getAgencyApplication(email) : null;
+      if (existing) {
+        setForm({
+          companyName: existing.companyName ?? "",
+          contactName: existing.contactName ?? "",
+          email: existing.email ?? email,
+          website: existing.website ?? "",
+          city: existing.city ?? "",
+          contractsUnderManagement: existing.contractsUnderManagement ?? 0,
+        });
+        if (status === "pending") setStage("submitted");
+      } else {
+        setForm((prev) => ({ ...prev, email }));
+      }
+      setHydrated(true);
+    })();
   }, [ready, authenticated, user, router]);
 
   const valid =
@@ -81,7 +83,7 @@ export default function AgencyOnboardPage() {
     form.contactName.trim().length > 1 &&
     /.+@.+\..+/.test(form.email);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
     const app: AgencyApplication = {
@@ -91,16 +93,24 @@ export default function AgencyOnboardPage() {
       website: form.website.trim() || undefined,
       city: form.city.trim() || undefined,
       contractsUnderManagement: form.contractsUnderManagement || undefined,
+      status: "pending",
       appliedAt: Date.now(),
     };
-    saveAgencyApplication(app);
-    setAgencyStatus("pending");
-    setStage("submitted");
+    try {
+      await saveAgencyApplication(app);
+      setStage("submitted");
+    } catch (err) {
+      console.error("[onboard] save failed:", err);
+    }
   };
 
-  const onDemoApprove = () => {
-    setAgencyStatus("approved");
-    router.push("/agency");
+  const onDemoApprove = async () => {
+    try {
+      await setAgencyStatus(form.email.trim(), "approved");
+      router.push("/agency");
+    } catch (err) {
+      console.error("[onboard] approve failed:", err);
+    }
   };
 
   if (!hydrated) return null;

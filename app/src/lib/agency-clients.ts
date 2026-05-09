@@ -1,22 +1,35 @@
 "use client";
 
-// Agency state — proprietários, imóveis, contratos.
-// Off-chain only no MVP: a imobiliária mantém um cadastro privado (este store)
-// e quando antecipa um contrato faz on-chain via use-agency. O store off-chain
-// existe pra UI poder linkar contratos a clientes via email.
+// Off-chain agency state — proprietários, imóveis, contratos.
+//
+// Persisted in Appwrite. All operations go through Next API routes
+// (/api/agency/*) so the Appwrite API key stays server-side.
+//
+// Reads are wrapped in lib/cache.ts (20s TTL) so navigating between tabs
+// doesn't refetch the same dataset and flash an empty state. Writes invalidate
+// the relevant cache prefixes.
+//
+// Migration note (2026-05-08): this module used to be localStorage-only.
+// Functions are now async (Promise<T>). Call sites must await + handle
+// loading/error states.
 //
 // Modelo: 1 client → N properties → N contracts (cada contract aponta pra 1 property).
+
+import { cached, invalidate } from "./cache";
 
 export type AgencyStatus = "none" | "pending" | "approved";
 
 export interface AgencyApplication {
+  id?: string; // Appwrite $id (slug of email)
   companyName: string;
   contactName: string;
   email: string;
   website?: string;
   city?: string;
   contractsUnderManagement?: number;
+  status: AgencyStatus;
   appliedAt: number;
+  decidedAt?: number;
 }
 
 export interface AgencyClient {
@@ -27,6 +40,7 @@ export interface AgencyClient {
   phone?: string;
   pixKey?: string;
   notes?: string;
+  agencyEmail?: string;
   createdAt: number;
 }
 
@@ -68,166 +82,238 @@ export interface AgencyContract {
   fundedAt?: number;
 }
 
-// Bumped to v2 when client/property model split (was bundled into one entity).
-// Old keys are left orphaned in localStorage so historical sessions are cleanly
-// ignored — new flow starts with an empty roster.
-const KEY_STATUS = "brix_agency_status_v2";
-const KEY_APP = "brix_agency_application_v2";
-const KEY_CLIENTS = "brix_agency_clients_v2";
-const KEY_PROPS = "brix_agency_properties_v2";
-const KEY_CONTRACTS = "brix_agency_contracts_v2";
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-function readJSON<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
+async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(url, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  if (!r.ok) {
+    const text = await r.text().catch(() => r.statusText);
+    throw new Error(`API ${r.status}: ${text}`);
   }
+  return r.json() as Promise<T>;
 }
 
-function writeJSON(key: string, value: unknown) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+// ─── Agency status / application ────────────────────────────────────────────
+
+export async function getAgencyApplication(
+  email: string,
+): Promise<AgencyApplication | null> {
+  if (!email) return null;
+  return cached(`apps:${email.toLowerCase()}`, () =>
+    fetchJSON<AgencyApplication | null>(
+      `/api/agency/applications?email=${encodeURIComponent(email)}`,
+    ),
+  );
 }
 
-// ─── Agency status ──────────────────────────────────────────────────────────
-
-export function getAgencyStatus(): AgencyStatus {
-  if (typeof window === "undefined") return "none";
-  const raw = window.localStorage.getItem(KEY_STATUS);
-  if (raw === "pending" || raw === "approved") return raw;
-  return "none";
+export async function getAgencyStatus(email: string): Promise<AgencyStatus> {
+  const app = await getAgencyApplication(email);
+  return app?.status ?? "none";
 }
 
-export function setAgencyStatus(status: AgencyStatus) {
-  if (typeof window === "undefined") return;
-  if (status === "none") {
-    window.localStorage.removeItem(KEY_STATUS);
-  } else {
-    window.localStorage.setItem(KEY_STATUS, status);
-  }
+export async function saveAgencyApplication(
+  application: AgencyApplication,
+): Promise<AgencyApplication> {
+  const result = await fetchJSON<AgencyApplication>("/api/agency/applications", {
+    method: "POST",
+    body: JSON.stringify({
+      ...application,
+      appliedAt: application.appliedAt ?? Date.now(),
+    }),
+  });
+  invalidate("apps:");
+  return result;
 }
 
-export function getAgencyApplication(): AgencyApplication | null {
-  return readJSON<AgencyApplication | null>(KEY_APP, null);
-}
-
-export function saveAgencyApplication(app: AgencyApplication) {
-  writeJSON(KEY_APP, app);
+export async function setAgencyStatus(
+  email: string,
+  status: AgencyStatus,
+): Promise<AgencyApplication> {
+  const result = await fetchJSON<AgencyApplication>(
+    `/api/agency/applications?email=${encodeURIComponent(email)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+  );
+  invalidate("apps:");
+  return result;
 }
 
 // ─── Clients ────────────────────────────────────────────────────────────────
 
-export function getClients(): AgencyClient[] {
-  return readJSON<AgencyClient[]>(KEY_CLIENTS, []);
-}
-
-export function getClientById(id: string): AgencyClient | null {
-  return getClients().find((c) => c.id === id) ?? null;
-}
-
-export function getClientByEmail(email: string): AgencyClient | null {
-  const target = email.trim().toLowerCase();
-  if (!target) return null;
-  return (
-    getClients().find((c) => c.email.toLowerCase() === target) ?? null
+export async function getClients(): Promise<AgencyClient[]> {
+  return cached("clients:all", () =>
+    fetchJSON<AgencyClient[]>("/api/agency/clients"),
   );
 }
 
-function slugifyEmail(email: string): string {
-  return email
-    .trim()
-    .toLowerCase()
-    .replace(/@.*$/, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+export async function getClientByEmail(
+  email: string,
+): Promise<AgencyClient | null> {
+  if (!email) return null;
+  return cached(`client:${email.toLowerCase()}`, () =>
+    fetchJSON<AgencyClient | null>(
+      `/api/agency/clients?email=${encodeURIComponent(email)}`,
+    ),
+  );
 }
 
-export function addClient(
+export async function getClientById(id: string): Promise<AgencyClient | null> {
+  // No dedicated route today — filter from full list. Fine for MVP scale.
+  if (!id) return null;
+  const all = await getClients();
+  return all.find((c) => c.id === id) ?? null;
+}
+
+export async function addClient(
   input: Omit<AgencyClient, "id" | "createdAt"> & { id?: string },
-): AgencyClient {
-  const list = getClients();
-  const id =
-    input.id ||
-    `${slugifyEmail(input.email)}-${Math.random().toString(36).slice(2, 6)}`;
-  const client: AgencyClient = { ...input, id, createdAt: Date.now() };
-  const existing = list.findIndex(
-    (c) => c.email.toLowerCase() === input.email.toLowerCase(),
-  );
-  const next = [...list];
-  if (existing >= 0) next[existing] = client;
-  else next.unshift(client);
-  writeJSON(KEY_CLIENTS, next);
-  return client;
+): Promise<AgencyClient> {
+  const result = await fetchJSON<AgencyClient>("/api/agency/clients", {
+    method: "POST",
+    body: JSON.stringify({ ...input, createdAt: Date.now() }),
+  });
+  invalidate("clients:");
+  invalidate("client:");
+  return result;
 }
 
 // ─── Properties ─────────────────────────────────────────────────────────────
 
-export function getProperties(): AgencyProperty[] {
-  return readJSON<AgencyProperty[]>(KEY_PROPS, []);
+export async function getProperties(): Promise<AgencyProperty[]> {
+  return cached("props:all", () =>
+    fetchJSON<AgencyProperty[]>("/api/agency/properties"),
+  );
 }
 
-export function getPropertyById(id: string): AgencyProperty | null {
-  return getProperties().find((p) => p.id === id) ?? null;
+export async function getPropertyById(
+  id: string,
+): Promise<AgencyProperty | null> {
+  if (!id) return null;
+  return cached(`prop:${id}`, () =>
+    fetchJSON<AgencyProperty | null>(
+      `/api/agency/properties?id=${encodeURIComponent(id)}`,
+    ),
+  );
 }
 
-export function getPropertiesByClientId(clientId: string): AgencyProperty[] {
-  return getProperties().filter((p) => p.clientId === clientId);
+export async function getPropertiesByClientId(
+  clientId: string,
+): Promise<AgencyProperty[]> {
+  if (!clientId) return [];
+  return cached(`props:client:${clientId}`, () =>
+    fetchJSON<AgencyProperty[]>(
+      `/api/agency/properties?clientId=${encodeURIComponent(clientId)}`,
+    ),
+  );
 }
 
-export function addProperty(
+export async function addProperty(
   input: Omit<AgencyProperty, "id" | "createdAt">,
-): AgencyProperty {
-  const list = getProperties();
-  const id = `prop-${Math.random().toString(36).slice(2, 8)}`;
-  const property: AgencyProperty = { ...input, id, createdAt: Date.now() };
-  const next = [property, ...list];
-  writeJSON(KEY_PROPS, next);
-  return property;
+): Promise<AgencyProperty> {
+  const result = await fetchJSON<AgencyProperty>("/api/agency/properties", {
+    method: "POST",
+    body: JSON.stringify({ ...input, createdAt: Date.now() }),
+  });
+  invalidate("props:");
+  invalidate("prop:");
+  return result;
 }
 
 // ─── Contracts ──────────────────────────────────────────────────────────────
 
-export function getAgencyContracts(): AgencyContract[] {
-  return readJSON<AgencyContract[]>(KEY_CONTRACTS, []);
+export async function getAgencyContracts(): Promise<AgencyContract[]> {
+  return cached("contracts:all", () =>
+    fetchJSON<AgencyContract[]>("/api/agency/contracts"),
+  );
 }
 
-export function getContractsByClientId(clientId: string): AgencyContract[] {
-  return getAgencyContracts().filter((c) => c.clientId === clientId);
+export async function getContractsByClientId(
+  clientId: string,
+): Promise<AgencyContract[]> {
+  if (!clientId) return [];
+  return cached(`contracts:client:${clientId}`, () =>
+    fetchJSON<AgencyContract[]>(
+      `/api/agency/contracts?clientId=${encodeURIComponent(clientId)}`,
+    ),
+  );
 }
 
-export function getContractsByPropertyId(propertyId: string): AgencyContract[] {
-  return getAgencyContracts().filter((c) => c.propertyId === propertyId);
+export async function getContractsByPropertyId(
+  propertyId: string,
+): Promise<AgencyContract[]> {
+  if (!propertyId) return [];
+  // No dedicated route — filter client-side from full list. Ok for MVP scale.
+  const all = await getAgencyContracts();
+  return all.filter((c) => c.propertyId === propertyId);
 }
 
-export function getContractsByEmail(email: string): AgencyContract[] {
-  const client = getClientByEmail(email);
-  if (!client) return [];
-  return getContractsByClientId(client.id);
+export async function getContractsByEmail(
+  email: string,
+): Promise<AgencyContract[]> {
+  if (!email) return [];
+  return fetchJSON<AgencyContract[]>(
+    `/api/agency/contracts?email=${encodeURIComponent(email)}`,
+  );
 }
 
-export function recordAgencyContract(c: AgencyContract) {
-  const list = getAgencyContracts();
-  const idx = list.findIndex((x) => x.id === c.id);
-  const next = [...list];
-  if (idx >= 0) next[idx] = c;
-  else next.unshift(c);
-  writeJSON(KEY_CONTRACTS, next);
+export async function recordAgencyContract(
+  c: AgencyContract,
+): Promise<AgencyContract> {
+  const result = await fetchJSON<AgencyContract>("/api/agency/contracts", {
+    method: "POST",
+    body: JSON.stringify(c),
+  });
+  invalidate("contracts:");
+  return result;
 }
 
-export function nextContractId(): string {
-  const existing = getAgencyContracts();
-  const n = existing.length + 1;
-  return `BRX-2026-${String(n).padStart(4, "0")}`;
+export async function nextContractId(): Promise<string> {
+  // Never cached — must be fresh to avoid collisions across rapid clicks.
+  return fetchJSON<string>("/api/agency/contracts?nextId=true");
 }
 
-// ─── Demo helpers ──────────────────────────────────────────────────────────
+// ─── Vault events (off-chain history mirror) ────────────────────────────────
 
-export function resetAllAgencyData() {
-  if (typeof window === "undefined") return;
-  for (const k of [KEY_STATUS, KEY_APP, KEY_CLIENTS, KEY_PROPS, KEY_CONTRACTS]) {
-    window.localStorage.removeItem(k);
-  }
+export type VaultEventKind = "deposit" | "withdraw" | "fund" | "repay";
+
+export interface VaultEvent {
+  id: string;
+  investorEmail: string;
+  investorPubkey: string;
+  kind: VaultEventKind;
+  amountBrz: number;
+  txSignature?: string;
+  contractId?: string;
+  vaultTvlBrzAfter?: number;
+  createdAt: number;
+}
+
+export async function listVaultEvents(opts?: {
+  email?: string;
+  limit?: number;
+}): Promise<VaultEvent[]> {
+  const params = new URLSearchParams();
+  if (opts?.email) params.set("email", opts.email);
+  if (opts?.limit) params.set("limit", String(opts.limit));
+  const qs = params.toString() ? `?${params.toString()}` : "";
+  const cacheKey = `events:${opts?.email ?? "global"}:${opts?.limit ?? "default"}`;
+  return cached(cacheKey, () => fetchJSON<VaultEvent[]>(`/api/vault-events${qs}`));
+}
+
+export async function recordVaultEvent(
+  event: Omit<VaultEvent, "id" | "createdAt"> & { createdAt?: number },
+): Promise<VaultEvent> {
+  const result = await fetchJSON<VaultEvent>("/api/vault-events", {
+    method: "POST",
+    body: JSON.stringify({ ...event, createdAt: event.createdAt ?? Date.now() }),
+  });
+  invalidate("events:");
+  return result;
 }

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 import { Logo } from "../brand/Logo";
 import { I } from "../icons";
 import { LangSwitch } from "./LangSwitch";
@@ -152,7 +153,17 @@ export function AppShell({
         >
           <LangSwitch />
           {address && (
-            <div
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(address);
+                  toast.success(t("shell_wallet_copied") as string);
+                } catch {
+                  // clipboard API can fail on insecure contexts; fallback no-op
+                  toast.error(address);
+                }
+              }}
               className="mono hidden md:inline-flex"
               style={{
                 padding: "6px 10px",
@@ -161,11 +172,13 @@ export function AppShell({
                 borderRadius: 6,
                 color: "var(--fg-1)",
                 border: "1px solid var(--line)",
+                cursor: "pointer",
               }}
               title={t("shell_wallet_tip") as string}
+              aria-label={t("shell_wallet_tip") as string}
             >
               {shortAddr(address)}
-            </div>
+            </button>
           )}
           <button
             onClick={handleLogout}

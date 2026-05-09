@@ -6,13 +6,14 @@
 // Owns the register_receivable + fund_landlord + repay flows via use-agency.
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { AppShell, type Tab } from "../../components/shell/AppShell";
 import { I } from "../../components/icons";
 import { KPI } from "../../components/primitives/KPI";
 import { Card } from "../../components/primitives/Card";
 import { Pill } from "../../components/primitives/Pill";
+import { ContractSteps } from "../../components/primitives/ContractSteps";
 import { useT } from "../../lib/i18n";
 import { getPersona } from "../../lib/persona";
 import { fmtBRZ, fmtBRZShort, fmtPct, contractIdBytes } from "../../lib/mock-data";
@@ -22,10 +23,8 @@ import {
   getAgencyApplication,
   getAgencyContracts,
   getAgencyStatus,
-  getClientById,
   getClients,
   getPropertiesByClientId,
-  getPropertyById,
   nextContractId,
   recordAgencyContract,
   type AgencyApplication,
@@ -37,13 +36,37 @@ import {
 import { useAgency } from "../../hooks/use-agency";
 
 type TabId = "portfolio" | "clients" | "register" | "repay";
+const VALID_TABS: TabId[] = ["portfolio", "clients", "register", "repay"];
+
+function readPrivyEmail(user: ReturnType<typeof usePrivy>["user"]): string {
+  return (
+    user?.email?.address ??
+    (
+      user?.linkedAccounts.find((a) => a.type === "email") as
+        | { address?: string }
+        | undefined
+    )?.address ??
+    ""
+  );
+}
 
 export default function AgencyPage() {
   const { t } = useT();
   const router = useRouter();
-  const { ready, authenticated } = usePrivy();
-  const [tab, setTab] = useState<TabId>("portfolio");
+  const searchParams = useSearchParams();
+  const { ready, authenticated, user } = usePrivy();
   const [hydrated, setHydrated] = useState(false);
+
+  // Tab is URL-driven so back/forward + shareable links work.
+  const tabFromUrl = searchParams.get("tab");
+  const tab: TabId = (VALID_TABS.includes(tabFromUrl as TabId)
+    ? tabFromUrl
+    : "portfolio") as TabId;
+  const setTab = (next: TabId) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", next);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     if (!ready) return;
@@ -55,12 +78,16 @@ export default function AgencyPage() {
       router.push("/login");
       return;
     }
-    if (getAgencyStatus() !== "approved") {
-      router.push("/agency/onboard");
-      return;
-    }
-    setHydrated(true);
-  }, [ready, authenticated, router]);
+    void (async () => {
+      const email = readPrivyEmail(user);
+      const status = email ? await getAgencyStatus(email) : "none";
+      if (status !== "approved") {
+        router.push("/agency/onboard");
+        return;
+      }
+      setHydrated(true);
+    })();
+  }, [ready, authenticated, user, router]);
 
   const tabs: Tab[] = [
     { id: "portfolio", label: t("ag_tab_portfolio") as string },
@@ -175,20 +202,93 @@ function EmptyState({
   );
 }
 
+// ─── Skeleton (used while data loads — prevents empty-state flash) ──────────
+function SkeletonRows({ count = 4 }: { count?: number }) {
+  return (
+    <Card style={{ padding: 0, overflow: "hidden", opacity: 0.55 }}>
+      <div
+        style={{
+          padding: 16,
+          borderBottom: "1px solid var(--line-soft)",
+          display: "flex",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            height: 36,
+            flex: "1 1 240px",
+            background: "var(--bg-2)",
+            borderRadius: 8,
+          }}
+        />
+        <div
+          style={{
+            height: 36,
+            width: 280,
+            background: "var(--bg-2)",
+            borderRadius: 8,
+          }}
+        />
+      </div>
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            padding: "14px 20px",
+            borderBottom:
+              i === count - 1 ? "none" : "1px solid var(--line-soft)",
+            display: "grid",
+            gridTemplateColumns: "160px 1.5fr 1fr 100px 80px 100px 100px",
+            gap: 12,
+            alignItems: "center",
+          }}
+        >
+          {Array.from({ length: 7 }).map((__, j) => (
+            <div
+              key={j}
+              style={{
+                height: 14,
+                background: "var(--bg-2)",
+                borderRadius: 4,
+              }}
+            />
+          ))}
+        </div>
+      ))}
+    </Card>
+  );
+}
+
 // ─── Portfolio ──────────────────────────────────────────────────────────────
 function Portfolio({ setTab }: { setTab: (id: TabId) => void }) {
   const { t } = useT();
+  const { user } = usePrivy();
   const [filter, setFilter] = useState<"all" | AgencyContractStatus>("all");
   const [q, setQ] = useState("");
   const [contracts, setContracts] = useState<AgencyContract[]>([]);
   const [application, setApplication] = useState<AgencyApplication | null>(
     null,
   );
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setContracts(getAgencyContracts());
-    setApplication(getAgencyApplication());
-  }, []);
+    let cancelled = false;
+    void (async () => {
+      const email = readPrivyEmail(user);
+      const [list, app] = await Promise.all([
+        getAgencyContracts(),
+        email ? getAgencyApplication(email) : Promise.resolve(null),
+      ]);
+      if (cancelled) return;
+      setContracts(list);
+      setApplication(app);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const filtered = contracts.filter((r) => {
     if (filter !== "all" && r.status !== filter) return false;
@@ -281,7 +381,9 @@ function Portfolio({ setTab }: { setTab: (id: TabId) => void }) {
         />
       </div>
 
-      {contracts.length === 0 ? (
+      {loading ? (
+        <SkeletonRows />
+      ) : contracts.length === 0 ? (
         <EmptyState
           icon={<I.chart size={26} />}
           title={t("ag_empty_h") as string}
@@ -381,7 +483,7 @@ function Portfolio({ setTab }: { setTab: (id: TabId) => void }) {
               className="mono"
               style={{
                 display: "grid",
-                gridTemplateColumns: "120px 1.5fr 1fr 100px 80px 100px 100px",
+                gridTemplateColumns: "160px 1.5fr 1fr 100px 80px 100px 100px",
                 padding: "12px 20px",
                 fontSize: 11,
                 color: "var(--fg-2)",
@@ -404,7 +506,7 @@ function Portfolio({ setTab }: { setTab: (id: TabId) => void }) {
                 style={{
                   display: "grid",
                   gridTemplateColumns:
-                    "120px 1.5fr 1fr 100px 80px 100px 100px",
+                    "160px 1.5fr 1fr 100px 80px 100px 100px",
                   padding: "14px 20px",
                   fontSize: 14,
                   borderBottom: "1px solid var(--line-soft)",
@@ -454,6 +556,7 @@ function Clients({ setTab }: { setTab: (id: TabId) => void }) {
   const [clients, setClients] = useState<AgencyClient[]>([]);
   const [properties, setProperties] = useState<AgencyProperty[]>([]);
   const [contracts, setContracts] = useState<AgencyContract[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showClientForm, setShowClientForm] = useState(false);
   const [showPropFormForClient, setShowPropFormForClient] = useState<
     string | null
@@ -470,42 +573,53 @@ function Clients({ setTab }: { setTab: (id: TabId) => void }) {
     monthlyRentBrz: 1800,
   });
 
-  const refresh = () => {
-    setClients(getClients());
-    setProperties(
-      getClients().flatMap((c) => getPropertiesByClientId(c.id)),
+  const refresh = async () => {
+    const list = await getClients();
+    setClients(list);
+    const propsLists = await Promise.all(
+      list.map((c) => getPropertiesByClientId(c.id)),
     );
-    setContracts(getAgencyContracts());
+    setProperties(propsLists.flat());
+    setContracts(await getAgencyContracts());
+    setLoading(false);
   };
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, []);
 
-  const onSaveClient = () => {
+  const onSaveClient = async () => {
     if (!clientForm.name || !clientForm.email) return;
-    addClient({
-      name: clientForm.name,
-      email: clientForm.email,
-      cpf: clientForm.cpf || undefined,
-      phone: clientForm.phone || undefined,
-      pixKey: clientForm.pixKey || clientForm.email,
-    });
-    setClientForm({ name: "", email: "", cpf: "", phone: "", pixKey: "" });
-    setShowClientForm(false);
-    refresh();
+    try {
+      await addClient({
+        name: clientForm.name,
+        email: clientForm.email,
+        cpf: clientForm.cpf || undefined,
+        phone: clientForm.phone || undefined,
+        pixKey: clientForm.pixKey || clientForm.email,
+      });
+      setClientForm({ name: "", email: "", cpf: "", phone: "", pixKey: "" });
+      setShowClientForm(false);
+      await refresh();
+    } catch (err) {
+      console.error("[agency] addClient failed:", err);
+    }
   };
 
-  const onSaveProperty = (clientId: string) => {
+  const onSaveProperty = async (clientId: string) => {
     if (!propForm.address) return;
-    addProperty({
-      clientId,
-      address: propForm.address,
-      monthlyRentBrz: propForm.monthlyRentBrz,
-    });
-    setPropForm({ address: "", monthlyRentBrz: 1800 });
-    setShowPropFormForClient(null);
-    refresh();
+    try {
+      await addProperty({
+        clientId,
+        address: propForm.address,
+        monthlyRentBrz: propForm.monthlyRentBrz,
+      });
+      setPropForm({ address: "", monthlyRentBrz: 1800 });
+      setShowPropFormForClient(null);
+      await refresh();
+    } catch (err) {
+      console.error("[agency] addProperty failed:", err);
+    }
   };
 
   return (
@@ -663,7 +777,9 @@ function Clients({ setTab }: { setTab: (id: TabId) => void }) {
         </Card>
       )}
 
-      {clients.length === 0 ? (
+      {loading ? (
+        <SkeletonRows count={2} />
+      ) : clients.length === 0 ? (
         <EmptyState
           icon={<I.building size={26} />}
           title={t("clients_empty_h") as string}
@@ -927,23 +1043,74 @@ function Clients({ setTab }: { setTab: (id: TabId) => void }) {
                   )}
                 </div>
 
-                {cProps.length > 0 && (
-                  <div
-                    style={{
-                      marginTop: 16,
-                      display: "flex",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <button
-                      onClick={() => setTab("register")}
-                      className="btn btn-secondary"
-                      style={{ fontSize: 13 }}
+                {cProps.length > 0 && (() => {
+                  // If the client has any contract that's not finished, show its
+                  // step progress instead of the "advance" CTA. Picks the most
+                  // recently registered active contract.
+                  const active = cContracts
+                    .filter(
+                      (k) =>
+                        k.status === "registered" ||
+                        k.status === "funded",
+                    )
+                    .sort((a, b) => b.registeredAt - a.registeredAt)[0];
+                  if (active) {
+                    return (
+                      <div
+                        style={{
+                          marginTop: 16,
+                          paddingTop: 16,
+                          borderTop: "1px solid var(--line-soft)",
+                        }}
+                      >
+                        <div
+                          className="mono"
+                          style={{
+                            fontSize: 11,
+                            color: "var(--fg-2)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            marginBottom: 10,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "baseline",
+                          }}
+                        >
+                          <span>{active.id} · status</span>
+                          <button
+                            onClick={() => setTab("portfolio")}
+                            style={{
+                              fontSize: 11,
+                              color: "var(--gold)",
+                              textTransform: "none",
+                              letterSpacing: "normal",
+                            }}
+                          >
+                            ver no portfólio →
+                          </button>
+                        </div>
+                        <ContractSteps contract={active} />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      style={{
+                        marginTop: 16,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                      }}
                     >
-                      {t("clients_advance") as string} <I.arrow size={14} />
-                    </button>
-                  </div>
-                )}
+                      <button
+                        onClick={() => setTab("register")}
+                        className="btn btn-secondary"
+                        style={{ fontSize: 13 }}
+                      >
+                        {t("clients_advance") as string} <I.arrow size={14} />
+                      </button>
+                    </div>
+                  );
+                })()}
               </Card>
             );
           })}
@@ -983,47 +1150,71 @@ function RegisterReceivable({ setTab }: { setTab: (id: TabId) => void }) {
   const [propsForClient, setPropsForClient] = useState<AgencyProperty[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [selectedProperty, setSelectedProperty] = useState<string>("");
+  // Agency-defined annual rate. Sanity bounds reflect reasonable BR rental
+  // advance pricing — below 15% the spread doesn't cover Brix fee + insurance,
+  // above 40% becomes predatory (cf. CashGO bait-and-switch the pitch
+  // explicitly attacks).
+  const APR_MIN_PCT = 15;
+  const APR_MAX_PCT = 40;
+  // Brix protocol fee — single source in lib/brix-fees.ts so /invest sees
+  // the same constant when computing the net APR shown to the investor.
+  const BRIX_FEE_PCT = 2; // = BRIX_PROTOCOL_FEE_BPS / 100, kept inline to avoid extra import in this hot file
   const [data, setData] = useState({
     months: 6,
     insurer: "Porto Seguro",
+    aprPct: 19,
   });
 
   useEffect(() => {
-    setClients(getClients());
+    void (async () => {
+      setClients(await getClients());
+    })();
   }, []);
 
   useEffect(() => {
-    if (selectedClient) {
-      const list = getPropertiesByClientId(selectedClient);
-      setPropsForClient(list);
-      setSelectedProperty(list[0]?.id ?? "");
-    } else {
+    if (!selectedClient) {
       setPropsForClient([]);
       setSelectedProperty("");
+      return;
     }
+    void (async () => {
+      const list = await getPropertiesByClientId(selectedClient);
+      setPropsForClient(list);
+      setSelectedProperty(list[0]?.id ?? "");
+    })();
   }, [selectedClient]);
 
-  const property = selectedProperty
-    ? getPropertyById(selectedProperty)
-    : null;
-  const client = selectedClient ? getClientById(selectedClient) : null;
+  // Derive selection from state instead of fetching again — clients and
+  // propsForClient are already loaded above.
+  const property =
+    propsForClient.find((p) => p.id === selectedProperty) ?? null;
+  const client = clients.find((c) => c.id === selectedClient) ?? null;
   const rent = property?.monthlyRentBrz ?? 0;
-  const apr = 0.18 + Math.max(0, data.months - 3) * 0.004;
+  const aprValid =
+    data.aprPct >= APR_MIN_PCT && data.aprPct <= APR_MAX_PCT;
+  const apr = data.aprPct / 100;
+  const investorAprPct = Math.max(0, data.aprPct - BRIX_FEE_PCT);
   const principalBrz = rent * data.months;
   const repaymentBrz = principalBrz * (1 + apr * (data.months / 12));
 
   const subFn = t("reg_sub") as unknown as (a: number, b: number) => string;
   const doneFn = t("reg_done_p") as unknown as (apr: string) => string;
 
-  const canProceed = !!client && !!property && data.months > 0;
+  const canProceed =
+    !!client && !!property && data.months > 0 && aprValid;
 
   const onConfirm = async () => {
     if (!client || !property) return;
-    const displayId = nextContractId();
-    const seed = `${client.id}-${property.id}-${Date.now()}`;
-    const contractId = contractIdBytes(seed);
 
-    const sig = await anteciparReceivable({
+    // Display ID is BRX-2026-NNNN — short (13 chars), unique, sequential.
+    // Used as the seed for the on-chain contract_id_bytes so register and
+    // repay derive the SAME Receivable PDA. Previously the register seed
+    // included a Date.now() timestamp that overflowed the 32-byte slice
+    // and made repay derive a different PDA — that bug is fixed here.
+    const displayId = await nextContractId();
+    const contractId = contractIdBytes(displayId);
+
+    const sigs = await anteciparReceivable({
       contractId,
       principalBrz,
       repaymentBrz,
@@ -1031,27 +1222,35 @@ function RegisterReceivable({ setTab }: { setTab: (id: TabId) => void }) {
       durationDays: data.months * 30,
     });
 
-    recordAgencyContract({
-      id: displayId,
-      clientId: client.id,
-      propertyId: property.id,
-      landlordName: client.name,
-      propertyAddress: property.address,
-      principalBrz,
-      repaymentBrz,
-      rateBps: Math.round(apr * 10_000),
-      durationDays: data.months * 30,
-      installmentsTotal: data.months,
-      installmentsPaid: 0,
-      status: sig ? "funded" : "registered",
-      hasInsurance: data.insurer !== (t("reg_insurer_none") as string),
-      insurer: data.insurer,
-      fundSig: sig ?? undefined,
-      registeredAt: Date.now(),
-      fundedAt: sig ? Date.now() : undefined,
-    });
+    // anteciparReceivable returns null on any failure (toast already shown).
+    // Don't create a ghost off-chain row when on-chain didn't actually happen.
+    if (sigs === null) return;
 
-    setStep(3);
+    try {
+      await recordAgencyContract({
+        id: displayId,
+        clientId: client.id,
+        propertyId: property.id,
+        landlordName: client.name,
+        propertyAddress: property.address,
+        principalBrz,
+        repaymentBrz,
+        rateBps: Math.round(apr * 10_000),
+        durationDays: data.months * 30,
+        installmentsTotal: data.months,
+        installmentsPaid: 0,
+        status: "funded",
+        hasInsurance: data.insurer !== (t("reg_insurer_none") as string),
+        insurer: data.insurer,
+        registerSig: sigs.registerSig,
+        fundSig: sigs.fundSig,
+        registeredAt: Date.now(),
+        fundedAt: Date.now(),
+      });
+      setStep(3);
+    } catch (err) {
+      console.error("[agency] recordAgencyContract failed:", err);
+    }
   };
 
   const reset = () => {
@@ -1246,6 +1445,56 @@ function RegisterReceivable({ setTab }: { setTab: (id: TabId) => void }) {
             </div>
           </div>
           <div style={{ marginBottom: 20 }}>
+            <label className="label">{t("reg_apr_l") as string}</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type="number"
+                min={APR_MIN_PCT}
+                max={APR_MAX_PCT}
+                step={0.5}
+                value={data.aprPct}
+                onChange={(e) =>
+                  setData({ ...data, aprPct: +e.target.value || 0 })
+                }
+                className="field tnum mono"
+                style={{ paddingRight: 32 }}
+              />
+              <span
+                className="mono"
+                style={{
+                  position: "absolute",
+                  right: 14,
+                  top: 14,
+                  color: "var(--fg-3)",
+                  fontSize: 14,
+                }}
+              >
+                %
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: aprValid ? "var(--fg-3)" : "var(--red, #ef4444)",
+                marginTop: 6,
+              }}
+            >
+              {aprValid
+                ? (
+                    t("reg_apr_help") as unknown as (
+                      min: number,
+                      max: number,
+                    ) => string
+                  )(APR_MIN_PCT, APR_MAX_PCT)
+                : (
+                    t("reg_apr_oor") as unknown as (
+                      min: number,
+                      max: number,
+                    ) => string
+                  )(APR_MIN_PCT, APR_MAX_PCT)}
+            </div>
+          </div>
+          <div style={{ marginBottom: 20 }}>
             <label className="label">{t("reg_insurer_l") as string}</label>
             <select
               value={data.insurer}
@@ -1276,6 +1525,14 @@ function RegisterReceivable({ setTab }: { setTab: (id: TabId) => void }) {
                 r={fmtBRZ(principalBrz)}
               />
               <Row2 l={t("reg_pre_apr") as string} r={fmtPct(apr)} accent />
+              <Row2
+                l={t("reg_pre_brix_fee") as string}
+                r={`${BRIX_FEE_PCT}% a.a.`}
+              />
+              <Row2
+                l={t("reg_pre_investor_yield") as string}
+                r={`${investorAprPct.toFixed(1).replace(".", ",")}% a.a.`}
+              />
             </div>
           )}
 
@@ -1328,6 +1585,14 @@ function RegisterReceivable({ setTab }: { setTab: (id: TabId) => void }) {
               r={`${data.months} × ${fmtBRZ(rent)}`}
             />
             <Row2 l={t("reg_r_apr") as string} r={fmtPct(apr)} accent />
+            <Row2
+              l={t("reg_r_brix_fee") as string}
+              r={`${BRIX_FEE_PCT}% a.a.`}
+            />
+            <Row2
+              l={t("reg_r_investor_yield") as string}
+              r={`${investorAprPct.toFixed(1).replace(".", ",")}% a.a.`}
+            />
             <Row2 l={t("reg_r_insurance") as string} r={data.insurer} />
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 24 }}>
@@ -1359,7 +1624,13 @@ function RegisterRepayment({ setTab }: { setTab: (id: TabId) => void }) {
   const { t } = useT();
   const { repay, isLoading } = useAgency();
   const [contracts, setContracts] = useState<AgencyContract[]>([]);
-  useEffect(() => setContracts(getAgencyContracts()), []);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    void (async () => {
+      setContracts(await getAgencyContracts());
+      setLoading(false);
+    })();
+  }, []);
 
   const funded = contracts.filter((c) => c.status === "funded");
   const [pickedId, setPickedId] = useState<string>("");
@@ -1368,6 +1639,24 @@ function RegisterRepayment({ setTab }: { setTab: (id: TabId) => void }) {
   }, [funded, pickedId]);
   const picked = funded.find((f) => f.id === pickedId);
   const [done, setDone] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="fade-in" style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h1
+          style={{
+            fontSize: 32,
+            fontWeight: 600,
+            letterSpacing: "-0.02em",
+            margin: "0 0 12px",
+          }}
+        >
+          {t("repay_h1") as string}
+        </h1>
+        <SkeletonRows count={2} />
+      </div>
+    );
+  }
 
   if (funded.length === 0) {
     return (
@@ -1411,12 +1700,16 @@ function RegisterRepayment({ setTab }: { setTab: (id: TabId) => void }) {
     // not be seeded yet), but only mark "repaid" status when fully paid.
     const newPaid = picked.installmentsPaid + 1;
     const allPaid = newPaid >= picked.installmentsTotal;
-    recordAgencyContract({
-      ...picked,
-      installmentsPaid: newPaid,
-      status: allPaid ? "repaid" : picked.status,
-    });
-    setContracts(getAgencyContracts());
+    try {
+      await recordAgencyContract({
+        ...picked,
+        installmentsPaid: newPaid,
+        status: allPaid ? "repaid" : picked.status,
+      });
+      setContracts(await getAgencyContracts());
+    } catch (err) {
+      console.error("[agency] repay record failed:", err);
+    }
     if (sig !== null) setDone(true);
     else setDone(true);
   };

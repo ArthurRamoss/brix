@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import {
   AnchorProvider,
+  BN,
   Program,
   Wallet,
   type Idl,
@@ -318,6 +319,103 @@ async function ensureVault(
   return { vaultPda, vaultAta, created: true };
 }
 
+// Bootstrap liquidity: admin deposits BRZ into the vault so subsequent
+// fund_landlord calls have something to release. Without this, the first
+// agency advance fails with InsufficientLiquidity (vault ATA == 0).
+//
+// Why the admin? It's the only keypair we have control of in this script.
+// Conceptually it acts as a "synthetic LP" until a real investor deposits.
+// The admin gets shares it never withdraws — fine for MVP demo.
+//
+// Idempotent: skips if the admin already has a Position account with shares.
+const BOOTSTRAP_LIQUIDITY_AMOUNT = 50_000n * BRZ_UNIT;
+const POSITION_SEED = Buffer.from("position");
+
+async function ensureBootstrapLiquidity(
+  connection: Connection,
+  admin: Keypair,
+  program: Program<Idl>,
+  programId: PublicKey,
+  mint: PublicKey,
+  vaultPda: PublicKey,
+) {
+  const [positionPda] = PublicKey.findProgramAddressSync(
+    [POSITION_SEED, vaultPda.toBuffer(), admin.publicKey.toBuffer()],
+    programId,
+  );
+
+  // If admin's position already exists, the vault has been bootstrapped.
+  try {
+    const positionAccount = (
+      program.account as unknown as {
+        investorPosition: {
+          fetch(address: PublicKey): Promise<{ shares: BN }>;
+        };
+      }
+    ).investorPosition;
+    const existing = await positionAccount.fetch(positionPda);
+    if (existing.shares && existing.shares.toString() !== "0") {
+      console.log(
+        `Bootstrap liquidity already in place (admin position has ${existing.shares.toString()} shares); skipping`,
+      );
+      return;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (
+      !message.includes("Account does not exist") &&
+      !message.includes("could not find account") &&
+      !message.includes("AccountNotFound")
+    ) {
+      throw err;
+    }
+  }
+
+  // Mint BRZ to admin's ATA so it has something to deposit.
+  const adminAta = await getOrCreateAssociatedTokenAccount(
+    connection,
+    admin,
+    mint,
+    admin.publicKey,
+    false,
+    "confirmed",
+  );
+  const account = await getAccount(connection, adminAta.address, "confirmed");
+  if (account.amount < BOOTSTRAP_LIQUIDITY_AMOUNT) {
+    const delta = BOOTSTRAP_LIQUIDITY_AMOUNT - account.amount;
+    await mintTo(
+      connection,
+      admin,
+      mint,
+      adminAta.address,
+      admin,
+      delta,
+      [],
+      { commitment: "confirmed" },
+    );
+  }
+
+  // Deposit into the vault.
+  const vaultAta = getAssociatedTokenAddressSync(mint, vaultPda, true);
+  const sig = await program.methods
+    .deposit(new BN(BOOTSTRAP_LIQUIDITY_AMOUNT.toString()))
+    .accounts({
+      investor: admin.publicKey,
+      vault: vaultPda,
+      brzMint: mint,
+      vaultAta,
+      investorBrzAta: adminAta.address,
+      position: positionPda,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc();
+
+  console.log(
+    `Bootstrap liquidity: ${formatBrz(BOOTSTRAP_LIQUIDITY_AMOUNT)} → vault: ${explorerTx(sig)}`,
+  );
+}
+
 async function ensureDemoBalance(
   connection: Connection,
   admin: Keypair,
@@ -410,6 +508,10 @@ async function main() {
   );
   const program = await createProgram(connection, admin, programId);
   const vault = await ensureVault(program, programId, mint, admin);
+  // NOTE: ensureBootstrapLiquidity is defined above but NOT called here.
+  // For the demo we want a real investor flow (separate Privy email logs in
+  // as `invest`, deposits BRZ via /invest UI). The bootstrap path remains
+  // available if a future script needs synthetic liquidity.
   const demo = await ensureDemoBalance(connection, admin, mint, demoWallet);
 
   const summary = {

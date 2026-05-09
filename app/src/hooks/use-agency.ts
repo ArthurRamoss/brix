@@ -20,8 +20,9 @@ import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { connection } from "../lib/connection";
 import {
   BRZ_MINT,
   VAULT_ADMIN,
@@ -29,6 +30,19 @@ import {
   getBrixProgram,
   type AnchorWalletAdapter,
 } from "../lib/brix-program";
+import { recordVaultEvent } from "../lib/agency-clients";
+
+function readPrivyEmail(user: ReturnType<typeof usePrivy>["user"]): string {
+  return (
+    user?.email?.address ??
+    (
+      user?.linkedAccounts.find((a) => a.type === "email") as
+        | { address?: string }
+        | undefined
+    )?.address ??
+    "unknown@local"
+  );
+}
 
 const DEVNET_CHAIN = "solana:devnet" as const;
 
@@ -85,13 +99,43 @@ function deriveReceivablePDA(programId: PublicKey, contractId: number[]) {
   );
 }
 
+// Helper: read on-chain vault TVL (BRZ) right after a tx so we can attach a
+// fresh snapshot to the VaultEvent for the TVL chart.
+async function fetchVaultTvlBrz(
+  program: ReturnType<typeof getBrixProgram>,
+  vaultPDA: PublicKey,
+): Promise<number> {
+  const vault = await (
+    program.account as unknown as {
+      vault: { fetch(a: PublicKey): Promise<RawVault & { totalDeployed: { toString(): string } }> };
+    }
+  ).vault.fetch(vaultPDA);
+  let ataBalance = 0n;
+  try {
+    const ataInfo = await connection.getTokenAccountBalance(
+      new PublicKey(vault.vaultAta),
+    );
+    ataBalance = BigInt(ataInfo.value.amount);
+  } catch {
+    // ignore
+  }
+  const totalDeployed = BigInt(vault.totalDeployed.toString());
+  return Number(ataBalance + totalDeployed) / 1_000_000;
+}
+
 export function useAgency() {
-  const { authenticated } = usePrivy();
+  const { authenticated, user } = usePrivy();
   const { wallets, ready: solanaWalletsReady } = useSolanaWallets();
   const { signTransaction: signPrivyTransaction } = useSignTransaction();
   const [isLoading, setIsLoading] = useState(false);
 
   const solanaWallet = useMemo(() => wallets[0] ?? null, [wallets]);
+
+  // See use-brix.ts for the long explanation. Same loop-prevention pattern:
+  // Privy's signPrivyTransaction is a fresh ref on every render, so we route
+  // it through useRef instead of putting it in dep arrays.
+  const signTransactionRef = useRef(signPrivyTransaction);
+  signTransactionRef.current = signPrivyTransaction;
 
   const anchorWallet = useMemo<AnchorWalletAdapter>(() => {
     if (!solanaWallet) {
@@ -110,26 +154,28 @@ export function useAgency() {
       publicKey: new PublicKey(solanaWallet.address),
       signTransaction: async <T extends Transaction | VersionedTransaction>(
         tx: T,
-      ) => signWithPrivy(tx, solanaWallet, signPrivyTransaction),
+      ) => signWithPrivy(tx, solanaWallet, signTransactionRef.current),
       signAllTransactions: async <T extends Transaction | VersionedTransaction>(
         txs: T[],
       ) => {
         const signed: T[] = [];
         for (const tx of txs) {
           signed.push(
-            await signWithPrivy(tx, solanaWallet, signPrivyTransaction),
+            await signWithPrivy(tx, solanaWallet, signTransactionRef.current),
           );
         }
         return signed;
       },
     };
-  }, [solanaWallet, signPrivyTransaction]);
+  }, [solanaWallet]);
 
   const program = useMemo(
     () => getBrixProgram(anchorWallet),
     [anchorWallet],
   );
 
+  // Returns both signatures so callers can record register + fund separately.
+  // null on any failure (toast already shown).
   const anteciparReceivable = useCallback(
     async (params: {
       contractId: number[];
@@ -138,7 +184,7 @@ export function useAgency() {
       rateBps: number;
       durationDays: number;
       landlord?: PublicKey;
-    }) => {
+    }): Promise<{ registerSig: string; fundSig: string } | null> => {
       if (!authenticated || !solanaWalletsReady || !solanaWallet) {
         toast.error("Conecte sua carteira Solana primeiro.");
         return null;
@@ -203,7 +249,26 @@ export function useAgency() {
         toast.success("Antecipação confirmada!", {
           description: `Register: https://explorer.solana.com/tx/${registerSig}?cluster=devnet | Fund: https://explorer.solana.com/tx/${fundSig}?cluster=devnet`,
         });
-        return fundSig;
+
+        // Record off-chain event so the TVL chart and history pick this up.
+        // The "fund" kind represents BRZ leaving the vault to the agency wallet.
+        try {
+          const tvlAfter = await fetchVaultTvlBrz(program, vaultPDA);
+          const contractIdHex = Buffer.from(params.contractId).toString("hex").slice(0, 50);
+          await recordVaultEvent({
+            investorEmail: readPrivyEmail(user),
+            investorPubkey: anchorWallet.publicKey.toBase58(),
+            kind: "fund",
+            amountBrz: params.principalBrz,
+            txSignature: fundSig,
+            contractId: contractIdHex,
+            vaultTvlBrzAfter: tvlAfter,
+          });
+        } catch (err) {
+          console.warn("[use-agency] failed to record fund event:", err);
+        }
+
+        return { registerSig, fundSig };
       } catch (err: unknown) {
         toast.dismiss(loadingToast);
         const msg = err instanceof Error ? err.message : String(err);
@@ -268,6 +333,24 @@ export function useAgency() {
         toast.success("Pagamento registrado!", {
           description: `Explorer: https://explorer.solana.com/tx/${txSig}?cluster=devnet`,
         });
+
+        // Record off-chain "repay" event for the TVL chart + history.
+        try {
+          const tvlAfter = await fetchVaultTvlBrz(program, vaultPDA);
+          const contractIdHex = Buffer.from(params.contractId).toString("hex").slice(0, 50);
+          await recordVaultEvent({
+            investorEmail: readPrivyEmail(user),
+            investorPubkey: anchorWallet.publicKey.toBase58(),
+            kind: "repay",
+            amountBrz: params.amountBrz,
+            txSignature: txSig,
+            contractId: contractIdHex,
+            vaultTvlBrzAfter: tvlAfter,
+          });
+        } catch (err) {
+          console.warn("[use-agency] failed to record repay event:", err);
+        }
+
         return txSig;
       } catch (err: unknown) {
         toast.dismiss(loadingToast);

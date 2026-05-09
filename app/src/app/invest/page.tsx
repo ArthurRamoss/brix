@@ -6,7 +6,7 @@
 // Ported from Brix-handoff/brix/project/investor.jsx.
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { AppShell, type Tab } from "../../components/shell/AppShell";
 import { I } from "../../components/icons";
@@ -15,20 +15,35 @@ import { Card } from "../../components/primitives/Card";
 import { TVLChart } from "../../components/primitives/TVLChart";
 import { useT } from "../../lib/i18n";
 import { getPersona } from "../../lib/persona";
-import { fmtBRZ, fmtPct, TVL_SERIES } from "../../lib/mock-data";
+import { fmtBRZ, fmtPct } from "../../lib/mock-data";
 import {
   getAgencyContracts,
+  listVaultEvents,
   type AgencyContract,
+  type VaultEvent,
 } from "../../lib/agency-clients";
+import { RecentEvents } from "../../components/primitives/RecentEvents";
 import { useBrix } from "../../hooks/use-brix";
 
 type TabId = "vault" | "deposit" | "withdraw" | "positions";
+const VALID_TABS: TabId[] = ["vault", "deposit", "withdraw", "positions"];
 
 export default function InvestPage() {
   const { t } = useT();
   const router = useRouter();
-  const { ready, authenticated } = usePrivy();
-  const [tab, setTab] = useState<TabId>("vault");
+  const searchParams = useSearchParams();
+  const { ready, authenticated, user } = usePrivy();
+
+  // Tab is URL-driven so browser back/forward + shareable links work.
+  const tabFromUrl = searchParams.get("tab");
+  const tab: TabId = (VALID_TABS.includes(tabFromUrl as TabId)
+    ? tabFromUrl
+    : "vault") as TabId;
+  const setTab = (next: TabId) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", next);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   // Auth + persona guard. Privy may not be configured (build w/o env) — only redirect when ready.
   useEffect(() => {
@@ -66,11 +81,29 @@ export default function InvestPage() {
 // ─── Vault dashboard ─────────────────────────────────────────────────────────
 function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
   const { t } = useT();
+  const { user } = usePrivy();
   const { vaultData } = useBrix();
   const [funded, setFunded] = useState<AgencyContract[]>([]);
+  const [events, setEvents] = useState<VaultEvent[]>([]);
+
+  const email =
+    user?.email?.address ??
+    (
+      user?.linkedAccounts.find((a) => a.type === "email") as
+        | { address?: string }
+        | undefined
+    )?.address ??
+    null;
 
   useEffect(() => {
-    setFunded(getAgencyContracts().filter((c) => c.status === "funded"));
+    void (async () => {
+      const [all, ev] = await Promise.all([
+        getAgencyContracts(),
+        listVaultEvents({ limit: 200 }),
+      ]);
+      setFunded(all.filter((c) => c.status === "funded"));
+      setEvents(ev);
+    })();
   }, []);
 
   // On-chain values; 0 when vault not yet seeded on devnet (empty state shows).
@@ -85,6 +118,73 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
       ? Number(vaultData.totalDeployed) / Number(vaultData.totalAssets)
       : 0;
   const utilCount = Math.round(utilization * Math.max(1, fundedCount));
+
+  // TVL chart series — derived from real vault_events. Each event's
+  // vaultTvlBrzAfter is plotted in chronological order. Empty when no
+  // events have been recorded yet.
+  const tvlSeries = useMemo(() => {
+    return events
+      .filter((e) => typeof e.vaultTvlBrzAfter === "number")
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .map((e, i) => ({ d: i, value: e.vaultTvlBrzAfter as number }));
+  }, [events]);
+
+  // 24h delta — last event's TVL minus the latest event TVL from 24h+ ago.
+  // null when there's not enough history (chart card hides the line then).
+  const delta24h = useMemo(() => {
+    if (tvlSeries.length === 0) return null;
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const sorted = [...events]
+      .filter((e) => typeof e.vaultTvlBrzAfter === "number")
+      .sort((a, b) => a.createdAt - b.createdAt);
+    if (sorted.length === 0) return null;
+    const latest = sorted[sorted.length - 1].vaultTvlBrzAfter as number;
+    const before = sorted.find((e) => e.createdAt >= cutoff);
+    if (!before) {
+      // First event was within the last 24h — use the very first as baseline.
+      const baseline = sorted[0].vaultTvlBrzAfter as number;
+      return latest - baseline;
+    }
+    const baseline = before.vaultTvlBrzAfter as number;
+    return latest - baseline;
+  }, [events, tvlSeries.length]);
+
+  // Projected TVL series — stitches future expected vault inflows from
+  // active contracts. For each funded contract, the remaining installments
+  // are spread evenly across the months ahead and each one bumps the
+  // projected TVL by `repaymentBrz / installmentsTotal`. Rendered as a
+  // dashed continuation of the historical chart.
+  const projectionSeries = useMemo(() => {
+    if (tvlSeries.length === 0) return [];
+    const lastTvl = tvlSeries[tvlSeries.length - 1].value;
+    const active = funded.filter(
+      (c) => c.installmentsPaid < c.installmentsTotal,
+    );
+    if (active.length === 0) return [];
+
+    // Build a sorted timeline of expected inflows in BRZ.
+    const inflows: { ts: number; amount: number }[] = [];
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    for (const c of active) {
+      const installmentBrz = c.repaymentBrz / c.installmentsTotal;
+      const remaining = c.installmentsTotal - c.installmentsPaid;
+      const intervalDays = Math.max(1, Math.floor(c.durationDays / c.installmentsTotal));
+      for (let i = 0; i < remaining; i++) {
+        const ts = now + (i + 1) * intervalDays * dayMs;
+        inflows.push({ ts, amount: installmentBrz });
+      }
+    }
+    inflows.sort((a, b) => a.ts - b.ts);
+    if (inflows.length === 0) return [];
+
+    let running = lastTvl;
+    const startD = tvlSeries[tvlSeries.length - 1].d;
+    return inflows.map((inflow, i) => {
+      running += inflow.amount;
+      return { d: startD + i + 1, value: running };
+    });
+  }, [tvlSeries, funded]);
 
   const kpiUtilSub = (t("inv_kpi_util_s") as unknown as (n: number) => string)(
     utilCount,
@@ -131,6 +231,7 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
           gridTemplateColumns: "1.6fr 1fr",
           gap: 16,
           marginBottom: 24,
+          alignItems: "start",
         }}
       >
         <Card style={{ padding: 28, position: "relative", overflow: "hidden" }}>
@@ -168,12 +269,17 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
               >
                 {fmtBRZ(tvl)}
               </div>
-              {tvl > 0 && (
+              {delta24h !== null && delta24h !== 0 && (
                 <div
                   className="mono"
-                  style={{ marginTop: 10, fontSize: 13, color: "var(--green)" }}
+                  style={{
+                    marginTop: 10,
+                    fontSize: 13,
+                    color: delta24h > 0 ? "var(--green)" : "var(--fg-2)",
+                  }}
                 >
-                  {t("inv_tvl_delta") as string}
+                  {delta24h > 0 ? "+" : ""}
+                  {fmtBRZ(delta24h)} {t("inv_tvl_delta_suffix") as string}
                 </div>
               )}
             </div>
@@ -208,7 +314,58 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
             </div>
           </div>
 
-          <TVLChart series={TVL_SERIES} mult={tvl > 0 ? 1 : 0} />
+          {tvlSeries.length >= 1 ? (
+            <TVLChart
+              series={tvlSeries}
+              projection={projectionSeries}
+              mult={1}
+            />
+          ) : (
+            <div
+              style={{
+                height: 200,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--fg-3)",
+                fontSize: 13,
+              }}
+            >
+              {t("inv_chart_empty") as string}
+            </div>
+          )}
+          {tvlSeries.length >= 1 && (
+            <div
+              style={{
+                marginTop: 16,
+                paddingTop: 16,
+                borderTop: "1px solid var(--line-soft)",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 12,
+              }}
+            >
+              <FooterStat
+                label={t("inv_chart_stat_events") as string}
+                value={String(events.length)}
+              />
+              <FooterStat
+                label={t("inv_chart_stat_projected") as string}
+                value={
+                  projectionSeries.length > 0
+                    ? fmtBRZ(
+                        projectionSeries[projectionSeries.length - 1].value -
+                          tvlSeries[tvlSeries.length - 1].value,
+                      )
+                    : "—"
+                }
+              />
+              <FooterStat
+                label={t("inv_chart_stat_active") as string}
+                value={String(fundedCount)}
+              />
+            </div>
+          )}
         </Card>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -246,19 +403,34 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
               <I.download size={14} /> {t("inv_withdraw_cta") as string}
             </button>
           </Card>
-          <KPI
-            label={t("inv_kpi_active") as string}
-            value={String(fundedCount)}
-            sub={
-              fundedCount === 0
-                ? (t("inv_kpi_active_s_empty") as string)
-                : (t("inv_kpi_active_s") as unknown as (n: number) => string)(
-                    fundedCount,
-                  )
-            }
-            tone="green"
-            mono
-          />
+          <Card style={{ padding: 0, overflow: "hidden" }}>
+            <div
+              style={{
+                padding: "12px 16px",
+                borderBottom: "1px solid var(--line-soft)",
+              }}
+            >
+              <div
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: "var(--fg-2)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                {t("inv_recent_events") as string}
+              </div>
+            </div>
+            {/* Vault dashboard shows the GLOBAL feed; "see all →" routes to
+                PositionsTab where the per-user history lives. */}
+            <RecentEvents
+              limit={3}
+              compact
+              showFullLink
+              seeAllHref="/invest?tab=positions"
+            />
+          </Card>
         </div>
       </div>
 
@@ -287,7 +459,7 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
           className="data-table-scroll"
           style={
             {
-              "--mobile-grid-cols": "110px 1.4fr 1fr 100px 80px 100px",
+              "--mobile-grid-cols": "150px 1.4fr 1fr 100px 80px 100px",
             } as CSSProperties
           }
         >
@@ -295,7 +467,7 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
             className="mono"
             style={{
               display: "grid",
-              gridTemplateColumns: "110px 1.4fr 1fr 100px 80px 100px",
+              gridTemplateColumns: "150px 1.4fr 1fr 100px 80px 100px",
               padding: "10px 20px",
               fontSize: 11,
               color: "var(--fg-2)",
@@ -327,7 +499,7 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
                 key={c.id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "110px 1.4fr 1fr 100px 80px 100px",
+                  gridTemplateColumns: "150px 1.4fr 1fr 100px 80px 100px",
                   padding: "14px 20px",
                   fontSize: 14,
                   borderTop: "1px solid var(--line-soft)",
@@ -377,12 +549,16 @@ function DepositTab() {
 
   // Share price derived from vault state when available.
   const sharePrice = useMemo(() => {
-    if (!vaultData) return 1.0274;
+    if (!vaultData) return 1.0;
     const totalShares = Number(vaultData.totalShares);
     const totalAssets = Number(vaultData.totalAssets);
     if (totalShares === 0) return 1.0;
     return totalAssets / totalShares;
   }, [vaultData]);
+
+  // APR shown to the investor — comes from the same weighted-rate computation
+  // as the dashboard. Zero when no contracts are funded yet.
+  const aprExpected = (vaultData?.aprBps ?? 0) / 10_000;
 
   const shares = sharePrice > 0 ? amt / sharePrice : 0;
 
@@ -469,7 +645,10 @@ function DepositTab() {
         >
           <Row2 l={t("dep_share_price") as string} r={`${sharePrice.toFixed(4)} BRZ`} />
           <Row2 l={t("dep_shares_est") as string} r={`${shares.toFixed(2)} brxV`} accent />
-          <Row2 l={t("dep_apr_exp") as string} r={fmtPct(0.197)} />
+          <Row2
+            l={t("dep_apr_exp") as string}
+            r={aprExpected > 0 ? fmtPct(aprExpected) : "—"}
+          />
           <Row2 l={t("dep_lockup") as string} r={t("dep_lockup_v") as string} />
         </div>
 
@@ -604,7 +783,9 @@ function WithdrawTab() {
 // ─── Positions ──────────────────────────────────────────────────────────────
 function PositionsTab() {
   const { t } = useT();
+  const { user } = usePrivy();
   const { positionData } = useBrix();
+  const [events, setEvents] = useState<VaultEvent[]>([]);
 
   // Derive numbers from real on-chain position; 0 when not yet deposited.
   const deposited = positionData
@@ -615,6 +796,30 @@ function PositionsTab() {
     : 0;
   const sharesNum = positionData ? Number(positionData.shares) / 1_000_000 : 0;
   const yieldPct = deposited > 0 ? (value - deposited) / deposited : 0;
+
+  const email =
+    user?.email?.address ??
+    (
+      user?.linkedAccounts.find((a) => a.type === "email") as
+        | { address?: string }
+        | undefined
+    )?.address ??
+    null;
+
+  useEffect(() => {
+    if (!email) return;
+    void (async () => {
+      const list = await listVaultEvents({ email, limit: 200 });
+      setEvents(list);
+    })();
+  }, [email]);
+
+  // Only deposits/withdraws are user-driven; fund/repay are agency events
+  // and don't belong in the investor's personal history view.
+  const myEvents = useMemo(
+    () => events.filter((e) => e.kind === "deposit" || e.kind === "withdraw"),
+    [events],
+  );
 
   return (
     <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
@@ -645,13 +850,13 @@ function PositionsTab() {
         <KPI
           label={t("pos_kpi_value") as string}
           value={fmtBRZ(value)}
-          sub={`+${fmtBRZ(value - deposited)}`}
+          sub={value > deposited ? `+${fmtBRZ(value - deposited)}` : "—"}
           tone="gold"
           mono
         />
         <KPI
           label={t("pos_kpi_yield") as string}
-          value={`+${fmtPct(yieldPct)}`}
+          value={yieldPct > 0 ? `+${fmtPct(yieldPct)}` : "—"}
           sub={t("pos_kpi_yield_s") as string}
           tone="green"
           mono
@@ -672,22 +877,142 @@ function PositionsTab() {
           }}
         >
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
-            {t("pos_history_h") as string}
+            {t("inv_history_h") as string}
           </h3>
         </div>
-        <div
-          style={{
-            padding: 32,
-            textAlign: "center",
-            fontSize: 13,
-            color: "var(--fg-3)",
-          }}
-        >
-          {deposited > 0
-            ? (t("pos_history_pending") as string)
-            : (t("pos_history_empty") as string)}
-        </div>
+        {myEvents.length === 0 ? (
+          <div
+            style={{
+              padding: 32,
+              textAlign: "center",
+              fontSize: 13,
+              color: "var(--fg-3)",
+            }}
+          >
+            {t("inv_history_empty") as string}
+          </div>
+        ) : (
+          <div
+            className="data-table-scroll"
+            style={
+              {
+                "--mobile-grid-cols": "150px 1.2fr 110px 80px",
+              } as CSSProperties
+            }
+          >
+            <div
+              className="mono"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "150px 1.2fr 110px 80px",
+                padding: "10px 20px",
+                fontSize: 11,
+                color: "var(--fg-2)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}
+            >
+              <span>{t("inv_history_th_when") as string}</span>
+              <span>{t("inv_history_th_kind") as string}</span>
+              <span style={{ textAlign: "right" }}>
+                {t("inv_history_th_amount") as string}
+              </span>
+              <span style={{ textAlign: "right" }}>
+                {t("inv_history_th_tx") as string}
+              </span>
+            </div>
+            {myEvents.map((e) => (
+              <div
+                key={e.id}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "150px 1.2fr 110px 80px",
+                  padding: "12px 20px",
+                  fontSize: 13,
+                  borderTop: "1px solid var(--line-soft)",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  className="mono"
+                  style={{ fontSize: 12, color: "var(--fg-2)" }}
+                >
+                  {new Date(e.createdAt).toLocaleString("pt-BR")}
+                </span>
+                <span style={{ color: "var(--fg-1)" }}>
+                  {t(`inv_history_kind_${e.kind}`) as string}
+                </span>
+                <span
+                  className="mono"
+                  style={{
+                    textAlign: "right",
+                    color:
+                      e.kind === "deposit" ? "var(--teal)" : "var(--fg-1)",
+                  }}
+                >
+                  {e.kind === "withdraw" ? "-" : "+"}
+                  {fmtBRZ(e.amountBrz)}
+                </span>
+                <span
+                  style={{
+                    textAlign: "right",
+                  }}
+                >
+                  {e.txSignature ? (
+                    <a
+                      href={`https://explorer.solana.com/tx/${e.txSignature}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mono"
+                      style={{
+                        fontSize: 11,
+                        color: "var(--fg-2)",
+                        display: "inline-flex",
+                        gap: 4,
+                        alignItems: "center",
+                      }}
+                    >
+                      <I.link size={10} />
+                      {e.txSignature.slice(0, 4)}…
+                    </a>
+                  ) : (
+                    <span style={{ color: "var(--fg-3)", fontSize: 11 }}>—</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
+    </div>
+  );
+}
+
+function FooterStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div
+        className="mono"
+        style={{
+          fontSize: 10,
+          color: "var(--fg-3)",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        className="mono"
+        style={{
+          marginTop: 4,
+          fontSize: 14,
+          color: "var(--fg-1)",
+          fontWeight: 500,
+        }}
+      >
+        {value}
+      </div>
     </div>
   );
 }

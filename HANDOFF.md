@@ -1,5 +1,7 @@
 # Handoff — TVL chart polish + backfill
 
+> **Antes de começar**: leia `LOCAL_DEV.md` na raiz. Tem topologia do repo (pnpm workspace), env vars, comandos `pnpm app:dev`, mapa de arquivos. Sem isso o agente fica perdido achando que falta `node_modules` ou env.
+
 ## Estado atual
 
 Última sessão fez:

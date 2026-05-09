@@ -17,8 +17,10 @@
         --fg-3: oklch(0.42 0.008 75);
         --gold: oklch(0.82 0.16 75);
         --gold-soft: oklch(0.82 0.16 75 / 0.12);
+        --gold-line: oklch(0.82 0.16 75 / 0.30);
         --teal: oklch(0.78 0.12 195);
         --teal-soft: oklch(0.78 0.12 195 / 0.12);
+        --teal-line: oklch(0.78 0.12 195 / 0.30);
         --green: oklch(0.78 0.18 145);
         --radius: 12px;
       }
@@ -68,6 +70,31 @@
           transform: translateY(0);
         }
       }
+
+      /* ─── Brand mark (3 stacked bricks) ──────────────────────────── */
+      .brand-mark {
+        display: inline-block;
+        vertical-align: middle;
+      }
+      /* Watermark in every slide's top-right corner */
+      .watermark {
+        position: fixed;
+        top: 24px;
+        right: 28px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0.65;
+        z-index: 5;
+        pointer-events: none;
+      }
+      .watermark .word {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--fg-1);
+      }
+
       .kicker {
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -81,7 +108,7 @@
         width: 6px;
         height: 6px;
         border-radius: 999px;
-        background: var(--teal);
+        background: var(--gold);
         margin-right: 10px;
         vertical-align: middle;
       }
@@ -117,19 +144,6 @@
         color: var(--fg-1);
         line-height: 1.45;
         max-width: 800px;
-      }
-      .stat {
-        font-family: ui-monospace, "SF Mono", monospace;
-        font-size: 56px;
-        color: var(--teal);
-        letter-spacing: -0.03em;
-        line-height: 1;
-      }
-      .stat-gold {
-        color: var(--gold);
-      }
-      .stat-fg {
-        color: var(--fg-0);
       }
       .grid-3 {
         display: grid;
@@ -194,21 +208,21 @@
         top: 18px;
         width: 8px;
         height: 8px;
-        background: var(--teal);
+        background: var(--gold);
         border-radius: 999px;
       }
-      li.gold::before {
-        background: var(--gold);
+      li.teal::before {
+        background: var(--teal);
       }
       strong {
         color: var(--fg-0);
         font-weight: 600;
       }
       .accent {
-        color: var(--teal);
-      }
-      .accent-gold {
         color: var(--gold);
+      }
+      .accent-teal {
+        color: var(--teal);
       }
       .nav {
         position: fixed;
@@ -232,6 +246,8 @@
       }
       .nav button:hover {
         background: var(--bg-2);
+        border-color: var(--gold-line);
+        color: var(--gold);
       }
       .nav .counter {
         font-family: ui-monospace, monospace;
@@ -242,7 +258,7 @@
       .url {
         font-family: ui-monospace, monospace;
         font-size: 14px;
-        color: var(--teal);
+        color: var(--gold);
         word-break: break-all;
       }
       .pill {
@@ -255,16 +271,15 @@
         font-family: ui-monospace, monospace;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        border: 1px solid var(--gold);
-        border-color: oklch(0.82 0.16 75 / 0.30);
+        border: 1px solid var(--gold-line);
       }
       .pill.teal {
         background: var(--teal-soft);
         color: var(--teal);
-        border-color: oklch(0.78 0.12 195 / 0.30);
+        border-color: var(--teal-line);
       }
       .quote {
-        border-left: 3px solid var(--teal);
+        border-left: 3px solid var(--gold);
         padding: 12px 0 12px 24px;
         font-size: 22px;
         color: var(--fg-0);
@@ -306,50 +321,20 @@
         letter-spacing: 0.06em;
       }
       .compare .ok {
-        color: var(--teal);
+        color: var(--gold);
       }
       .compare .no {
         color: var(--fg-3);
       }
-      .footer-strip {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 14px 28px;
-        background: var(--bg-1);
-        border-top: 1px solid var(--line-soft);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-family: ui-monospace, monospace;
-        font-size: 11px;
-        color: var(--fg-3);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
       .demo-frame {
         margin-top: 24px;
         background: var(--bg-1);
-        border: 1px solid var(--line);
+        border: 1px solid var(--gold-line);
         border-radius: var(--radius);
         padding: 24px;
         display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 24px;
-        align-items: center;
-      }
-      .demo-frame .qr {
-        width: 120px;
-        height: 120px;
-        background: var(--fg-0);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--bg-0);
-        font-family: monospace;
-        font-size: 10px;
+        grid-template-columns: 1fr;
+        gap: 16px;
       }
       .ask {
         font-size: 28px;
@@ -361,35 +346,95 @@
       .ask strong {
         color: var(--gold);
       }
+
+      /* ─── Title slide special layout ────────────────────────────── */
+      .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .hero .logo-block {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 40px;
+      }
+      .hero .wordmark {
+        font-size: 96px;
+        font-weight: 600;
+        letter-spacing: -0.04em;
+        color: var(--fg-0);
+        line-height: 0.9;
+      }
+      .hero .wordmark .dot {
+        color: var(--gold);
+      }
     </style>
   </head>
   <body>
+    <!-- Watermark logo on every slide except title -->
+    <div class="watermark" id="watermark">
+      <svg
+        class="brand-mark"
+        width="22"
+        height="22"
+        viewBox="0 0 32 32"
+        fill="none"
+        aria-hidden="true"
+      >
+        <rect x="2" y="6" width="22" height="6" rx="1.2" fill="var(--gold)" opacity="0.4" />
+        <rect x="6" y="13" width="22" height="6" rx="1.2" fill="var(--gold)" opacity="0.7" />
+        <rect x="2" y="20" width="22" height="6" rx="1.2" fill="var(--gold)" />
+      </svg>
+      <span class="word">brix</span>
+    </div>
+
     <div class="deck" id="deck">
-      <!-- 1 · Title -->
-      <section class="slide active">
-        <div class="kicker"><span class="dot"></span>colosseum frontier · solana · may 2026</div>
-        <h1 style="font-size: 88px;">brix.</h1>
-        <p class="subtitle" style="font-size: 28px; max-width: 880px; color: var(--fg-0);">
-          aluguel é renda previsível.<br />
-          não devia precisar esperar 12 meses.
-        </p>
-        <div style="margin-top: 48px; display: flex; gap: 24px; align-items: center;">
-          <span class="pill teal">RWA Lending</span>
-          <span class="pill">Stablecoin Payments</span>
-          <span class="pill teal">Brasil First</span>
+      <!-- 1 · Title (logo grande, sem watermark duplicado) -->
+      <section class="slide active" data-no-watermark="true">
+        <div class="hero">
+          <div class="logo-block">
+            <svg
+              class="brand-mark"
+              width="120"
+              height="120"
+              viewBox="0 0 32 32"
+              fill="none"
+              aria-label="Brix logo"
+            >
+              <rect x="2" y="6" width="22" height="6" rx="1.2" fill="var(--gold)" opacity="0.4" />
+              <rect x="6" y="13" width="22" height="6" rx="1.2" fill="var(--gold)" opacity="0.7" />
+              <rect x="2" y="20" width="22" height="6" rx="1.2" fill="var(--gold)" />
+            </svg>
+            <span class="wordmark">brix<span class="dot">.</span></span>
+          </div>
+
+          <p class="subtitle" style="font-size: 32px; max-width: 880px; color: var(--fg-0); line-height: 1.25;">
+            aluguel é renda previsível.<br />
+            <span class="accent">não devia precisar esperar 12 meses.</span>
+          </p>
+
+          <div style="margin-top: 48px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+            <span class="pill">RWA Lending</span>
+            <span class="pill">Stablecoin Payments</span>
+            <span class="pill teal">Brasil First</span>
+            <span class="pill">Insurance-Backed</span>
+          </div>
+
+          <div class="mono" style="margin-top: 56px; display: flex; gap: 32px; align-items: baseline; flex-wrap: wrap;">
+            <span style="font-size: 13px; color: var(--fg-2);">colosseum frontier · solana · maio 2026</span>
+            <span style="font-size: 13px; color: var(--fg-2);">arthur ramos · @ArthurRamoss</span>
+          </div>
         </div>
-        <p class="mono" style="margin-top: 32px; font-size: 13px; color: var(--fg-2);">
-          arthur ramos · github.com/ArthurRamoss/brix
-        </p>
       </section>
 
       <!-- 2 · Hook (founder story) -->
       <section class="slide">
         <div class="kicker"><span class="dot"></span>02 · o gancho</div>
-        <h2>minha mãe tem uma imobiliária. 700 contratos.</h2>
+        <h2>minha mãe tem uma imobiliária. <span class="accent">700 contratos.</span></h2>
         <p class="subtitle">
           ela quase assinou com uma fintech pra antecipar aluguel dos clientes. na simulação,
-          taxa de <strong class="accent">18% a.a</strong>. na hora de assinar, <strong class="accent-gold">32%</strong>.
+          taxa de <strong class="accent-teal">18% a.a</strong>. na hora de assinar, <strong class="accent">32%</strong>.
         </p>
         <div class="quote">
           "eles mudam o pricing entre o quote e o contrato. é o pão com manteiga do
@@ -399,7 +444,7 @@
         </div>
         <p style="font-size: 22px; color: var(--fg-0); margin-top: 24px;">
           com brix, a taxa é gravada no <strong class="accent">smart contract</strong> no momento
-          da assinatura. impossível mudar. nunca.
+          da assinatura. impossível mudar. <strong class="accent">nunca.</strong>
         </p>
       </section>
 
@@ -411,39 +456,33 @@
           <div class="card">
             <div class="label">crédito imobiliário br</div>
             <div class="number">−54%</div>
-            <div class="desc">
-              SBPE caiu de R$19,9bi → R$9,1bi no 1S25. CBIC.
-            </div>
+            <div class="desc">SBPE caiu de R$19,9bi → R$9,1bi no 1S25 (CBIC).</div>
           </div>
           <div class="card">
             <div class="label">famílias alugam no br</div>
-            <div class="number teal">17,4%</div>
-            <div class="desc">
-              13M+ unidades alugadas. IBGE PNAD 2023.
-            </div>
+            <div class="number">17,4%</div>
+            <div class="desc">13M+ unidades alugadas (IBGE PNAD 2023).</div>
           </div>
           <div class="card">
             <div class="label">gap on-chain solana</div>
             <div class="number">~$0</div>
-            <div class="desc">
-              RWA lending TVL no DefiLlama é praticamente zero — quase tudo é T-bills.
-            </div>
+            <div class="desc">RWA lending TVL no DefiLlama é praticamente zero — quase tudo é T-bills.</div>
           </div>
         </div>
         <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2);">
-          off-chain: pricing opaco e bait-and-switch.
-          on-chain: nenhum projeto colosseum dominou recebíveis de aluguel ainda.
+          <strong class="accent">off-chain</strong> · pricing opaco e bait-and-switch.
+          <strong class="accent">on-chain</strong> · nenhum projeto colosseum dominou recebíveis de aluguel ainda.
         </p>
       </section>
 
       <!-- 4 · Why now -->
       <section class="slide">
         <div class="kicker"><span class="dot"></span>04 · por que agora</div>
-        <h2>3 forças que alinharam em 2026</h2>
+        <h2><span class="accent">3 forças</span> que alinharam em 2026</h2>
         <div class="grid-3">
           <div class="card">
             <div class="label">macro</div>
-            <h3>bancos saíram</h3>
+            <h3 style="color: var(--gold);">bancos saíram</h3>
             <p style="font-size: 15px; color: var(--fg-2); margin: 0;">
               corte de 54% no crédito imobiliário br abriu vácuo. 13M+ proprietários sem
               instrumento.
@@ -451,7 +490,7 @@
           </div>
           <div class="card">
             <div class="label">solana</div>
-            <h3>RWA momentum</h3>
+            <h3 style="color: var(--gold);">RWA momentum</h3>
             <p style="font-size: 15px; color: var(--fg-2); margin: 0;">
               $2B+ de RWA TVL em solana em 2026, mas categoria <strong>lending</strong> tá
               vazia. Goldfinch ($103M→$1.6M) e Credix ($1 TVL) caíram por <strong>falta
@@ -460,7 +499,7 @@
           </div>
           <div class="card">
             <div class="label">br stack</div>
-            <h3>BRZ + PIX prontos</h3>
+            <h3 style="color: var(--gold);">BRZ + PIX prontos</h3>
             <p style="font-size: 15px; color: var(--fg-2); margin: 0;">
               BRZ (Transfero) é stablecoin nativa em solana desde 2021. off-ramp PIX
               via API. trilho completo, sem cripto na ponta.
@@ -472,13 +511,13 @@
       <!-- 5 · Solution -->
       <section class="slide">
         <div class="kicker"><span class="dot"></span>05 · a solução</div>
-        <h2>vault on-chain lastreado em recebíveis com seguro fiança</h2>
+        <h2>vault on-chain lastreado em recebíveis com <span class="accent">seguro fiança</span></h2>
         <ul style="margin-top: 24px; max-width: 880px;">
           <li>
             <strong>taxa imutável:</strong> gravada no smart contract no momento da
             assinatura. fim do bait-and-switch.
           </li>
-          <li class="gold">
+          <li>
             <strong>seguro fiança como escudo estrutural:</strong> ~85% dos contratos da
             Selectimob já carregam seguro fiança. <em>default real perto de zero</em>.
             isso é o que matou Goldfinch.
@@ -487,7 +526,7 @@
             <strong>off-ramp PIX:</strong> proprietário recebe BRZ → vira PIX em até 24h
             via Transfero. nunca toca em cripto.
           </li>
-          <li class="gold">
+          <li class="teal">
             <strong>originação distribuída:</strong> imobiliárias parceiras validam o
             contrato off-chain e assinam on-chain. não depende de nós conhecermos cada
             inquilino.
@@ -498,9 +537,9 @@
       <!-- 6 · Demo -->
       <section class="slide">
         <div class="kicker"><span class="dot"></span>06 · demo · solana devnet</div>
-        <h2>fluxo end-to-end funcionando</h2>
+        <h2>fluxo end-to-end <span class="accent">funcionando</span></h2>
         <p class="subtitle">
-          1 transação, 4 personas, ~6 RPC calls. tudo on-chain devnet.
+          1 transação, 3 personas, ~6 RPC calls. tudo on-chain.
         </p>
         <ul style="margin-top: 24px; max-width: 880px;">
           <li>
@@ -510,7 +549,7 @@
           <li>
             <strong>vault</strong> financia automaticamente — proprietário recebe BRZ
           </li>
-          <li>
+          <li class="teal">
             <strong>investidor</strong> deposita → recebe shares (brxV) que valorizam por
             parcela
           </li>
@@ -520,17 +559,16 @@
           </li>
         </ul>
         <div class="demo-frame">
-          <div class="qr">QR aqui</div>
           <div>
-            <div class="label mono" style="font-size: 11px; text-transform: uppercase; color: var(--fg-2); letter-spacing: 0.06em; margin-bottom: 8px;">
+            <div class="mono" style="font-size: 11px; text-transform: uppercase; color: var(--fg-2); letter-spacing: 0.06em; margin-bottom: 8px;">
               demo ao vivo
             </div>
-            <div class="url">brix.app · localhost:3000</div>
-            <div class="mono" style="font-size: 12px; color: var(--fg-3); margin-top: 12px;">
-              programa: 6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94 · solana devnet
+            <div class="url" style="font-size: 22px;">brixprotocol.com</div>
+            <div class="mono" style="font-size: 12px; color: var(--fg-3); margin-top: 16px;">
+              programa · 6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94 · solana devnet
             </div>
             <div class="mono" style="font-size: 12px; color: var(--fg-3);">
-              repo: github.com/ArthurRamoss/brix
+              repo · github.com/ArthurRamoss/brix
             </div>
           </div>
         </div>
@@ -539,7 +577,7 @@
       <!-- 7 · Why crypto necessary -->
       <section class="slide">
         <div class="kicker"><span class="dot"></span>07 · por que blockchain</div>
-        <h2>se tirar a cadeia, o produto desaparece.</h2>
+        <h2>se tirar a cadeia, <span class="accent">o produto desaparece.</span></h2>
         <div class="compare">
           <div class="row-h">
             <span></span><span>brix on-chain</span><span>off-chain</span>
@@ -562,14 +600,14 @@
           </div>
         </div>
         <p style="margin-top: 32px; font-size: 16px; color: var(--fg-2);">
-          a regra precisa morar no contrato, não no termo de uso. <strong>essa é a tese.</strong>
+          a regra precisa morar no contrato, não no termo de uso. <strong class="accent">essa é a tese.</strong>
         </p>
       </section>
 
       <!-- 8 · Traction -->
       <section class="slide">
         <div class="kicker"><span class="dot"></span>08 · tração</div>
-        <h2>piloto pronto dia um, zero CAC</h2>
+        <h2>piloto pronto dia um, <span class="accent">zero CAC</span></h2>
         <div class="grid-3">
           <div class="card">
             <div class="label">selectimob (familia)</div>
@@ -578,7 +616,7 @@
           </div>
           <div class="card">
             <div class="label">~85% c/ seguro fiança</div>
-            <div class="number teal">~595</div>
+            <div class="number">~595</div>
             <div class="desc">
               contratos já protegidos por porto/too/mapfre — protocolo herda
             </div>
@@ -593,7 +631,8 @@
         </div>
         <p style="margin-top: 32px; font-size: 18px; color: var(--fg-1);">
           imobiliária parceira já intermedeia o pagamento de aluguel — smart contract
-          plugue na rotina existente. <strong>day one origination, zero acquisition cost.</strong>
+          plugue na rotina existente.
+          <strong class="accent">day one origination, zero acquisition cost.</strong>
         </p>
       </section>
 
@@ -602,19 +641,19 @@
         <div class="kicker"><span class="dot"></span>09 · ask</div>
         <h2>onde brix vai a partir daqui</h2>
         <p class="ask" style="margin-bottom: 32px;">
-          <strong>colosseum frontier</strong> — qualificação na <strong>track payments &amp;
+          <strong>colosseum frontier</strong> — qualificação na track <strong>payments &amp;
           stablecoins</strong> + grant pra fechar a integração com Transfero (PIX off-ramp
-          real) e ativar o piloto Selectimob na rede.
+          real) e ativar o piloto Selectimob.
         </p>
         <div class="grid-2">
           <div class="card">
             <div class="label">próximos 90 dias</div>
-            <h3 style="margin-bottom: 12px;">de devnet pra mainnet piloto</h3>
+            <h3 style="margin-bottom: 12px; color: var(--gold);">de devnet pra mainnet piloto</h3>
             <ul style="padding: 0; margin: 0;">
               <li style="padding: 6px 0 6px 20px; font-size: 14px;">
                 Transfero off-ramp PIX (parceria já mapeada)
               </li>
-              <li class="gold" style="padding: 6px 0 6px 20px; font-size: 14px;">
+              <li style="padding: 6px 0 6px 20px; font-size: 14px;">
                 cessão de crédito (Art. 286 CC) com escritório jurídico
               </li>
               <li style="padding: 6px 0 6px 20px; font-size: 14px;">
@@ -624,12 +663,12 @@
           </div>
           <div class="card">
             <div class="label">12 meses</div>
-            <h3 style="margin-bottom: 12px;">phase 2: short-term rentals globalmente</h3>
+            <h3 style="margin-bottom: 12px; color: var(--gold);">phase 2: short-term rentals globalmente</h3>
             <ul style="padding: 0; margin: 0;">
               <li style="padding: 6px 0 6px 20px; font-size: 14px;">
                 STR Scout (já construído) vira underwriting engine
               </li>
-              <li class="gold" style="padding: 6px 0 6px 20px; font-size: 14px;">
+              <li style="padding: 6px 0 6px 20px; font-size: 14px;">
                 AirDNA data → modelagem de risco por unidade
               </li>
               <li style="padding: 6px 0 6px 20px; font-size: 14px;">
@@ -641,10 +680,24 @@
       </section>
 
       <!-- 10 · Contact -->
-      <section class="slide" style="text-align: left;">
+      <section class="slide">
         <div class="kicker"><span class="dot"></span>10 · obrigado</div>
-        <h1 style="font-size: 64px; margin-bottom: 32px;">vamos conversar.</h1>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px;">
+        <div style="display: flex; align-items: center; gap: 28px; margin-bottom: 40px;">
+          <svg
+            class="brand-mark"
+            width="64"
+            height="64"
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect x="2" y="6" width="22" height="6" rx="1.2" fill="var(--gold)" opacity="0.4" />
+            <rect x="6" y="13" width="22" height="6" rx="1.2" fill="var(--gold)" opacity="0.7" />
+            <rect x="2" y="20" width="22" height="6" rx="1.2" fill="var(--gold)" />
+          </svg>
+          <h1 style="font-size: 64px; margin: 0;">vamos conversar.</h1>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
           <div class="card">
             <div class="label">arthur ramos</div>
             <div class="mono" style="font-size: 16px; color: var(--fg-0); margin-top: 8px;">
@@ -656,8 +709,8 @@
           </div>
           <div class="card">
             <div class="label">live demo</div>
-            <div class="url" style="font-size: 18px; margin-top: 8px;">
-              localhost:3000/invest
+            <div class="url" style="font-size: 22px; margin-top: 8px;">
+              brixprotocol.com
             </div>
             <div class="mono" style="font-size: 12px; color: var(--fg-3); margin-top: 8px;">
               programa devnet · 6xon…sy94
@@ -678,12 +731,16 @@
 
     <script>
       const slides = document.querySelectorAll(".slide");
+      const watermark = document.getElementById("watermark");
       let idx = 0;
       const total = slides.length;
       function show(i) {
         idx = ((i % total) + total) % total;
         slides.forEach((s, k) => s.classList.toggle("active", k === idx));
         document.getElementById("counter").textContent = `${idx + 1} / ${total}`;
+        // Hide watermark on slides that already feature the logo prominently
+        const noWatermark = slides[idx].dataset.noWatermark === "true";
+        watermark.style.display = noWatermark ? "none" : "flex";
       }
       function nav(d) {
         show(idx + d);
@@ -701,6 +758,8 @@
           show(total - 1);
         }
       });
+      // Initialize
+      show(0);
     </script>
   </body>
 </html>

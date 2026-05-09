@@ -68,4 +68,21 @@ pub mod brix {
     pub fn withdraw(ctx: Context<Withdraw>, shares: u64) -> Result<()> {
         instructions::withdraw::handler(ctx, shares)
     }
+
+    /// Admin-only: forcibly close a Receivable PDA and write off any
+    /// unreleased principal from `vault.total_deployed`. Used for bad-debt
+    /// cleanup and demo resets — see admin_close_receivable.rs for the full
+    /// rationale.
+    pub fn admin_close_receivable(
+        ctx: Context<AdminCloseReceivable>,
+        contract_id: [u8; CONTRACT_ID_LEN],
+    ) -> Result<()> {
+        instructions::admin_close_receivable::handler(ctx, contract_id)
+    }
+
+    /// Admin-only: forcibly close an InvestorPosition PDA and burn its
+    /// shares from `vault.total_shares`. Demo cleanup helper.
+    pub fn admin_close_position(ctx: Context<AdminClosePosition>) -> Result<()> {
+        instructions::admin_close_position::handler(ctx)
+    }
 }

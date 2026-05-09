@@ -1,3 +1,5 @@
+pub mod admin_close_position;
+pub mod admin_close_receivable;
 pub mod deposit;
 pub mod fund_landlord;
 pub mod initialize_vault;
@@ -10,6 +12,8 @@ pub mod withdraw;
 // reachable at the crate root, which only happens via `pub use module::*;`.
 // The ambiguous `handler` re-export is a harmless warning — all call
 // sites use the fully-qualified path `instructions::<ix>::handler(...)`.
+pub use admin_close_position::*;
+pub use admin_close_receivable::*;
 pub use deposit::*;
 pub use fund_landlord::*;
 pub use initialize_vault::*;

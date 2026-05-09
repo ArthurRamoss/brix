@@ -1237,12 +1237,11 @@ function Row2({ l, r, accent }: { l: string; r: string; accent?: boolean }) {
 
 // ─── Deposit modal ──────────────────────────────────────────────────────────
 // Two-step UX: depositing into the vault requires BRZ in the user's wallet
-// first. The modal makes that explicit. The "add BRZ to wallet" button hits
-// /api/admin/mint-brz for the demo (server-signs with the test mint
-// authority); in production this becomes a Transfero on-ramp / external
-// transfer / wallet connect — same modal slot, different backend.
+// first. The modal makes that explicit. Step 1 ("add BRZ to wallet") is a
+// roadmap placeholder for the production flow (Transfero PIX on-ramp /
+// external wallet transfer / wallet-connect) — disabled today, ships when
+// the integration lands. Step 2 routes to the existing deposit tab.
 function DepositModal({
-  walletAddress,
   onClose,
   onProceedToVault,
 }: {
@@ -1251,9 +1250,6 @@ function DepositModal({
   onProceedToVault: () => void;
 }) {
   const { t } = useT();
-  const [busy, setBusy] = useState(false);
-  const [doneMsg, setDoneMsg] = useState<string | null>(null);
-  const [errMsg, setErrMsg] = useState<string | null>(null);
 
   // Close on Escape.
   useEffect(() => {
@@ -1263,32 +1259,6 @@ function DepositModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-
-  const mintToWallet = async () => {
-    if (!walletAddress) {
-      setErrMsg("wallet not connected");
-      return;
-    }
-    setBusy(true);
-    setErrMsg(null);
-    try {
-      const res = await fetch("/api/admin/mint-brz", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipient: walletAddress, amount: 50_000 }),
-      });
-      const data = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok || !data.ok) {
-        setErrMsg(data.error ?? `HTTP ${res.status}`);
-        return;
-      }
-      setDoneMsg(t("inv_deposit_modal_wallet_done") as string);
-    } catch (err) {
-      setErrMsg(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <div
@@ -1388,43 +1358,36 @@ function DepositModal({
             {t("inv_deposit_modal_wallet_d") as string}
           </p>
           <button
-            onClick={mintToWallet}
-            disabled={busy || !!doneMsg || !walletAddress}
-            className="btn"
+            disabled
+            type="button"
             style={{
               width: "100%",
-              background: doneMsg ? "var(--bg-2)" : "var(--gold)",
-              color: doneMsg ? "var(--green)" : "var(--bg-0)",
-              border: 0,
+              background: "var(--bg-2)",
+              color: "var(--fg-2)",
+              border: "1px dashed var(--gold-line)",
               padding: "10px 16px",
               borderRadius: 8,
               fontWeight: 500,
-              cursor: busy || doneMsg ? "default" : "pointer",
-              opacity: !walletAddress ? 0.5 : 1,
+              cursor: "not-allowed",
+              fontFamily: "inherit",
+              fontSize: 14,
             }}
           >
-            {doneMsg
-              ? doneMsg
-              : busy
-                ? (t("inv_deposit_modal_wallet_busy") as string)
-                : (t("inv_deposit_modal_wallet_btn") as string)}
+            {t("inv_deposit_modal_wallet_btn") as string}
           </button>
-          {errMsg && (
-            <pre
-              style={{
-                marginTop: 12,
-                padding: 10,
-                background: "var(--bg-2)",
-                borderRadius: 6,
-                fontSize: 11,
-                color: "#f88",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-all",
-              }}
-            >
-              {errMsg}
-            </pre>
-          )}
+          <div
+            className="mono"
+            style={{
+              marginTop: 8,
+              fontSize: 10,
+              color: "var(--fg-3)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              textAlign: "center",
+            }}
+          >
+            {t("inv_deposit_modal_wallet_note") as string}
+          </div>
         </div>
 
         {/* Step 2 — vault */}

@@ -418,10 +418,9 @@ const pt = {
     "primeiro adicione BRZ na sua carteira, depois invista no vault.",
   inv_deposit_modal_wallet_t: "adicionar BRZ na carteira",
   inv_deposit_modal_wallet_d:
-    "comprar, receber ou mintar BRZ pra usar no vault. (em produção: integração Transfero — comprar via PIX, receber transferência ou conectar carteira externa)",
-  inv_deposit_modal_wallet_btn: "mintar 50.000 BRZ (demo)",
-  inv_deposit_modal_wallet_busy: "mintando…",
-  inv_deposit_modal_wallet_done: "✓ 50.000 BRZ na sua carteira",
+    "comprar via PIX, receber transferência ou conectar carteira externa.",
+  inv_deposit_modal_wallet_btn: "comprar BRZ via PIX",
+  inv_deposit_modal_wallet_note: "em breve · integração Transfero",
   inv_deposit_modal_vault_t: "depositar no vault",
   inv_deposit_modal_vault_d:
     "investir o BRZ que já tá na sua carteira. recebe shares (brxV) que valorizam por parcela paga.",
@@ -1030,10 +1029,9 @@ const en = {
     "first add BRZ to your wallet, then invest into the vault.",
   inv_deposit_modal_wallet_t: "add BRZ to your wallet",
   inv_deposit_modal_wallet_d:
-    "buy, receive or mint BRZ to use in the vault. (in production: Transfero integration — buy with PIX, receive a transfer, or connect external wallet)",
-  inv_deposit_modal_wallet_btn: "mint 50,000 BRZ (demo)",
-  inv_deposit_modal_wallet_busy: "minting…",
-  inv_deposit_modal_wallet_done: "✓ 50,000 BRZ in your wallet",
+    "buy with PIX, receive a transfer, or connect an external wallet.",
+  inv_deposit_modal_wallet_btn: "buy BRZ via PIX",
+  inv_deposit_modal_wallet_note: "coming soon · Transfero integration",
   inv_deposit_modal_vault_t: "deposit into the vault",
   inv_deposit_modal_vault_d:
     "invest the BRZ already in your wallet. you get shares (brxV) that grow as installments come in.",

@@ -581,13 +581,16 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
                 {t("inv_recent_events") as string}
               </div>
             </div>
-            {/* Vault dashboard shows the GLOBAL feed; "see all →" routes to
-                PositionsTab where the per-user history lives. */}
+            {/* Vault dashboard shows the GLOBAL feed; "see all →" switches
+                to the positions tab where the same feed continues with full
+                history. We use a callback (not a Link) because we're already
+                on /invest — a Link would update the URL but not re-trigger
+                the parent's tab-from-URL effect. */}
             <RecentEvents
               limit={3}
               compact
               showFullLink
-              seeAllHref="/invest?tab=positions"
+              onSeeAll={() => setTab("positions")}
             />
           </Card>
         </div>
@@ -942,7 +945,6 @@ function WithdrawTab() {
 // ─── Positions ──────────────────────────────────────────────────────────────
 function PositionsTab() {
   const { t } = useT();
-  const { user } = usePrivy();
   const { positionData } = useBrix();
   const [events, setEvents] = useState<VaultEvent[]>([]);
 
@@ -956,29 +958,22 @@ function PositionsTab() {
   const sharesNum = positionData ? Number(positionData.shares) / 1_000_000 : 0;
   const yieldPct = deposited > 0 ? (value - deposited) / deposited : 0;
 
-  const email =
-    user?.email?.address ??
-    (
-      user?.linkedAccounts.find((a) => a.type === "email") as
-        | { address?: string }
-        | undefined
-    )?.address ??
-    null;
-
+  // Show the same global vault feed the dashboard shows. As an investor your
+  // capital is pooled — fund/repay events on contracts move share value too,
+  // not just your own deposits/withdraws. So the position-tab history is a
+  // continuation of the dashboard's "recent operations" card with the full
+  // list, instead of a per-user filter that would hide vault activity that
+  // affects you.
   useEffect(() => {
-    if (!email) return;
     void (async () => {
-      const list = await listVaultEvents({ email, limit: 200 });
+      const list = await listVaultEvents({ limit: 200 });
       setEvents(list);
     })();
-  }, [email]);
+  }, []);
 
-  // Only deposits/withdraws are user-driven; fund/repay are agency events
-  // and don't belong in the investor's personal history view.
-  const myEvents = useMemo(
-    () => events.filter((e) => e.kind === "deposit" || e.kind === "withdraw"),
-    [events],
-  );
+  // Display all events; the user's personal txs are visually mixed with
+  // vault-wide activity, ordered chronologically.
+  const myEvents = events;
 
   return (
     <div className="fade-in" style={{ maxWidth: 1080, margin: "0 auto" }}>
@@ -1106,10 +1101,14 @@ function PositionsTab() {
                   style={{
                     textAlign: "right",
                     color:
-                      e.kind === "deposit" ? "var(--teal)" : "var(--fg-1)",
+                      e.kind === "deposit" || e.kind === "repay"
+                        ? "var(--teal)"
+                        : e.kind === "fund"
+                          ? "var(--gold)"
+                          : "var(--fg-1)",
                   }}
                 >
-                  {e.kind === "withdraw" ? "-" : "+"}
+                  {e.kind === "deposit" || e.kind === "repay" ? "+" : "-"}
                   {fmtBRZ(e.amountBrz)}
                 </span>
                 <span

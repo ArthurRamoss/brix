@@ -34,6 +34,10 @@ type Props = {
   showFullLink?: boolean;
   /** Override the destination of the footer link (default /history). */
   seeAllHref?: string;
+  /** When provided, the see-all footer becomes a button that calls this
+   * instead of navigating. Use for in-page tab switches where Link can't
+   * trigger a re-render of the current route. */
+  onSeeAll?: () => void;
   /** Optional kind filter. */
   kindFilter?: VaultEventKind | "all";
 };
@@ -56,6 +60,7 @@ export function RecentEvents({
   compact = false,
   showFullLink = false,
   seeAllHref = "/history",
+  onSeeAll,
   kindFilter = "all",
 }: Props) {
   const { t, lang } = useT();
@@ -131,23 +136,46 @@ export function RecentEvents({
           ))}
         </div>
       )}
-      {showFullLink && (
-        <Link
-          href={seeAllHref}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            justifyContent: "center",
-            padding: "12px",
-            fontSize: 12,
-            color: "var(--fg-2)",
-            borderTop: "1px solid var(--line-soft)",
-          }}
-        >
-          {t("inv_history_see_all") as string} <I.arrow size={12} />
-        </Link>
-      )}
+      {showFullLink &&
+        (onSeeAll ? (
+          <button
+            type="button"
+            onClick={onSeeAll}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              justifyContent: "center",
+              padding: "12px",
+              fontSize: 12,
+              color: "var(--fg-2)",
+              background: "transparent",
+              border: 0,
+              borderTop: "1px solid var(--line-soft)",
+              cursor: "pointer",
+              width: "100%",
+              fontFamily: "inherit",
+            }}
+          >
+            {t("inv_history_see_all") as string} <I.arrow size={12} />
+          </button>
+        ) : (
+          <Link
+            href={seeAllHref}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              justifyContent: "center",
+              padding: "12px",
+              fontSize: 12,
+              color: "var(--fg-2)",
+              borderTop: "1px solid var(--line-soft)",
+            }}
+          >
+            {t("inv_history_see_all") as string} <I.arrow size={12} />
+          </Link>
+        ))}
     </div>
   );
 }

@@ -254,15 +254,26 @@ function notify() {
   for (const cb of subscribers) cb();
 }
 
-function setVaultStore(v: VaultData) {
+function setVaultStore(v: VaultData | null) {
   vaultStore = v;
-  writePersistedState(VAULT_CACHE_KEY, serializeVault(v));
+  if (v) {
+    writePersistedState(VAULT_CACHE_KEY, serializeVault(v));
+  } else if (typeof window !== "undefined") {
+    // Clear localStorage too — otherwise a future page load reads the stale
+    // value, paints it, and the next fetch (if it also returns null) won't
+    // re-trigger a clear because the store is already null.
+    window.localStorage.removeItem(VAULT_CACHE_KEY);
+  }
   notify();
 }
 
 function setPositionStore(p: PositionData | null) {
   positionStore = p;
-  if (p) writePersistedState(POSITION_CACHE_KEY, serializePosition(p));
+  if (p) {
+    writePersistedState(POSITION_CACHE_KEY, serializePosition(p));
+  } else if (typeof window !== "undefined") {
+    window.localStorage.removeItem(POSITION_CACHE_KEY);
+  }
   notify();
 }
 
@@ -432,8 +443,22 @@ async function doFetchPosition(
       totalWithdrawn: BigInt(position.totalWithdrawn.toString()),
       estimatedValueBrz,
     });
-  } catch {
-    // Don't reset on transient failures — keep last position.
+  } catch (err) {
+    // Distinguish "the position PDA was closed / never existed" (expected
+    // after a demo reset or for a brand-new investor) from "RPC hiccup".
+    // The first case must clear the cached store — otherwise the UI keeps
+    // painting the last-known values from localStorage forever. The second
+    // case keeps the cache so a transient outage doesn't flash KPIs to 0.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (
+      msg.includes("Account does not exist") ||
+      msg.includes("has no data") ||
+      msg.includes("could not find account") ||
+      msg.toLowerCase().includes("not found")
+    ) {
+      setPositionStore(null);
+    }
+    // Otherwise: silent — keep last position.
   }
 }
 

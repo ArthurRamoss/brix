@@ -15,7 +15,12 @@ import { Wordmark } from "../../components/brand/Wordmark";
 import { LangSwitch } from "../../components/shell/LangSwitch";
 import { I } from "../../components/icons";
 import { useT } from "../../lib/i18n";
-import { setPersona, type Persona } from "../../lib/persona";
+import {
+  getEmailPersona,
+  setEmailPersona,
+  setPersona,
+  type Persona,
+} from "../../lib/persona";
 import {
   getAgencyStatus,
   getClientByEmail,
@@ -30,8 +35,11 @@ export default function LoginPage() {
   const [chosen, setChosen] = useState<Persona | null>(null);
   const [autoChecked, setAutoChecked] = useState(false);
 
-  // After Privy auth, check email against agency client list. If match,
-  // auto-route to /landlord — the user is a tenant of an existing agency.
+  // After Privy auth, decide persona without showing the picker when possible:
+  //   1. Email is in agency clients list → /landlord (agency invited them).
+  //   2. Email already chose a persona in a previous login → reuse it.
+  //      Enforces 1 email = 1 persona; users cannot switch role across logins.
+  //   3. Else → fall through to the picker.
   useEffect(() => {
     if (!ready || !authenticated || autoChecked) return;
     const email =
@@ -43,7 +51,15 @@ export default function LoginPage() {
       const client = getClientByEmail(email);
       if (client) {
         setPersona("landlord");
+        setEmailPersona(email, "landlord");
         setChosen("landlord");
+        setAutoChecked(true);
+        return;
+      }
+      const remembered = getEmailPersona(email);
+      if (remembered) {
+        setPersona(remembered);
+        setChosen(remembered);
         setAutoChecked(true);
         return;
       }
@@ -66,6 +82,12 @@ export default function LoginPage() {
 
   const onChoose = (p: SelectablePersona) => {
     setPersona(p);
+    const email =
+      user?.email?.address ??
+      (user?.linkedAccounts.find(
+        (a) => a.type === "email",
+      ) as { address?: string } | undefined)?.address;
+    if (email) setEmailPersona(email, p);
     setChosen(p);
   };
 

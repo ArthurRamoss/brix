@@ -203,6 +203,99 @@ Adicionar entradas cronológicas do tipo:
 
 Últimas entradas aqui embaixo (mais novas no topo):
 
+### 2026-05-08 (sex) — worktree `upbeat-dirac-3901d7` — **dia 4 SAGRADA · 3 dias pro Frontier**
+
+Sessão de continuidade: vim do PC Windows (Git Bash + WSL Ubuntu juntos no mesmo PC).
+Working dir: `/c/Users/Ramos/Desktop/brix/.claude/worktrees/upbeat-dirac-3901d7`.
+Branch: `claude/upbeat-dirac-3901d7` · 2 commits à frente do que o handoff anterior descrevia (`c1c199c`, `f80cc75` — polish Selectimob brand na landing).
+
+**Mudanças aplicadas nesta sessão (3 arquivos, ainda não commitadas)**:
+
+- [app/src/app/layout.tsx](app/src/app/layout.tsx): `<body suppressHydrationWarning>` — silencia warnings causados por extensões (Bitdefender `bis_*`, Grammarly `__processed_*`) injetando atributos no DOM antes do React hidratar. Fix recomendado pelo Next docs pra esse caso, não esconde bugs reais.
+- [app/src/lib/persona.ts](app/src/lib/persona.ts): adicionou `getEmailPersona()` + `setEmailPersona()` usando key `brix_user_persona::<email>` (separada de `brix_persona`). Header explica dual-key (session vs lock).
+- [app/src/app/login/page.tsx](app/src/app/login/page.tsx): useEffect de auto-routing agora tem 3 caminhos: (1) email é cliente → /landlord (já existia), (2) **email já tem persona registrada → reusa** (novo), (3) fallback → picker. `onChoose` salva mapping email→persona pra travar futuras escolhas. Implementa "1 email = 1 persona": uma vez que o email escolheu agency/invest, não pode trocar nos próximos logins.
+
+**Estado de ambiente confirmado**:
+
+- WSL Ubuntu ativo neste PC: solana-cli 3.1.14 (Agave), anchor-cli 1.0.1, keypair admin `EFQuU2ii5HhG1r7nRCoMQNNA9YnSDnG2UGPvUZSG3dRs` em `/home/ramos/.config/solana/id.json`. Saldo devnet **0.392 SOL** (suficiente).
+- Plano descoberto: rodar comandos do Windows Git Bash usando `--admin-keypair "//wsl.localhost/Ubuntu/home/ramos/.config/solana/id.json"` (UNC path lê o keypair do WSL sem copiar).
+- `pnpm install` rodado no Windows (5m20s, 945 packages, peer deps OK com warnings benignos sobre swc/sharp/keccak ignored build scripts).
+- `pnpm app:dev` em background (Next.js 16.2.4 + Turbopack, ready em 8.1s, http://localhost:3000). Hot reload pegou as 3 edições.
+- `.env.local` (worktree) copiado do main repo + bloco APPWRITE adicionado.
+- `app/.env.local` (worktree) criado espelhando NEXT_PUBLIC_* da raiz.
+
+**Bloqueios atuais (pendentes pra próxima sessão)**:
+
+1. **Privy embedded Solana wallet não criada** pra `arthuur.ramoss@gmail.com`. Causa diagnosticada: o CSP `frame-ancestors` da Privy ainda lista só `brixprotocol.com` + `auth.privy.io`, **não inclui localhost:3000**. O iframe que a Privy usa pra inicializar a embedded wallet é bloqueado, e `createOnLogin: "all-users"` (já configurado em [privy-provider.tsx:47](app/src/providers/privy-provider.tsx:47)) falha silenciosamente. User chega em /agency, persona escolhida, tudo aparenta OK, mas `user.linkedAccounts` não tem entry com `chainType === "solana"` → badge da wallet em [AppShell.tsx:154](app/src/components/shell/AppShell.tsx:154) não renderiza.
+
+   **Fix exato (sequência)**:
+   1. https://dashboard.privy.io → app `cmoa0jx8500v30cl78buc8dop` → Settings → Domains/Allowed origins → adicionar `http://localhost:3000` (e idealmente `https://*.appwrite.network`) → save.
+   2. Chrome devtools → Application → Storage → **Clear site data** (em localhost:3000).
+   3. dashboard Privy → Users → procurar `arthuur.ramoss@gmail.com` → **delete** (pra forçar recriação completa).
+   4. relogin no localhost (com lock email→persona já em vigor, primeira vez vai cair no picker → escolhe agency → daí frente travado).
+   5. badge mono cinza tipo `ft5L…X9k` deve aparecer no header (entre PT/EN e ícone porta).
+
+2. **Seed-demo não rodou** — depende da wallet (#1) pra ter pubkey pra `--demo-wallet`.
+
+3. **Backend Appwrite em curso** — decisão tomada de migrar `agency-clients.ts` (hoje só localStorage) pra Appwrite Databases. Razão: localStorage isolado entre janelas/sessões impede que Maria (cliente) veja dados que a Selectimob (agency) cadastrou em outra janela. Argumento de produto: judges vão perguntar "isso é só localStorage?", queremos resposta crível. Stack consolidation: já tá usando Appwrite Sites, mesma conta + dashboard.
+
+   - **Project ID**: `699dc0fd002b40801226` (em `.env.local` como `NEXT_PUBLIC_APPWRITE_PROJECT_ID`)
+   - **Endpoint**: `https://nyc.cloud.appwrite.io/v1`
+   - **API Key**: salvada em `.env.local` na raiz (worktree) como `APPWRITE_API_KEY=standard_...` — gitignored. **Rotacionar pós-bootstrap**.
+   - **Plugin Claude Code Appwrite**: user adicionou via dashboard mas a sessão atual não recarregou (ToolSearch retornou zero `mcp__appwrite__*` tools). Próxima sessão: rodar `/reload-plugins` no chat pra ativar.
+   - **Schema planejado** (4 collections em database `brix_main`):
+     - `agency_applications`: companyName, contactName, email (unique idx), website, city, contractsUnderManagement, status (enum), appliedAt
+     - `agency_clients`: name, email (unique idx), cpf, phone, pixKey, notes, agencyEmail, createdAt
+     - `agency_properties`: clientId (idx), address, monthlyRentBrz, propertyType (enum), notes, createdAt
+     - `agency_contracts`: clientId (idx), propertyId (idx), landlordName, propertyAddress, principalBrz, repaymentBrz, rateBps, durationDays, installmentsTotal, installmentsPaid, status (enum), hasInsurance, insurer, registerSig, fundSig, registeredAt, fundedAt
+   - **Plano de implementação** (4-6h estimado):
+     1. Tentar plugin Appwrite via `/reload-plugins`. Se OK, criar collections via tool calls.
+     2. Senão, rodar `scripts/appwrite-bootstrap.ts` (a escrever) usando `node-appwrite` SDK + `APPWRITE_API_KEY`.
+     3. Criar `app/src/lib/agency-store.ts` espelhando signatures de `agency-clients.ts` mas async.
+     4. Migrar ~5 call sites: `/agency/page.tsx`, `/agency/onboard/page.tsx`, `/landlord/page.tsx`, `/login/page.tsx`, `use-agency.ts` — adicionar loading states.
+     5. Apagar localStorage keys antigos (`brix_agency_*_v2`).
+     6. Testar golden path E2E.
+
+4. **Pitch-script (`pitch-script.md` seção 4) precisa update**: hoje fala em "três janelas anônimas pra simular três personas... cada uma com session Privy separada". Isso é **impossível** com a arquitetura atual (cookies Privy compartilham entre janelas anônimas da mesma sessão; isolamento total requer profiles diferentes que aí localStorage não compartilha tampouco). Solução real: **1 janela + logout entre personas** (Maria vê dados via match `getClientByEmail` no localStorage compartilhado da mesma sessão). DEPOIS do backend Appwrite, isso fica natural (dados centralizados, qualquer janela vê).
+
+**Decisões em aberto pra próxima sessão**:
+
+- Confirmar: vamos com "1 janela + logouts" no demo (resposta provável: sim) — atualizar pitch-script.md seção 4.
+- Plugin Appwrite vs SDK Node: depende do `/reload-plugins`.
+
+**Próximos comandos exatos (cópia direta)**:
+
+```bash
+# 1. Confirma worktree e estado
+cd /c/Users/Ramos/Desktop/brix/.claude/worktrees/upbeat-dirac-3901d7
+git status -sb
+
+# 2. Confirma dev server (pode estar morto se reiniciou PC); se morto, sobe:
+pnpm app:dev > /tmp/brix-dev.log 2>&1 &
+# (em paralelo: tu loga no localhost depois do fix Privy)
+
+# 3. Saldo admin devnet (deve ser ~0.39 SOL)
+wsl.exe -- bash -c 'solana balance EFQuU2ii5HhG1r7nRCoMQNNA9YnSDnG2UGPvUZSG3dRs --url https://api.devnet.solana.com'
+
+# 4. Após user logar e copiar pubkeys:
+#    pubkey_invest = wallet do email_invest (persona invest)
+#    pubkey_agency = wallet do email_agency (persona agency)
+pnpm demo:seed -- --demo-wallet <pubkey_invest> --admin-keypair "//wsl.localhost/Ubuntu/home/ramos/.config/solana/id.json"
+# segunda run reusa o mint criado, só minta BRZ pra agency wallet
+pnpm demo:seed -- --demo-wallet <pubkey_agency> --admin-keypair "//wsl.localhost/Ubuntu/home/ramos/.config/solana/id.json" --skip-airdrop --mint <mint-do-1o-run>
+
+# 5. Atualizar BRZ_MINT em 3 lugares:
+#    .env.local (worktree)
+#    app/.env.local (worktree)
+#    .env.local (main repo /c/Users/Ramos/Desktop/brix/) — pra outras worktrees verem
+#    + Appwrite Sites env vars (manualmente no console — última coisa antes de redeploy)
+```
+
+**Avisos de segurança pendentes**:
+
+- API Key Appwrite (`standard_...`) e Helius API key estão em texto plano em `.env.local`. Pós-hackathon: rotacionar.
+- Colosseum PAT também tá em `.env.local` (não usado em runtime do app — só pra research, dev-only).
+
 ### 2026-05-05 (ter) — worktree `flamboyant-kapitsa-80c31b` — **dia 1 da Semana SAGRADA**
 
 - Sessões 4 mai trouxeram **muito mais do que o CHECKPOINTS refletia** (commits d3ffe82 + 5b38cf7):

@@ -33,7 +33,7 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${plexSans.variable} ${plexMono.variable}`}
     >
-      <body>
+      <body suppressHydrationWarning>
         <LangProvider>
           <Providers>{children}</Providers>
         </LangProvider>

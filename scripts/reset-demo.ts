@@ -19,7 +19,6 @@
 //   pnpm reset:demo --skip-on-chain  # only Appwrite wipe
 //   pnpm reset:demo --dry-run        # show what would happen, change nothing
 
-import "dotenv/config";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";

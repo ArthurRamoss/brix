@@ -120,13 +120,28 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
   const utilCount = Math.round(utilization * Math.max(1, fundedCount));
 
   // TVL chart series — derived from real vault_events. Each event's
-  // vaultTvlBrzAfter is plotted in chronological order. Empty when no
-  // events have been recorded yet.
+  // vaultTvlBrzAfter is plotted at its day offset from now (negative =
+  // past, 0 = today). Time-based d so the chart scales proportionally to
+  // elapsed time instead of event count, which keeps realized and
+  // projected portions visually balanced. A synthetic point at d=0 is
+  // appended so the realized line carries the last TVL horizontally until
+  // "now", meeting the projection at the today marker.
   const tvlSeries = useMemo(() => {
-    return events
+    const dayMs = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const points = events
       .filter((e) => typeof e.vaultTvlBrzAfter === "number")
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map((e, i) => ({ d: i, value: e.vaultTvlBrzAfter as number }));
+      .map((e) => ({
+        d: Math.floor((e.createdAt - now) / dayMs),
+        value: e.vaultTvlBrzAfter as number,
+      }));
+    if (points.length === 0) return points;
+    const lastPoint = points[points.length - 1];
+    if (lastPoint.d < 0) {
+      points.push({ d: 0, value: lastPoint.value });
+    }
+    return points;
   }, [events]);
 
   // 24h delta — last event's TVL minus the latest event TVL from 24h+ ago.
@@ -152,8 +167,10 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
   // Projected TVL series — stitches future expected vault inflows from
   // active contracts. For each funded contract, the remaining installments
   // are spread evenly across the months ahead and each one bumps the
-  // projected TVL by `repaymentBrz / installmentsTotal`. Rendered as a
-  // dashed continuation of the historical chart.
+  // projected TVL by `repaymentBrz / installmentsTotal`. Sampled daily so
+  // the chart curve is dense (real installments still drive the steps;
+  // empty days fill in the plateau between them). Rendered as a dashed
+  // continuation of the historical chart.
   const projectionSeries = useMemo(() => {
     if (tvlSeries.length === 0) return [];
     const lastTvl = tvlSeries[tvlSeries.length - 1].value;
@@ -178,13 +195,61 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
     inflows.sort((a, b) => a.ts - b.ts);
     if (inflows.length === 0) return [];
 
+    // Sample daily across the full projection window so the dashed line has
+    // visual density — each day either repeats the previous TVL (a plateau)
+    // or bumps up by the installments that landed that day. d=0 marks today
+    // (matching tvlSeries' time base) so realized and projected line up at
+    // the boundary.
+    const lastDay = Math.max(
+      1,
+      Math.ceil((inflows[inflows.length - 1].ts - now) / dayMs),
+    );
+    const series: { d: number; value: number }[] = [];
+    let pointer = 0;
     let running = lastTvl;
-    const startD = tvlSeries[tvlSeries.length - 1].d;
-    return inflows.map((inflow, i) => {
-      running += inflow.amount;
-      return { d: startD + i + 1, value: running };
-    });
+    for (let day = 1; day <= lastDay; day++) {
+      const tCutoff = now + day * dayMs;
+      while (pointer < inflows.length && inflows[pointer].ts <= tCutoff) {
+        running += inflows[pointer].amount;
+        pointer++;
+      }
+      series.push({ d: day, value: running });
+    }
+    return series;
   }, [tvlSeries, funded]);
+
+  // Variant A · time anchored: derive the time-axis labels and footer stats
+  // from the combined day range of realized + projected series. `todayPct`
+  // is where d=0 lands as a percentage of the chart's width.
+  const anchors = useMemo(() => {
+    const ds = [
+      ...tvlSeries.map((s) => s.d),
+      ...projectionSeries.map((s) => s.d),
+    ];
+    if (ds.length === 0) return null;
+    const dMin = Math.min(...ds);
+    const dMax = Math.max(...ds);
+    const range = dMax - dMin || 1;
+    const todayPct = ((0 - dMin) / range) * 100;
+    return {
+      dMin,
+      dMax,
+      range,
+      todayPct,
+      historyDays: -dMin,
+      projectedDays: dMax,
+    };
+  }, [tvlSeries, projectionSeries]);
+
+  const realizedNow =
+    tvlSeries.length > 0 ? tvlSeries[tvlSeries.length - 1].value : 0;
+  const projectedEndValue =
+    projectionSeries.length > 0
+      ? projectionSeries[projectionSeries.length - 1].value
+      : 0;
+  const projectedDelta =
+    projectionSeries.length > 0 ? projectedEndValue - realizedNow : 0;
+  const growthPct = realizedNow > 0 ? projectedDelta / realizedNow : 0;
 
   const kpiUtilSub = (t("inv_kpi_util_s") as unknown as (n: number) => string)(
     utilCount,
@@ -231,10 +296,19 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
           gridTemplateColumns: "1.6fr 1fr",
           gap: 16,
           marginBottom: 24,
-          alignItems: "start",
+          alignItems: "stretch",
         }}
       >
-        <Card style={{ padding: 28, position: "relative", overflow: "hidden" }}>
+        <Card
+          style={{
+            padding: 28,
+            position: "relative",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 508,
+          }}
+        >
           <div
             style={{
               display: "flex",
@@ -315,15 +389,94 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
           </div>
 
           {tvlSeries.length >= 1 ? (
-            <TVLChart
-              series={tvlSeries}
-              projection={projectionSeries}
-              mult={1}
-            />
+            <>
+              <TVLChart
+                series={tvlSeries}
+                projection={projectionSeries}
+                mult={1}
+              />
+              {anchors && (
+                <div
+                  className="mono"
+                  style={{
+                    position: "relative",
+                    marginTop: 8,
+                    height: 14,
+                    fontSize: 10,
+                    color: "var(--fg-3)",
+                  }}
+                >
+                  <span style={{ position: "absolute", left: 0 }}>
+                    {anchors.historyDays > 0
+                      ? `−${anchors.historyDays}d`
+                      : (t("inv_chart_anchor_start") as string)}
+                  </span>
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: `${anchors.todayPct}%`,
+                      transform:
+                        anchors.todayPct > 90
+                          ? "translateX(-100%)"
+                          : anchors.todayPct < 10
+                            ? "translateX(0)"
+                            : "translateX(-50%)",
+                      color: "var(--teal)",
+                    }}
+                  >
+                    {t("inv_chart_today") as string}
+                  </span>
+                  {anchors.projectedDays > 0 && (
+                    <span style={{ position: "absolute", right: 0 }}>
+                      +{anchors.projectedDays}d
+                    </span>
+                  )}
+                </div>
+              )}
+              <div
+                style={{
+                  marginTop: "auto",
+                  paddingTop: 16,
+                  borderTop: "1px solid var(--line-soft)",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 16,
+                }}
+              >
+                <FooterStatColored
+                  label={t("inv_chart_stat_tvl_now") as string}
+                  value={fmtBRZ(realizedNow)}
+                  tone="teal"
+                />
+                <FooterStatColored
+                  label={
+                    anchors && anchors.projectedDays > 0
+                      ? (
+                          t("inv_chart_stat_projected_in") as unknown as (
+                            d: number,
+                          ) => string
+                        )(anchors.projectedDays)
+                      : (t("inv_chart_stat_projected") as string)
+                  }
+                  value={
+                    projectionSeries.length > 0
+                      ? fmtBRZ(projectedEndValue)
+                      : "—"
+                  }
+                  tone="gold"
+                  delta={
+                    projectionSeries.length > 0 && projectedDelta > 0
+                      ? `+${fmtPct(growthPct)}`
+                      : null
+                  }
+                />
+              </div>
+            </>
           ) : (
             <div
               style={{
-                height: 200,
+                flex: 1,
+                minHeight: 200,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -332,38 +485,6 @@ function VaultDashboard({ setTab }: { setTab: (id: TabId) => void }) {
               }}
             >
               {t("inv_chart_empty") as string}
-            </div>
-          )}
-          {tvlSeries.length >= 1 && (
-            <div
-              style={{
-                marginTop: 16,
-                paddingTop: 16,
-                borderTop: "1px solid var(--line-soft)",
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 12,
-              }}
-            >
-              <FooterStat
-                label={t("inv_chart_stat_events") as string}
-                value={String(events.length)}
-              />
-              <FooterStat
-                label={t("inv_chart_stat_projected") as string}
-                value={
-                  projectionSeries.length > 0
-                    ? fmtBRZ(
-                        projectionSeries[projectionSeries.length - 1].value -
-                          tvlSeries[tvlSeries.length - 1].value,
-                      )
-                    : "—"
-                }
-              />
-              <FooterStat
-                label={t("inv_chart_stat_active") as string}
-                value={String(fundedCount)}
-              />
             </div>
           )}
         </Card>
@@ -988,7 +1109,18 @@ function PositionsTab() {
   );
 }
 
-function FooterStat({ label, value }: { label: string; value: string }) {
+function FooterStatColored({
+  label,
+  value,
+  tone,
+  delta,
+}: {
+  label: string;
+  value: string;
+  tone: "teal" | "gold";
+  delta?: string | null;
+}) {
+  const color = tone === "teal" ? "var(--teal)" : "var(--gold)";
   return (
     <div>
       <div
@@ -998,20 +1130,36 @@ function FooterStat({ label, value }: { label: string; value: string }) {
           color: "var(--fg-3)",
           textTransform: "uppercase",
           letterSpacing: "0.06em",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
+        <span
+          aria-hidden
+          style={{
+            display: "inline-block",
+            width: 8,
+            height: 8,
+            borderRadius: 999,
+            background: color,
+          }}
+        />
         {label}
       </div>
       <div
         className="mono"
         style={{
           marginTop: 4,
-          fontSize: 14,
-          color: "var(--fg-1)",
-          fontWeight: 500,
+          display: "flex",
+          alignItems: "baseline",
+          gap: 8,
         }}
       >
-        {value}
+        <span style={{ fontSize: 18, color, fontWeight: 500 }}>{value}</span>
+        {delta && (
+          <span style={{ fontSize: 12, color: "var(--green)" }}>{delta}</span>
+        )}
       </div>
     </div>
   );

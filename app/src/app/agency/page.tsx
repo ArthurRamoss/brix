@@ -6,7 +6,7 @@
 // Owns the register_receivable + fund_landlord + repay flows via use-agency.
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { AppShell, type Tab } from "../../components/shell/AppShell";
 import { I } from "../../components/icons";
@@ -53,20 +53,25 @@ function readPrivyEmail(user: ReturnType<typeof usePrivy>["user"]): string {
 export default function AgencyPage() {
   const { t } = useT();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { ready, authenticated, user } = usePrivy();
   const [hydrated, setHydrated] = useState(false);
 
-  // Tab is URL-driven so back/forward + shareable links work.
-  const tabFromUrl = searchParams.get("tab");
-  const tab: TabId = (VALID_TABS.includes(tabFromUrl as TabId)
-    ? tabFromUrl
-    : "portfolio") as TabId;
-  const setTab = (next: TabId) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", next);
-    router.replace(`?${params.toString()}`, { scroll: false });
-  };
+  // Tab is in-memory state (no URL noise on click). Deep links from /history
+  // still work via `?tab=...` on first mount; we strip it after consuming so
+  // subsequent tab clicks don't desync the URL.
+  const [tab, setTab] = useState<TabId>("portfolio");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get("tab");
+    if (tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId)) {
+      setTab(tabFromUrl as TabId);
+      params.delete("tab");
+      const qs = params.toString();
+      const cleanUrl = window.location.pathname + (qs ? `?${qs}` : "");
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, []);
 
   useEffect(() => {
     if (!ready) return;

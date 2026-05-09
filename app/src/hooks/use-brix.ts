@@ -1,5 +1,3 @@
-"use client";
-
 import { BN } from "@coral-xyz/anchor";
 import { usePrivy } from "@privy-io/react-auth";
 import {
@@ -18,7 +16,13 @@ import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { toast } from "sonner";
 import { connection } from "../lib/connection";
 import {
@@ -31,7 +35,6 @@ import {
 import {
   getAgencyContracts,
   recordVaultEvent,
-  type AgencyContract,
 } from "../lib/agency-clients";
 import { BRIX_PROTOCOL_FEE_BPS } from "../lib/brix-fees";
 
@@ -92,16 +95,9 @@ function brixAccounts(program: BrixProgramClient): BrixAccounts {
   return program.account as unknown as BrixAccounts;
 }
 
-// Two-level cache of last computed vault/position state.
-//
-// Layer 1 (module-level): survives mount/unmount within the same session —
-// e.g. navigating from /history back to /invest paints instantly.
-// Layer 2 (localStorage): survives F5/full reload, so a returning user sees
-// last-known values during the very first paint while we kick off the fresh
-// on-chain fetch in the background.
-//
-// VaultData/PositionData hold PublicKey + BigInt, so they need custom
-// serialize/deserialize to round-trip through JSON.
+// ─── localStorage layer ──────────────────────────────────────────────────────
+// Persists vault/position across full reloads. The module-level store below
+// hydrates from this on first import so we paint last-known values instantly.
 
 const VAULT_CACHE_KEY = "brix:vault_data:v1";
 const POSITION_CACHE_KEY = "brix:position_data:v1";
@@ -201,10 +197,237 @@ function writePersistedState(key: string, data: unknown) {
   }
 }
 
-let cachedVaultData: VaultData | null =
-  readPersistedState<VaultData>(VAULT_CACHE_KEY, deserializeVault);
-let cachedPositionData: PositionData | null =
-  readPersistedState<PositionData>(POSITION_CACHE_KEY, deserializePosition);
+// ─── Module-level singleton store ────────────────────────────────────────────
+// All useBrix() callers share the same vault/position state. Mounts/unmounts
+// from tab switches or page navs don't re-fetch — they just subscribe to the
+// store and read its current value. TTL enforces refresh when stale; an
+// in-flight promise dedups parallel callers down to a single RPC roundtrip.
+//
+// Why useSyncExternalStore instead of useState:
+//   - getSnapshot returns the same reference for unchanged data → no spurious
+//     re-renders.
+//   - getServerSnapshot returns null so SSR + first hydration paint match.
+//   - Post-hydration, snapshot becomes the localStorage-hydrated value, so
+//     remounted components read instantly without an empty-state flash.
+
+const VAULT_TTL_MS = 30_000;
+const POSITION_TTL_MS = 30_000;
+
+let vaultStore: VaultData | null = readPersistedState<VaultData>(
+  VAULT_CACHE_KEY,
+  deserializeVault,
+);
+let positionStore: PositionData | null = readPersistedState<PositionData>(
+  POSITION_CACHE_KEY,
+  deserializePosition,
+);
+let isLoadingStore = false;
+
+let lastVaultFetchAt = 0;
+let lastPositionFetchAt = 0;
+let inflightVaultFetch: Promise<void> | null = null;
+let inflightPositionFetch: Promise<void> | null = null;
+
+const subscribers = new Set<() => void>();
+
+function subscribe(cb: () => void): () => void {
+  subscribers.add(cb);
+  return () => {
+    subscribers.delete(cb);
+  };
+}
+
+function notify() {
+  for (const cb of subscribers) cb();
+}
+
+function setVaultStore(v: VaultData) {
+  vaultStore = v;
+  writePersistedState(VAULT_CACHE_KEY, serializeVault(v));
+  notify();
+}
+
+function setPositionStore(p: PositionData | null) {
+  positionStore = p;
+  if (p) writePersistedState(POSITION_CACHE_KEY, serializePosition(p));
+  notify();
+}
+
+function setIsLoadingStore(v: boolean) {
+  if (isLoadingStore === v) return;
+  isLoadingStore = v;
+  notify();
+}
+
+function getVaultSnapshot(): VaultData | null {
+  return vaultStore;
+}
+function getPositionSnapshot(): PositionData | null {
+  return positionStore;
+}
+function getIsLoadingSnapshot(): boolean {
+  return isLoadingStore;
+}
+function getNullSnapshot(): null {
+  return null;
+}
+function getFalseSnapshot(): boolean {
+  return false;
+}
+
+// ─── Fetch primitives (with dedup + TTL) ────────────────────────────────────
+
+async function doFetchVault(program: BrixProgramClient): Promise<void> {
+  const [vaultPDA] = deriveVaultPDA();
+  try {
+    const vault = await brixAccounts(program).vault.fetch(vaultPDA);
+
+    let ataBalance = 0n;
+    try {
+      const ataInfo = await connection.getTokenAccountBalance(
+        new PublicKey(vault.vaultAta),
+      );
+      ataBalance = BigInt(ataInfo.value.amount);
+    } catch {
+      // Vault ATA may not exist before scripts/seed-demo.ts runs.
+    }
+
+    const totalDeployed = BigInt(vault.totalDeployed.toString());
+    const totalAssets = ataBalance + totalDeployed;
+
+    // APR derived from active receivables (cache-backed via lib/cache.ts):
+    // weighted average of rateBps by principal, NET of BRIX_PROTOCOL_FEE_BPS.
+    let aprBps = 0;
+    try {
+      const contracts = await getAgencyContracts();
+      const active = contracts.filter(
+        (c) => c.status === "funded" || c.status === "registered",
+      );
+      if (active.length > 0) {
+        const totalPrincipal = active.reduce((s, c) => s + c.principalBrz, 0);
+        if (totalPrincipal > 0) {
+          const weighted = active.reduce(
+            (s, c) => s + c.rateBps * c.principalBrz,
+            0,
+          );
+          const gross = Math.round(weighted / totalPrincipal);
+          aprBps = Math.max(0, gross - BRIX_PROTOCOL_FEE_BPS);
+        }
+      }
+    } catch {
+      // ignore — APR falls back to 0 (cache miss + network failure)
+    }
+
+    setVaultStore({
+      admin: new PublicKey(vault.admin),
+      brzMint: new PublicKey(vault.brzMint),
+      vaultAta: new PublicKey(vault.vaultAta),
+      totalShares: BigInt(vault.totalShares.toString()),
+      totalDeployed,
+      totalDeposits: BigInt(vault.totalDeposits.toString()),
+      totalRepaid: BigInt(vault.totalRepaid.toString()),
+      paused: vault.paused,
+      vaultAtaBalance: ataBalance,
+      totalAssets,
+      aprBps,
+    });
+  } catch (err) {
+    console.warn("Vault not found:", err);
+    // Don't clobber vaultStore — keep last known good state so remounted
+    // views don't flash empty.
+  }
+}
+
+async function fetchVaultIfStale(
+  program: BrixProgramClient,
+  force = false,
+): Promise<void> {
+  if (inflightVaultFetch) return inflightVaultFetch;
+  if (!force && vaultStore && Date.now() - lastVaultFetchAt < VAULT_TTL_MS) {
+    return;
+  }
+  inflightVaultFetch = (async () => {
+    try {
+      await doFetchVault(program);
+    } finally {
+      lastVaultFetchAt = Date.now();
+      inflightVaultFetch = null;
+    }
+  })();
+  return inflightVaultFetch;
+}
+
+async function doFetchPosition(
+  program: BrixProgramClient,
+  investorPubkey: PublicKey,
+): Promise<void> {
+  const [vaultPDA] = deriveVaultPDA();
+  try {
+    const [positionPDA] = derivePositionPDA(
+      program.programId,
+      vaultPDA,
+      investorPubkey,
+    );
+
+    const [position, vault] = await Promise.all([
+      brixAccounts(program).investorPosition.fetch(positionPDA),
+      brixAccounts(program).vault.fetch(vaultPDA),
+    ]);
+
+    const shares = BigInt(position.shares.toString());
+    const totalShares = BigInt(vault.totalShares.toString());
+
+    let ataBalance = 0n;
+    try {
+      const ataInfo = await connection.getTokenAccountBalance(
+        new PublicKey(vault.vaultAta),
+      );
+      ataBalance = BigInt(ataInfo.value.amount);
+    } catch {
+      // Missing vault ATA means there is no user position to value yet.
+    }
+
+    const totalDeployed = BigInt(vault.totalDeployed.toString());
+    const totalAssets = ataBalance + totalDeployed;
+    const estimatedValueBrz =
+      totalShares > 0n ? (shares * totalAssets) / totalShares : 0n;
+
+    setPositionStore({
+      shares,
+      totalDeposited: BigInt(position.totalDeposited.toString()),
+      totalWithdrawn: BigInt(position.totalWithdrawn.toString()),
+      estimatedValueBrz,
+    });
+  } catch {
+    // Don't reset on transient failures — keep last position.
+  }
+}
+
+async function fetchPositionIfStale(
+  program: BrixProgramClient,
+  investorPubkey: PublicKey,
+  force = false,
+): Promise<void> {
+  if (inflightPositionFetch) return inflightPositionFetch;
+  if (
+    !force &&
+    positionStore &&
+    Date.now() - lastPositionFetchAt < POSITION_TTL_MS
+  ) {
+    return;
+  }
+  inflightPositionFetch = (async () => {
+    try {
+      await doFetchPosition(program, investorPubkey);
+    } finally {
+      lastPositionFetchAt = Date.now();
+      inflightPositionFetch = null;
+    }
+  })();
+  return inflightPositionFetch;
+}
+
+// ─── Privy signing helpers ───────────────────────────────────────────────────
 
 function serializeForPrivy(tx: Transaction | VersionedTransaction): Uint8Array {
   if (tx instanceof VersionedTransaction) return tx.serialize();
@@ -260,34 +483,37 @@ function readPrivyEmail(user: ReturnType<typeof usePrivy>["user"]): string {
   );
 }
 
+// ─── Hook ────────────────────────────────────────────────────────────────────
+
 export function useBrix() {
   const { authenticated, user } = usePrivy();
   const { wallets, ready: solanaWalletsReady } = useSolanaWallets();
   const { signTransaction: signPrivyTransaction } = useSignTransaction();
 
-  // useState initial values are NULL so SSR + first client render match.
-  // The module-level cache (and localStorage) is read via useEffect after
-  // mount — that's the only way to avoid the hydration mismatch error.
-  const [vaultData, setVaultData] = useState<VaultData | null>(null);
-  const [positionData, setPositionData] = useState<PositionData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Hydrate from in-memory + localStorage cache after mount. SSR renders
-  // with null (correct — no window). Client first render matches that. The
-  // useEffect runs synchronously after the first paint; the subsequent
-  // render fills the values without flickering through "BRZ 0".
-  useEffect(() => {
-    if (cachedVaultData) setVaultData(cachedVaultData);
-    if (cachedPositionData) setPositionData(cachedPositionData);
-  }, []);
+  // Subscribe to module-level store. SSR + first client hydration return the
+  // server snapshot (null) so they match. Post-hydration, the client snapshot
+  // is the populated store value (hydrated from localStorage on module load).
+  const vaultData = useSyncExternalStore<VaultData | null>(
+    subscribe,
+    getVaultSnapshot,
+    getNullSnapshot,
+  );
+  const positionData = useSyncExternalStore<PositionData | null>(
+    subscribe,
+    getPositionSnapshot,
+    getNullSnapshot,
+  );
+  const isLoading = useSyncExternalStore<boolean>(
+    subscribe,
+    getIsLoadingSnapshot,
+    getFalseSnapshot,
+  );
 
   const solanaWallet = useMemo(() => wallets[0] ?? null, [wallets]);
 
-  // Privy's useSignTransaction() returns a NEW function reference on every render.
-  // Putting it in the anchorWallet useMemo deps creates an infinite loop:
-  // signPrivyTransaction changes → anchorWallet re-creates → program re-creates
-  // → fetchVaultData re-creates → useEffect re-fires → setState → re-render → ∞.
-  // The ref keeps the callable up-to-date without participating in dep arrays.
+  // Privy's useSignTransaction() returns a NEW function reference on every
+  // render. Putting it in deps creates an infinite loop; the ref keeps the
+  // callable up-to-date without participating in dep arrays.
   const signTransactionRef = useRef(signPrivyTransaction);
   signTransactionRef.current = signPrivyTransaction;
 
@@ -328,79 +554,30 @@ export function useBrix() {
     [anchorWallet],
   );
 
-  const fetchVaultData = useCallback(async () => {
-    const [vaultPDA] = deriveVaultPDA();
-
-    try {
-      const vault = await brixAccounts(program).vault.fetch(vaultPDA);
-
-      let ataBalance = 0n;
-      try {
-        const ataInfo = await connection.getTokenAccountBalance(
-          new PublicKey(vault.vaultAta),
-        );
-        ataBalance = BigInt(ataInfo.value.amount);
-      } catch {
-        // Vault ATA may not exist before scripts/seed-demo.ts runs.
-      }
-
-      const totalDeployed = BigInt(vault.totalDeployed.toString());
-      const totalAssets = ataBalance + totalDeployed;
-
-      // APR derived from active receivables (cache-backed via lib/cache.ts):
-      // weighted average of rateBps by principal, NET of BRIX_PROTOCOL_FEE_BPS.
-      // The first call hits the network; subsequent calls within 20s are a
-      // cache hit so this is effectively free.
-      let aprBps = 0;
-      try {
-        const contracts = await getAgencyContracts();
-        const active = contracts.filter(
-          (c) => c.status === "funded" || c.status === "registered",
-        );
-        if (active.length > 0) {
-          const totalPrincipal = active.reduce(
-            (s, c) => s + c.principalBrz,
-            0,
-          );
-          if (totalPrincipal > 0) {
-            const weighted = active.reduce(
-              (s, c) => s + c.rateBps * c.principalBrz,
-              0,
-            );
-            const gross = Math.round(weighted / totalPrincipal);
-            aprBps = Math.max(0, gross - BRIX_PROTOCOL_FEE_BPS);
-          }
-        }
-      } catch {
-        // ignore — APR falls back to 0 (cache miss + network failure)
-      }
-
-      const next: VaultData = {
-        admin: new PublicKey(vault.admin),
-        brzMint: new PublicKey(vault.brzMint),
-        vaultAta: new PublicKey(vault.vaultAta),
-        totalShares: BigInt(vault.totalShares.toString()),
-        totalDeployed,
-        totalDeposits: BigInt(vault.totalDeposits.toString()),
-        totalRepaid: BigInt(vault.totalRepaid.toString()),
-        paused: vault.paused,
-        vaultAtaBalance: ataBalance,
-        totalAssets,
-        aprBps,
-      };
-      cachedVaultData = next;
-      writePersistedState(VAULT_CACHE_KEY, serializeVault(next));
-      setVaultData(next);
-    } catch (err) {
-      console.warn("Vault not found:", err);
-      // Don't clobber cached value with null on transient errors — keep last
-      // known good state so remounted views don't flash empty.
-    }
+  // Trigger initial vault + position fetches when wallet stabilizes. Multiple
+  // useBrix instances mounting simultaneously all call these — module-level
+  // dedup collapses the burst into a single network request.
+  useEffect(() => {
+    void fetchVaultIfStale(program);
   }, [program]);
 
-  // Reads on-chain vault state and returns the current TVL in BRZ (no setState).
-  // Used right after a deposit/withdraw to attach a fresh snapshot to the
-  // VaultEvent we record off-chain.
+  useEffect(() => {
+    if (!authenticated || !solanaWalletsReady || !solanaWallet) {
+      setPositionStore(null);
+      return;
+    }
+    void fetchPositionIfStale(program, anchorWallet.publicKey);
+  }, [
+    authenticated,
+    solanaWalletsReady,
+    solanaWallet,
+    program,
+    anchorWallet.publicKey,
+  ]);
+
+  // Read-only helper used by deposit/withdraw to attach a fresh TVL snapshot
+  // to recorded events. Doesn't go through the store — intentionally returns
+  // a one-shot value.
   const fetchVaultTvlBrz = useCallback(async (): Promise<number> => {
     const [vaultPDA] = deriveVaultPDA();
     const vault = await brixAccounts(program).vault.fetch(vaultPDA);
@@ -416,72 +593,6 @@ export function useBrix() {
     const totalDeployed = BigInt(vault.totalDeployed.toString());
     return Number(ataBalance + totalDeployed) / 1_000_000;
   }, [program]);
-
-  const fetchPositionData = useCallback(async () => {
-    if (!authenticated || !solanaWalletsReady || !solanaWallet) {
-      setPositionData(null);
-      return;
-    }
-
-    const [vaultPDA] = deriveVaultPDA();
-
-    try {
-      const [positionPDA] = derivePositionPDA(
-        program.programId,
-        vaultPDA,
-        anchorWallet.publicKey,
-      );
-
-      const [position, vault] = await Promise.all([
-        brixAccounts(program).investorPosition.fetch(positionPDA),
-        brixAccounts(program).vault.fetch(vaultPDA),
-      ]);
-
-      const shares = BigInt(position.shares.toString());
-      const totalShares = BigInt(vault.totalShares.toString());
-
-      let ataBalance = 0n;
-      try {
-        const ataInfo = await connection.getTokenAccountBalance(
-          new PublicKey(vault.vaultAta),
-        );
-        ataBalance = BigInt(ataInfo.value.amount);
-      } catch {
-        // Missing vault ATA means there is no user position to value yet.
-      }
-
-      const totalDeployed = BigInt(vault.totalDeployed.toString());
-      const totalAssets = ataBalance + totalDeployed;
-      const estimatedValueBrz =
-        totalShares > 0n ? (shares * totalAssets) / totalShares : 0n;
-
-      const next: PositionData = {
-        shares,
-        totalDeposited: BigInt(position.totalDeposited.toString()),
-        totalWithdrawn: BigInt(position.totalWithdrawn.toString()),
-        estimatedValueBrz,
-      };
-      cachedPositionData = next;
-      writePersistedState(POSITION_CACHE_KEY, serializePosition(next));
-      setPositionData(next);
-    } catch {
-      // Same reasoning as vault — don't reset to null on transient failures.
-    }
-  }, [
-    authenticated,
-    anchorWallet.publicKey,
-    program,
-    solanaWallet,
-    solanaWalletsReady,
-  ]);
-
-  useEffect(() => {
-    void Promise.resolve().then(fetchVaultData);
-  }, [fetchVaultData]);
-
-  useEffect(() => {
-    void Promise.resolve().then(fetchPositionData);
-  }, [fetchPositionData]);
 
   async function deposit(amountBrz: number) {
     if (!authenticated || !solanaWalletsReady || !solanaWallet) {
@@ -505,7 +616,7 @@ export function useBrix() {
     );
 
     const loadingToast = toast.loading("Enviando depósito...");
-    setIsLoading(true);
+    setIsLoadingStore(true);
 
     try {
       const txSig = await program.methods
@@ -527,7 +638,8 @@ export function useBrix() {
         description: `Explorer: https://explorer.solana.com/tx/${txSig}?cluster=devnet`,
       });
 
-      // Record the off-chain event for history + chart, then refresh state.
+      // Record off-chain event for history + chart, then force-refetch (bypass
+      // TTL) since we just changed on-chain state.
       try {
         const tvlAfter = await fetchVaultTvlBrz();
         await recordVaultEvent({
@@ -542,13 +654,16 @@ export function useBrix() {
         console.warn("[use-brix] failed to record deposit event:", err);
       }
 
-      await Promise.all([fetchVaultData(), fetchPositionData()]);
+      await Promise.all([
+        fetchVaultIfStale(program, true),
+        fetchPositionIfStale(program, anchorWallet.publicKey, true),
+      ]);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
       const msg = err instanceof Error ? err.message : String(err);
       toast.error("Falha no depósito", { description: msg });
     } finally {
-      setIsLoading(false);
+      setIsLoadingStore(false);
     }
   }
 
@@ -572,7 +687,7 @@ export function useBrix() {
     );
 
     const loadingToast = toast.loading("Processando saque...");
-    setIsLoading(true);
+    setIsLoadingStore(true);
 
     try {
       const txSig = await program.methods
@@ -592,17 +707,10 @@ export function useBrix() {
         description: `Explorer: https://explorer.solana.com/tx/${txSig}?cluster=devnet`,
       });
 
-      // Pre-tx vault TVL is captured for delta; here we record post-tx for the
-      // chart, plus the BRZ amount the user actually received (shares→BRZ).
       try {
         const tvlAfter = await fetchVaultTvlBrz();
-        // Best-effort BRZ amount: shares * (totalAssets / totalShares) at time of withdraw.
-        const totalSharesNow = vaultData
-          ? Number(vaultData.totalShares)
-          : 1;
-        const totalAssetsNow = vaultData
-          ? Number(vaultData.totalAssets)
-          : 0;
+        const totalSharesNow = vaultStore ? Number(vaultStore.totalShares) : 1;
+        const totalAssetsNow = vaultStore ? Number(vaultStore.totalAssets) : 0;
         const sharePrice =
           totalSharesNow > 0 ? totalAssetsNow / totalSharesNow : 1;
         const amountBrz = (Number(shares) * sharePrice) / 1_000_000;
@@ -618,13 +726,16 @@ export function useBrix() {
         console.warn("[use-brix] failed to record withdraw event:", err);
       }
 
-      await Promise.all([fetchVaultData(), fetchPositionData()]);
+      await Promise.all([
+        fetchVaultIfStale(program, true),
+        fetchPositionIfStale(program, anchorWallet.publicKey, true),
+      ]);
     } catch (err: unknown) {
       toast.dismiss(loadingToast);
       const msg = err instanceof Error ? err.message : String(err);
       toast.error("Falha no saque", { description: msg });
     } finally {
-      setIsLoading(false);
+      setIsLoadingStore(false);
     }
   }
 
@@ -638,8 +749,10 @@ export function useBrix() {
     deposit,
     withdraw,
     refetch: () => {
-      void fetchVaultData();
-      void fetchPositionData();
+      void fetchVaultIfStale(program, true);
+      if (authenticated && solanaWallet) {
+        void fetchPositionIfStale(program, anchorWallet.publicKey, true);
+      }
     },
   };
 }

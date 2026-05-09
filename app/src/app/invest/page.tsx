@@ -6,7 +6,7 @@
 // Ported from Brix-handoff/brix/project/investor.jsx.
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { AppShell, type Tab } from "../../components/shell/AppShell";
 import { I } from "../../components/icons";
@@ -31,19 +31,24 @@ const VALID_TABS: TabId[] = ["vault", "deposit", "withdraw", "positions"];
 export default function InvestPage() {
   const { t } = useT();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { ready, authenticated, user } = usePrivy();
 
-  // Tab is URL-driven so browser back/forward + shareable links work.
-  const tabFromUrl = searchParams.get("tab");
-  const tab: TabId = (VALID_TABS.includes(tabFromUrl as TabId)
-    ? tabFromUrl
-    : "vault") as TabId;
-  const setTab = (next: TabId) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", next);
-    router.replace(`?${params.toString()}`, { scroll: false });
-  };
+  // Tab is in-memory state (no URL noise on click). On first mount we still
+  // honor `?tab=...` so deep links from /history keep working — then we
+  // strip the query so subsequent tab clicks don't desync the URL.
+  const [tab, setTab] = useState<TabId>("vault");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get("tab");
+    if (tabFromUrl && VALID_TABS.includes(tabFromUrl as TabId)) {
+      setTab(tabFromUrl as TabId);
+      params.delete("tab");
+      const qs = params.toString();
+      const cleanUrl = window.location.pathname + (qs ? `?${qs}` : "");
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, []);
 
   // Auth + persona guard. Privy may not be configured (build w/o env) — only redirect when ready.
   useEffect(() => {

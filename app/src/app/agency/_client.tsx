@@ -1724,9 +1724,16 @@ function RegisterRepayment({ setTab }: { setTab: (id: TabId) => void }) {
 
   if (!picked) return null;
 
-  const installmentBrz = picked.principalBrz / picked.installmentsTotal;
+  // Each installment is principal + interest (i.e. repaymentBrz / N), NOT
+  // just principalBrz / N. Using principal-only here was a bug: it caused
+  // the on-chain repay to pay back principal at par with no interest, so
+  // TVL only grew by the small interest portion the on-chain logic could
+  // attribute from the gap between paid amount and outstanding principal.
+  // Using repaymentBrz makes each installment a full annuity payment that
+  // matches the rate the investor was promised at signing.
+  const installmentBrz = picked.repaymentBrz / picked.installmentsTotal;
   const restBrz =
-    (picked.principalBrz *
+    (picked.repaymentBrz *
       (picked.installmentsTotal - picked.installmentsPaid - 1)) /
     picked.installmentsTotal;
 

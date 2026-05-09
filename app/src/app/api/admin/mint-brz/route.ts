@@ -55,10 +55,14 @@ function loadAdminKeypair(): Keypair {
 }
 
 export async function POST(req: Request) {
-  // Hard gate: refuse outside dev / non-devnet RPC.
-  if (process.env.NODE_ENV === "production") {
-    return badRequest("test-BRZ faucet is disabled in production");
-  }
+  // Only safety gate that matters: refuse if the RPC isn't devnet. The
+  // admin keypair is the test mint authority on devnet only — on mainnet,
+  // BRZ is minted by Transfero and any signature attempt with our key
+  // would be rejected by the SPL Token program anyway. Belt-and-
+  // suspenders: this check catches misconfig before we even sign.
+  // (Previous NODE_ENV guard was over-conservative — it broke the demo
+  // running on Appwrite Sites where NODE_ENV=production but the RPC is
+  // still devnet. Removed.)
   if (!RPC.includes("devnet")) {
     return badRequest("test-BRZ faucet only works against devnet RPCs");
   }

@@ -98,10 +98,17 @@ function brixAccounts(program: BrixProgramClient): BrixAccounts {
 // ─── localStorage layer ──────────────────────────────────────────────────────
 // Persists vault/position across full reloads. The module-level store below
 // hydrates from this on first import so we paint last-known values instantly.
+//
+// We DON'T expire the cache on read — even week-old data is fine to paint
+// for one frame because the in-memory TTL (VAULT_TTL_MS / POSITION_TTL_MS)
+// always triggers a background refresh on mount. The `expires` field is
+// kept in the payload as a versioning hint but ignored on read; that way
+// the user never sees a "BRZ 0" flash just because they were away for a
+// few minutes.
 
 const VAULT_CACHE_KEY = "brix:vault_data:v1";
 const POSITION_CACHE_KEY = "brix:position_data:v1";
-const STATE_CACHE_TTL_MS = 5 * 60_000;
+const STATE_CACHE_TTL_MS = 24 * 60 * 60_000; // 24h, just for write metadata
 
 type Persisted<T> = { data: T; expires: number };
 
@@ -174,10 +181,8 @@ function readPersistedState<T>(
     const raw = window.localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Persisted<unknown>;
-    if (parsed.expires < Date.now()) {
-      window.localStorage.removeItem(key);
-      return null;
-    }
+    // Intentionally ignore parsed.expires — see header comment. Stale data
+    // paints once; the in-memory TTL refreshes it within the same second.
     return deserialize(parsed.data);
   } catch {
     return null;
@@ -369,26 +374,47 @@ async function doFetchPosition(
       investorPubkey,
     );
 
-    const [position, vault] = await Promise.all([
-      brixAccounts(program).investorPosition.fetch(positionPDA),
-      brixAccounts(program).vault.fetch(vaultPDA),
-    ]);
+    // Reuse vault snapshot from vaultStore when it's recent (< 5s old). The
+    // vault data only feeds totalShares + totalAssets here, both of which
+    // are derivable from what fetchVault already populated. Skipping the
+    // duplicate vault.fetch + getTokenAccountBalance saves 2 RPC calls per
+    // position fetch when both fire on the same mount.
+    const VAULT_REUSE_WINDOW_MS = 5_000;
+    const canReuseVault =
+      vaultStore && Date.now() - lastVaultFetchAt < VAULT_REUSE_WINDOW_MS;
 
-    const shares = BigInt(position.shares.toString());
-    const totalShares = BigInt(vault.totalShares.toString());
+    let totalShares: bigint;
+    let totalAssets: bigint;
+    let position: RawPosition;
 
-    let ataBalance = 0n;
-    try {
-      const ataInfo = await connection.getTokenAccountBalance(
-        new PublicKey(vault.vaultAta),
-      );
-      ataBalance = BigInt(ataInfo.value.amount);
-    } catch {
-      // Missing vault ATA means there is no user position to value yet.
+    if (canReuseVault && vaultStore) {
+      // 1 RPC call: just position.fetch
+      position = await brixAccounts(program).investorPosition.fetch(positionPDA);
+      totalShares = vaultStore.totalShares;
+      totalAssets = vaultStore.totalAssets;
+    } else {
+      // Cold path: 3 RPC calls in parallel
+      const [pos, vault] = await Promise.all([
+        brixAccounts(program).investorPosition.fetch(positionPDA),
+        brixAccounts(program).vault.fetch(vaultPDA),
+      ]);
+      position = pos;
+      totalShares = BigInt(vault.totalShares.toString());
+
+      let ataBalance = 0n;
+      try {
+        const ataInfo = await connection.getTokenAccountBalance(
+          new PublicKey(vault.vaultAta),
+        );
+        ataBalance = BigInt(ataInfo.value.amount);
+      } catch {
+        // Missing vault ATA means there is no user position to value yet.
+      }
+      const totalDeployed = BigInt(vault.totalDeployed.toString());
+      totalAssets = ataBalance + totalDeployed;
     }
 
-    const totalDeployed = BigInt(vault.totalDeployed.toString());
-    const totalAssets = ataBalance + totalDeployed;
+    const shares = BigInt(position.shares.toString());
     const estimatedValueBrz =
       totalShares > 0n ? (shares * totalAssets) / totalShares : 0n;
 

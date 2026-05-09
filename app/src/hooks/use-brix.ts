@@ -486,7 +486,7 @@ function readPrivyEmail(user: ReturnType<typeof usePrivy>["user"]): string {
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useBrix() {
-  const { authenticated, user } = usePrivy();
+  const { authenticated, user, ready: privyReady } = usePrivy();
   const { wallets, ready: solanaWalletsReady } = useSolanaWallets();
   const { signTransaction: signPrivyTransaction } = useSignTransaction();
 
@@ -562,12 +562,22 @@ export function useBrix() {
   }, [program]);
 
   useEffect(() => {
+    // Boot phase: Privy still initializing — don't touch the store. Otherwise
+    // we'd clobber the localStorage-hydrated cache and force the KPIs to flash
+    // through 0 → real value once Privy resolves a few hundred ms later.
+    if (!privyReady) return;
+
+    // Privy resolved AND user is not logged in: legitimately empty state.
+    // (Not perfect across user-switches since the cache key isn't user-scoped,
+    // but covers the common "logged out" case.)
     if (!authenticated || !solanaWalletsReady || !solanaWallet) {
       setPositionStore(null);
       return;
     }
+
     void fetchPositionIfStale(program, anchorWallet.publicKey);
   }, [
+    privyReady,
     authenticated,
     solanaWalletsReady,
     solanaWallet,

@@ -1,191 +1,119 @@
-# Brix
+# Brix — Rental receivables, on-chain.
 
-> **Rental receivables lending on Solana** — Brazil-first, insurance-backed, immutable rate.
-> Colosseum Frontier submission target: **2026-05-11**.
+[![Live demo](https://img.shields.io/badge/Live%20demo-brixprotocol.com-FF9900?style=for-the-badge)](https://brixprotocol.com)
+[![Solana devnet](https://img.shields.io/badge/Solana-devnet-9945FF?style=for-the-badge&logo=solana)](https://explorer.solana.com/address/6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94?cluster=devnet)
+[![Colosseum Frontier](https://img.shields.io/badge/Colosseum-Frontier%202026-FFD700?style=for-the-badge)](https://colosseum.com/frontier)
 
-- **Pitch/produto**: [`brix.md`](./brix.md)
-- **Estado atual**: [`CHECKPOINTS.md`](./CHECKPOINTS.md)
-- **Cérebro do agente AI**: [`.agents/AGENT_BRAIN.md`](./.agents/AGENT_BRAIN.md)
-- **Research**: [`research/deep-dive-brix-2026-04-18.md`](./research/deep-dive-brix-2026-04-18.md)
+> **An RWA lending vault on Solana for Brazilian rental receivables.**
+> Immutable rate, insurance-backed, paid out in BRZ → PIX. Brazil-first; built to scale globally.
 
 ---
 
-## Quickstart (cross-PC)
+## TL;DR for judges
 
-Arthur desenvolve de PCs diferentes. Este bloco é replicável em qualquer máquina.
+**Problem.** 13M+ Brazilian families rent. Property owners hold predictable future income but
+can't access it at fair terms. Off-chain fintechs charge 36–60% APR with **bait-and-switch**
+(rate changes between simulation and contract). On-chain alternatives died from defaults:
+**Goldfinch collapsed $103M → $1.6M TVL. Credix is a $44M institutional USDC product, not retail.**
 
-### 1. Requisitos
+**Why now.** Transfero **already minted 200M BRZ on Solana** (73% of the total BRZ supply),
+but Solana hosts only **42 active addresses with ~$1.1k monthly volume** — vs. **$25.65M/month
+on Polygon**. The supply is there, the demand vector isn't. Brix is that vector.
 
-- **WSL2 Ubuntu** (Windows) OU Ubuntu/macOS nativo
-- Git
+**Solution.** A single transparent yield vault funded by BRZ stablecoin, lending against
+rental receivables originated by partner real-estate agencies. Three structural defenses:
 
-### 2. Toolchain (dentro do WSL/Linux)
+1. **Immutable rate** — gravada no smart contract no momento da assinatura. Bait-and-switch impossible.
+2. **Seguro fiança as default shield** — ~85% of Brazilian rental contracts already carry
+   tenant-default insurance; the protocol inherits that protection. This is what killed
+   Goldfinch's uninsured book.
+3. **Off-ramp PIX automático** via Transfero — landlord receives BRZ, sees PIX in 24h,
+   never touches crypto.
 
-> **Nota**: desde abril 2026 a CLI Solana virou **Agave** (3.x) e o Anchor pulou pra **1.x**. Comandos abaixo refletem o ecossistema atual.
+**Day-one origination.** Selectimob (founding partner, family business): **700+ active rental
+contracts, ~85% with seguro fiança**, zero CAC, integrated payment rail.
 
-```bash
-# Build deps
-sudo apt update && sudo apt install -y build-essential pkg-config libssl-dev libudev-dev protobuf-compiler git
+---
 
-# Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
-source "$HOME/.cargo/env"
+## Quick links
 
-# Solana CLI (Agave via Anza)
-curl -sSfL https://release.anza.xyz/stable/install | sh
-export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+| | |
+|---|---|
+| 🌐 **Live demo** | [brixprotocol.com](https://brixprotocol.com) |
+| 🎬 **Pitch video** (3 min) | [link uploaded for submission] |
+| 📊 **Pitch deck** (HTML, click slides) | [`pitch-deck.html`](./pitch-deck.html) |
+| 📄 **Full pitch / product brief** | [`brix.md`](./brix.md) |
+| 🔗 **On-chain program** | `6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94` ([Explorer](https://explorer.solana.com/address/6xonaQdmV1b7QqfaiGvEnrbo6xH318odiXvLQ8Ebsy94?cluster=devnet)) |
+| 🎯 **Track positioning** | Payments / Stablecoins (also fits DeFi-RWA) |
+| 👤 **Builder** | [@ArthurRamoss](https://github.com/ArthurRamoss) |
 
-# Anchor via avm (instala versão latest, atualmente 1.0.1)
-cargo install --git https://github.com/coral-xyz/anchor avm --force
-avm install latest
-avm use latest
+---
 
-# Node + pnpm (via nvm)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-export NVM_DIR="$HOME/.nvm"
-. "$NVM_DIR/nvm.sh"
-nvm install 20
-nvm alias default 20
-corepack enable && corepack prepare pnpm@latest --activate
+## What's in this repo
 
-# Verificar
-anchor --version && solana --version && node -v && pnpm -v
+```
+programs/brix/         Anchor program (Rust): vault, deposit, withdraw,
+                       register_receivable, fund_landlord, repay,
+                       admin_close_receivable, admin_close_position
+app/                   Next.js 16 frontend (Privy auth, Appwrite backend, BRZ on devnet)
+scripts/               seed-demo.ts, reset-demo.ts, appwrite-bootstrap.ts
+brix.md                Full product brief — problem, solution, competitive landscape,
+                       regulatory strategy, timeline
+pitch-deck.html        10-slide deck (open in browser, navigate with arrow keys)
+.claude/dev/           Internal docs: dev setup, demo recording scripts, planning
+.claude/research/      Background research (Colosseum Copilot, deep dive)
 ```
 
-**Versões de referência (validadas 2026-04-22)**: Rust 1.95.0 · Agave 3.1.14 · Anchor 1.0.1 · Node 20.20.2 · pnpm 10.33.1.
+---
 
-### 3. Wallet devnet
+## Try it locally
 
-```bash
-solana-keygen new                    # SALVE o seed phrase num gerenciador seguro
-solana config set --url devnet
-solana airdrop 2                     # faucet costuma dar rate limit; use https://faucet.solana.com se falhar
-solana balance
-```
-
-### 4. Clonar + env
+Prereqs: Node 20+, pnpm 10+, Solana CLI (Agave), Anchor 1.x.
 
 ```bash
-git clone https://github.com/ArthurRamoss/brix.git
-cd brix
-cp .env.local.example .env.local
-cp .env.local.example app/.env.local
-# preencher .env.local (root) e app/.env.local:
-#   HELIUS_API_KEY, NEXT_PUBLIC_PRIVY_APP_ID,
-#   NEXT_PUBLIC_BRIX_PROGRAM_ID (já default 6xon...sy94),
-#   NEXT_PUBLIC_BRZ_MINT (preencher após `pnpm demo:seed`)
+git clone https://github.com/ArthurRamoss/brix && cd brix
 pnpm install
+cp app/.env.local.example app/.env.local        # fill RPC + Privy + Appwrite keys
+pnpm app:dev                                     # → http://localhost:3000
 ```
 
-> **Nota build-safe**: o app tolera `NEXT_PUBLIC_BRZ_MINT` placeholder/inválido sem
-> crashar (`brix-program.ts::parsePubkey`). Mas a demo de transação real precisa do
-> mint correto — rode `pnpm demo:seed` e copie o valor pro `app/.env.local`.
-
-### 5. Rodar
-
-```bash
-# Smart contract
-pnpm program:build           # = anchor build
-pnpm program:test            # = anchor test (LiteSVM, sub-segundos)
-
-# Frontend (dev hot reload)
-pnpm app:dev                 # = pnpm --filter app dev
-
-# Frontend (production build)
-pnpm app:build               # ✅ valida build limpo (~70s, /mnt/c)
-```
-
-### 6. Demo seed (CP3 — pré-gravação)
-
-```bash
-# 1. Loga no app uma vez pra Privy criar a embedded Solana wallet.
-#    Copia o address (botão de copy no /landlord ou /invest após login).
-
-# 2. Roda o seed em devnet (precisa do admin keypair `EFQuU2...sy94`):
-pnpm demo:seed -- --demo-wallet <PRIVY_WALLET_PUBKEY>
-
-# Output: cria devnet BRZ test mint (se não existe), inicializa vault,
-# minta 100k BRZ pra demo wallet. Grava `scripts/demo-state.json`.
-
-# 3. Copia o `NEXT_PUBLIC_BRZ_MINT` do output pro `app/.env.local`.
-# 4. Reinicia `pnpm app:dev` pra pegar o env atualizado.
-```
-
-### 7. Golden path do vídeo (3min, 1 wallet)
-
-```
-login (persona invest)  → /invest         → deposita 50k BRZ → vault TVL sobe
-logout
-login (persona agency)  → /agency         → register SEL-2026-001 → fund_landlord
-                                          → BRZ chega na ATA (vira "PIX recebido" na narrativa)
-                                          → repay (parcela ou full)
-logout
-login (persona invest)  → /invest         → withdraw → recebe principal + juros
-```
-
-Tx links pro Solana Explorer aparecem em todos os toasts — usar pra prova on-chain no vídeo.
+Detailed setup (toolchain, env vars, deploy): [`.claude/dev/LOCAL_DEV.md`](./.claude/dev/LOCAL_DEV.md).
 
 ---
 
-## Workflow (trunk-based)
+## Architecture in one paragraph
 
-```bash
-# Início de sessão
-git pull --rebase origin main
-pnpm install
-cat CHECKPOINTS.md
-
-# Fim de sessão (obrigatório)
-# 1) editar CHECKPOINTS.md com "próximo: X"
-git add -A
-git commit -m "wip(cp1): <o que fez> - next: <o que falta>"
-git push origin main
-```
-
-**Nunca** encerrar sessão com código descommitado.
-**Nunca** commitar `.env.local` ou keypairs.
-
----
-
-## Estrutura do repo (após scaffold-project)
-
-```
-brix/
-├── brix.md                              # Pitch e contexto de produto
-├── CHECKPOINTS.md                       # Tracking de progresso por checkpoint
-├── README.md                            # Este arquivo
-├── .env.local.example                   # Template de env vars
-├── .agents/
-│   ├── AGENT_BRAIN.md                   # Cérebro do agente AI
-│   ├── SKILL_ROUTER.md                  # Roteador de skills
-│   ├── tone-guide.md
-│   ├── data/                            # Knowledge bases (solana, defi, colosseum)
-│   └── skills/                          # Skills instaladas
-├── research/
-│   ├── deep-dive-brix-2026-04-18.md
-│   ├── copilot-deep-dive-2026-04-18/    # 18 JSON de research
-│   └── archive-2026-04-14/              # Research anterior
-├── programs/brix/                       # (será criado pelo scaffold) Anchor program
-├── app/ ou src/                         # (será criado pelo scaffold) Next.js frontend
-├── tests/                               # (será criado pelo scaffold) Anchor tests
-└── scripts/                             # Scripts de demo/admin
-```
+The Anchor program holds a singleton `Vault` PDA that custodies BRZ. Investors call `deposit`
+and receive shares (`brxV`). Agencies call `register_receivable` (writes immutable rate to
+the smart contract) and `fund_landlord` (vault transfers BRZ to landlord ATA). Every month,
+the agency forwards the tenant's payment to the contract via `repay`, which splits the
+amount pro-rata between principal and interest — principal returns to the vault, interest
+flows to share value. The Next.js app uses Privy for email-based auth (zero seed phrases),
+Helius for RPC, and Appwrite for off-chain UX state (clients, properties, contract metadata,
+event log for the TVL chart).
 
 ---
 
 ## Stack
 
-Ver [`.agents/AGENT_BRAIN.md` §4](./.agents/AGENT_BRAIN.md) para a lista canônica.
-
-Resumo: **Anchor 1.x** (Rust) em **Agave 3.x** · **Next.js 14** App Router · **Privy** (auth) · **Helius** (RPC) · **BRZ** (stablecoin nativo Solana) · **pnpm**.
+**Anchor 1.x** (Rust) on **Solana devnet** · **Next.js 16** (Turbopack, App Router) · **Privy**
+(embedded wallets, Frontier sponsor) · **Helius** (RPC, Frontier sponsor) · **BRZ** (Transfero
+stablecoin, native on Solana since 2021) · **Appwrite** (off-chain state) · **pnpm workspace**.
 
 ---
 
-## Links rápidos
+## Roadmap
 
-- Privy dashboard: https://dashboard.privy.io
-- Helius dashboard: https://dashboard.helius.dev
-- Colosseum Copilot: https://copilot.colosseum.com
-- Solana Explorer devnet: https://explorer.solana.com/?cluster=devnet
-- Solscan devnet: https://solscan.io/?cluster=devnet
-- Anchor docs: https://www.anchor-lang.com
+- v2: Senior/junior tranches (pattern from Pencil Finance / Kormos)
+- v2: Real Transfero PIX off-ramp wired up (currently mocked in demo)
+- v3: STR (short-term rentals) underwriting via STR Scout flywheel (already shipped)
+- v3: Construction receivables vertical
+- Global: any market with local stablecoin + registered lease infrastructure
+
+Detail in [`ROADMAP.md`](./ROADMAP.md).
+
+---
+
+## License
+
+MIT.

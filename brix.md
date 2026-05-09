@@ -18,18 +18,26 @@ Brix unlocks parked capital stuck in future rent by tokenizing insurance-backed 
 
 Property owners hold predictable future rental income but cannot access it at fair terms.
 
-### Macro (capital inefficiency)
-- **Banks cut real estate credit in Brazil by 54%** in H1 2025 (CBIC): R$19.9bi → R$9.1bi in SBPE production credit
+### Macro
 - **17.4% of Brazilian households are renters** (IBGE PNAD 2023) — 13M+ rented units
-- Existing off-chain fintechs (CashGO R$120M FIDC, 250K+ owners served) operate with opaque pricing and **bait-and-switch practices**: simulation rate differs from final contract rate
+- **PIX moves 7B+ transactions/month, ~$6.7T in 2025** (+34% YoY, EBANX). Universal local rail — but **no on-chain bridge to it for receivables**.
+- Brazilian fintech credit market grew 68% YoY (R$35B in 2024, ANBC); alternative-lending TAM growing to **$3.35B by 2029**. Rental receivables remain underserved.
+- Existing off-chain fintechs (CashGO R$120M FIDC, 250K+ owners served) operate with opaque pricing and **bait-and-switch practices**: simulation rate differs from final contract rate.
 
-### On-chain gap
-- Solana RWA TVL >$2B (Apr 2026), but nearly all of it is US Treasuries (BlackRock, Ondo)
-- **Solana RWA Lending on DefiLlama is nearly empty** — structural gap
-- No Colosseum project in the 5,400+ corpus has dominated rental receivables with insurance wrapper + local origination in Brazil
+### The on-chain gap (the most defensible stat we have)
+- **BRZ has 200M+ tokens minted on Solana** — 73% of total Transfero supply lives here (rwa.xyz, May 2026)
+- ...but Solana hosts only **42 active addresses with ~$1.1k monthly volume**
+- Polygon does **$25.65M/month** in BRZ activity — same token, same issuer, 23,000× the volume
+- **Brix is the first real demand vector** for the BRZ supply already deployed on Solana
+
+### Solana RWA category state (May 2026)
+- $2.26B distributed value on Solana RWA, +2.82% 30d (rwa.xyz)
+- Leadership migrated to **Treasury products** (BlackRock BUIDL, Ondo, Maple $2.2B)
+- **RWA Lending category is empty** — Goldfinch collapsed $103M → $1.3M TVL (DefiLlama), killed by uninsured defaults. Credix is alive ($44M issued, 24 active deals) but is institutional USDC SME credit — not retail rental.
+- No Colosseum project in the 5,400+ corpus has dominated rental receivables with insurance wrapper + local origination in Brazil.
 
 ### Why the insurance angle matters
-Goldfinch peaked at $103M TVL and collapsed to $1.6M — killed by loan defaults without an insurance layer. Credix raised $11.25M and sits at $1 TVL. **Brix solves the default problem structurally via seguro fiança** (Brazilian rental insurance), which ~85% of Selectimob's contracts already carry.
+Goldfinch peaked at $103M TVL and collapsed to $1.3M — **killed by loan defaults without an insurance layer**. Credix is the only living adjacent (institutional/USDC), leaving retail-rental wide open. **Brix solves the default problem structurally via seguro fiança** (Brazilian rental insurance), which ~85% of Selectimob's contracts already carry.
 
 ---
 
@@ -103,11 +111,12 @@ Landlord (via Selectimob)           Investor (DeFi user / institution)
 | Yumi Finance (C4) | BNPL + credit scoring | 4 | 1st DeFi Cypherpunk $25K | Underwriting reference |
 | VitalFi | Medical receivables BR → USDT yield | 4 | HM RWAs Cypherpunk | Proves BR receivables on-chain works |
 
-### What's killed / coasting
-- **Goldfinch**: $103M → $1.6M TVL. Died from uninsured defaults.
-- **Credix**: $11.25M Series A, $1 TVL, $10M+ historical borrowed. Effectively inactive.
+### Status of the closest competitors (May 2026)
+- **Goldfinch**: collapsed from $103M → ~$1.3M TVL (DefiLlama). Died from uninsured borrower defaults — **the exact failure mode Brix's seguro fiança defends against**.
+- **Credix**: alive — $44M issued, $7.1M interest, 24 active deals across Brazil + Colombia. **But institutional USDC SME credit, not retail rental.** Brix is positioned as **retail / BRZ / rental / PIX-native**.
+- **VitalFi** (medical receivables BR via Pollum): direct shape clone but different vertical (medical, USDT). Brix differentiates on asset class + native BRZ rail + Selectimob's day-one origination.
 
-**Honest positioning**: "Nobody has dominated rental receivables with insurance wrapper and local origination in Brazil on Solana." Not "zero competitors."
+**Honest positioning**: "Nobody has dominated **rental receivables with insurance wrapper and local origination in Brazil** on Solana." Credix sits adjacent (institutional, USD-denominated); Brix owns the retail/BRZ slot.
 
 ---
 

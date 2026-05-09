@@ -8,6 +8,160 @@
   },
   "instructions": [
     {
+      "name": "admin_close_position",
+      "docs": [
+        "Admin-only: forcibly close an InvestorPosition PDA and burn its",
+        "shares from `vault.total_shares`. Demo cleanup helper."
+      ],
+      "discriminator": [
+        244,
+        87,
+        243,
+        195,
+        206,
+        162,
+        31,
+        129
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault whose share counter we're decrementing."
+          ],
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "position",
+          "docs": [
+            "Position being closed. Constraint enforces it belongs to this vault."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "position.investor",
+                "account": "InvestorPosition"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "admin_close_receivable",
+      "docs": [
+        "Admin-only: forcibly close a Receivable PDA and write off any",
+        "unreleased principal from `vault.total_deployed`. Used for bad-debt",
+        "cleanup and demo resets — see admin_close_receivable.rs for the full",
+        "rationale."
+      ],
+      "discriminator": [
+        217,
+        192,
+        16,
+        2,
+        12,
+        37,
+        17,
+        78
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault whose accounting we're correcting. Admin authority is enforced",
+            "by the `has_one` constraint — only the vault's stored admin pubkey",
+            "can sign."
+          ],
+          "writable": true,
+          "relations": [
+            "receivable"
+          ]
+        },
+        {
+          "name": "receivable",
+          "docs": [
+            "Receivable being closed. Lamports rent-refunded to admin via",
+            "`close = admin`. Constraint also verifies it belongs to this vault."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  101,
+                  105,
+                  118,
+                  97,
+                  98,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "contract_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "contract_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "deposit",
       "docs": [
         "Investor deposits BRZ into the vault and receives pro-rata shares."

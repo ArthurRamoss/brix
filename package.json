@@ -14,6 +14,7 @@
     "app:dev": "pnpm --filter app dev",
     "app:build": "pnpm --filter app build",
     "demo:seed": "tsx scripts/seed-demo.ts",
+    "demo:reset": "tsx scripts/reset-demo.ts",
     "appwrite:bootstrap": "tsx scripts/appwrite-bootstrap.ts",
     "lint": "prettier \"**/*.{js,ts,tsx,json,md}\" --check --ignore-path .prettierignore",
     "lint:fix": "prettier \"**/*.{js,ts,tsx,json,md}\" --write --ignore-path .prettierignore"

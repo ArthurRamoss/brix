@@ -215,8 +215,16 @@ function writePersistedState(key: string, data: unknown) {
 //   - Post-hydration, snapshot becomes the localStorage-hydrated value, so
 //     remounted components read instantly without an empty-state flash.
 
-const VAULT_TTL_MS = 30_000;
-const POSITION_TTL_MS = 30_000;
+// In-memory TTL controls when fetch* helpers actually go to the network.
+// 5 minutes is generous — the underlying data only changes when:
+//   - vault: a different investor deposits/withdraws, or an agency repays
+//   - position: this user deposits/withdraws (and we force-refetch in those
+//     code paths regardless of TTL)
+// So most tab switches and re-mounts can serve from the in-memory store with
+// no RPC roundtrip. If the user wants fresher numbers, the page-level
+// refetch button (or a hard refresh) bypasses TTL via force=true.
+const VAULT_TTL_MS = 5 * 60_000;
+const POSITION_TTL_MS = 5 * 60_000;
 
 let vaultStore: VaultData | null = readPersistedState<VaultData>(
   VAULT_CACHE_KEY,
@@ -588,18 +596,17 @@ export function useBrix() {
   }, [program]);
 
   useEffect(() => {
-    // Boot phase: Privy still initializing — don't touch the store. Otherwise
-    // we'd clobber the localStorage-hydrated cache and force the KPIs to flash
-    // through 0 → real value once Privy resolves a few hundred ms later.
+    // Wait for Privy to fully resolve before deciding anything. Without this
+    // gate we'd act on transient false readings during boot.
     if (!privyReady) return;
 
-    // Privy resolved AND user is not logged in: legitimately empty state.
-    // (Not perfect across user-switches since the cache key isn't user-scoped,
-    // but covers the common "logged out" case.)
-    if (!authenticated || !solanaWalletsReady || !solanaWallet) {
-      setPositionStore(null);
-      return;
-    }
+    // No wallet yet — don't fetch, but DON'T null the store either. Even a
+    // single frame of `authenticated=false` from Privy churn would otherwise
+    // wipe the cached position and flash the KPIs to 0. The cache key isn't
+    // user-scoped, so the worst case (user-switch in the same session) shows
+    // brief stale data which the next fetch corrects within ~1s. For an MVP
+    // that trade-off is fine.
+    if (!authenticated || !solanaWalletsReady || !solanaWallet) return;
 
     void fetchPositionIfStale(program, anchorWallet.publicKey);
   }, [

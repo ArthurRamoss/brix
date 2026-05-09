@@ -65,14 +65,21 @@ function loadEnv(): Record<string, string | undefined> {
 
 const env = loadEnv();
 
-const ENDPOINT = env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
-const PROJECT_ID = env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
-const DATABASE_ID = env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || "brix_main";
+// Prefer the non-public names; fall back to legacy NEXT_PUBLIC_ ones so
+// existing .env.local files keep working during transition.
+const ENDPOINT =
+  env.APPWRITE_ENDPOINT || env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+const PROJECT_ID =
+  env.APPWRITE_PROJECT_ID || env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+const DATABASE_ID =
+  env.APPWRITE_DATABASE_ID ||
+  env.NEXT_PUBLIC_APPWRITE_DATABASE_ID ||
+  "brix_main";
 const API_KEY = env.APPWRITE_API_KEY;
 
 if (!ENDPOINT || !PROJECT_ID || !API_KEY) {
   console.error(
-    "Missing Appwrite env vars in .env.local (root). Need NEXT_PUBLIC_APPWRITE_ENDPOINT, NEXT_PUBLIC_APPWRITE_PROJECT_ID, APPWRITE_API_KEY.",
+    "Missing Appwrite env vars in .env.local. Need APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY (legacy NEXT_PUBLIC_* names also accepted).",
   );
   process.exit(1);
 }

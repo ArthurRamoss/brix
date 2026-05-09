@@ -294,16 +294,20 @@ async function main() {
 
   const env = { ...envFromAppFile(), ...process.env } as Record<string, string>;
 
-  const APPWRITE_ENDPOINT = env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
-  const APPWRITE_PROJECT = env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
-  const APPWRITE_DATABASE = env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
+  // Prefer non-public names; fall back to legacy NEXT_PUBLIC_ for transition.
+  const APPWRITE_ENDPOINT =
+    env.APPWRITE_ENDPOINT ?? env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+  const APPWRITE_PROJECT =
+    env.APPWRITE_PROJECT_ID ?? env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+  const APPWRITE_DATABASE =
+    env.APPWRITE_DATABASE_ID ?? env.NEXT_PUBLIC_APPWRITE_DATABASE_ID;
   const APPWRITE_KEY = env.APPWRITE_API_KEY;
   const RPC =
     env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
 
   if (!APPWRITE_ENDPOINT || !APPWRITE_PROJECT || !APPWRITE_DATABASE || !APPWRITE_KEY) {
     throw new Error(
-      "Missing Appwrite env vars (NEXT_PUBLIC_APPWRITE_ENDPOINT/PROJECT_ID/DATABASE_ID, APPWRITE_API_KEY).",
+      "Missing Appwrite env vars (APPWRITE_ENDPOINT/PROJECT_ID/DATABASE_ID, APPWRITE_API_KEY) — legacy NEXT_PUBLIC_* names also accepted.",
     );
   }
 

@@ -11,12 +11,23 @@
 
 import { Client, TablesDB, Permission, Role } from "node-appwrite";
 
-const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ?? "";
-const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ?? "";
+// Read server-only env vars without the NEXT_PUBLIC_ prefix — these never
+// need to enter the client bundle. Fallback to the legacy NEXT_PUBLIC_
+// names so existing local .env.local files keep working during transition.
+const ENDPOINT =
+  process.env.APPWRITE_ENDPOINT ??
+  process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT ??
+  "";
+const PROJECT_ID =
+  process.env.APPWRITE_PROJECT_ID ??
+  process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID ??
+  "";
 const API_KEY = process.env.APPWRITE_API_KEY ?? "";
 
 export const DATABASE_ID =
-  process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID ?? "brix_main";
+  process.env.APPWRITE_DATABASE_ID ??
+  process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID ??
+  "brix_main";
 
 // Table IDs — kept in sync with scripts/appwrite-bootstrap.ts.
 export const Tables = {

@@ -1295,7 +1295,7 @@ function RegisterReceivable({ setTab }: { setTab: (id: TabId) => void }) {
     setStep(1);
     setSelectedClient("");
     setSelectedProperty("");
-    setData({ months: 6, insurer: "Porto Seguro" });
+    setData({ months: 6, insurer: "Porto Seguro", aprPct: 19 });
   };
 
   // No clients yet → guide to clients tab.

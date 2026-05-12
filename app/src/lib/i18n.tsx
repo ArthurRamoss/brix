@@ -418,9 +418,9 @@ const pt = {
     "primeiro adicione BRZ na sua carteira, depois invista no vault.",
   inv_deposit_modal_wallet_t: "adicionar BRZ na carteira",
   inv_deposit_modal_wallet_d:
-    "comprar via PIX, receber transferência ou conectar carteira externa.",
-  inv_deposit_modal_wallet_btn: "comprar BRZ via PIX",
-  inv_deposit_modal_wallet_note: "em breve · integração Transfero",
+    "para os jurados do hackathon: clica abaixo e o backend minta 50k BRZ de teste direto na carteira logada (devnet, BRZ real virá pela Transfero em produção).",
+  inv_deposit_modal_wallet_btn: "mintar 50k BRZ de teste",
+  inv_deposit_modal_wallet_note: "devnet · faucet só para juízes do Colosseum",
   inv_deposit_modal_vault_t: "depositar no vault",
   inv_deposit_modal_vault_d:
     "investir o BRZ que já tá na sua carteira. recebe shares (brxV) que valorizam por parcela paga.",
@@ -1029,9 +1029,9 @@ const en = {
     "first add BRZ to your wallet, then invest into the vault.",
   inv_deposit_modal_wallet_t: "add BRZ to your wallet",
   inv_deposit_modal_wallet_d:
-    "buy with PIX, receive a transfer, or connect an external wallet.",
-  inv_deposit_modal_wallet_btn: "buy BRZ via PIX",
-  inv_deposit_modal_wallet_note: "coming soon · Transfero integration",
+    "for hackathon judges: click below and the backend mints 50k test BRZ directly into the wallet you're logged into (devnet only — real BRZ flows in from Transfero in production).",
+  inv_deposit_modal_wallet_btn: "mint 50k test BRZ",
+  inv_deposit_modal_wallet_note: "devnet · faucet for Colosseum judges",
   inv_deposit_modal_vault_t: "deposit into the vault",
   inv_deposit_modal_vault_d:
     "invest the BRZ already in your wallet. you get shares (brxV) that grow as installments come in.",

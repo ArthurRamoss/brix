@@ -1241,7 +1241,14 @@ function Row2({ l, r, accent }: { l: string; r: string; accent?: boolean }) {
 // roadmap placeholder for the production flow (Transfero PIX on-ramp /
 // external wallet transfer / wallet-connect) — disabled today, ships when
 // the integration lands. Step 2 routes to the existing deposit tab.
+type MintState =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "success"; signature: string }
+  | { kind: "error"; message: string };
+
 function DepositModal({
+  walletAddress,
   onClose,
   onProceedToVault,
 }: {
@@ -1250,6 +1257,39 @@ function DepositModal({
   onProceedToVault: () => void;
 }) {
   const { t } = useT();
+  const [mintState, setMintState] = useState<MintState>({ kind: "idle" });
+
+  async function handleMint() {
+    if (!walletAddress) {
+      setMintState({
+        kind: "error",
+        message: "wallet not detected. log in first.",
+      });
+      return;
+    }
+    setMintState({ kind: "loading" });
+    try {
+      const res = await fetch("/api/admin/mint-brz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipient: walletAddress, amount: 50000 }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        signature?: string;
+        error?: string;
+      };
+      if (!res.ok || !data.ok || !data.signature) {
+        throw new Error(data.error ?? `mint failed (status ${res.status})`);
+      }
+      setMintState({ kind: "success", signature: data.signature });
+    } catch (err) {
+      setMintState({
+        kind: "error",
+        message: err instanceof Error ? err.message : "mint failed",
+      });
+    }
+  }
 
   // Close on Escape.
   useEffect(() => {
@@ -1358,23 +1398,53 @@ function DepositModal({
             {t("inv_deposit_modal_wallet_d") as string}
           </p>
           <button
-            disabled
+            onClick={handleMint}
+            disabled={mintState.kind === "loading" || !walletAddress}
             type="button"
-            style={{
-              width: "100%",
-              background: "var(--bg-2)",
-              color: "var(--fg-2)",
-              border: "1px dashed var(--gold-line)",
-              padding: "10px 16px",
-              borderRadius: 8,
-              fontWeight: 500,
-              cursor: "not-allowed",
-              fontFamily: "inherit",
-              fontSize: 14,
-            }}
+            className="btn btn-primary"
+            style={{ width: "100%" }}
           >
-            {t("inv_deposit_modal_wallet_btn") as string}
+            {mintState.kind === "loading"
+              ? "minting…"
+              : mintState.kind === "success"
+                ? "mint again"
+                : (t("inv_deposit_modal_wallet_btn") as string)}
           </button>
+          {mintState.kind === "success" && (
+            <div
+              className="mono"
+              style={{
+                marginTop: 10,
+                fontSize: 11,
+                color: "var(--gold)",
+                lineHeight: 1.4,
+                textAlign: "center",
+              }}
+            >
+              ✓ 50k BRZ minted ·{" "}
+              <a
+                href={`https://explorer.solana.com/tx/${mintState.signature}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--gold)", textDecoration: "underline" }}
+              >
+                view tx
+              </a>
+            </div>
+          )}
+          {mintState.kind === "error" && (
+            <div
+              style={{
+                marginTop: 10,
+                fontSize: 12,
+                color: "oklch(0.7 0.18 25)",
+                lineHeight: 1.4,
+                textAlign: "center",
+              }}
+            >
+              {mintState.message}
+            </div>
+          )}
           <div
             className="mono"
             style={{
